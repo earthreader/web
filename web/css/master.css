@@ -24,13 +24,15 @@ time, mark, audio, video {
 html, body {
 	min-height: 100%;
 	font-family: "Helvetica Neue", clean, sans-serif;
-	min-width: 700px;
 }
 
 body {
 	width: 100%;
 	background: white;
 	line-height: 1.2;
+	/* for responsible UI */
+	animation-name: small;
+	animation-duration: .001s;
 }
 
 a, a:hover, a:active, a:link, a:visited {
@@ -98,6 +100,7 @@ ul > li {
 	height: 100%;
 	padding-top: 47px;
 	background: rgb(238, 238, 238);
+	overflow: scroll;
 	box-shadow: 1px 0 2px #aaa;
 }
 
@@ -114,6 +117,7 @@ ul > li {
 	position: relative;
 	width: 100%;
 	height: 100%;
+	overflow: scroll;
 }
 
 [role=navigation] header {
@@ -155,4 +159,11 @@ ul > li {
 
 [role=main] article .entry-title:hover {
 	background: rgb(235, 235, 235);
+}
+
+@media all and (min-width: 700px) {
+	body {
+		/* for responsible UI */
+		animation-name: big;
+	}
 }
