@@ -23,9 +23,10 @@ function resizer(event) {
 		banner.style.background = "white";
 		banner.style.textAlign = "center";
 		banner.style.zIndex = "10";
+		banner.style.fontSize = "2em";
 		banner.className = "banner";
 
-		banner.textContent = "Earth reader doesn't support small screen.";
+		banner.textContent = "Earth Reader doesn't support small screen.";
 
 		document.body.appendChild(banner);
 	}
