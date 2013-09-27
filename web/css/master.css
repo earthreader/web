@@ -85,6 +85,7 @@ ul > li {
 	height: 100%;
 	padding: 0 1em;
 	display: inline-block;
+	cursor: pointer;
 }
 
 
@@ -117,15 +118,19 @@ ul > li {
 
 [role=navigation] header {
 	padding: 0.4em 0 .5em .7em;
+	border-bottom: 1px solid rgb(237, 237, 237);
 	background: rgb(245, 245, 245);
+	cursor: pointer;
 }
 
 [role=navigation] li {
 	padding: 0.4em 0 .5em .7em;
+	cursor: pointer;
 }
 
-[role=navigation] li:hover {
-	background: rgb(230, 230, 230);
+[role=navigation] li:hover,
+[role=navigation] header:hover {
+	background: rgb(225, 225, 225);
 }
 
 [role=navigation] ul.feedlist ul.category {
@@ -145,6 +150,7 @@ ul > li {
 	padding: .5em 2em;
 	border-bottom: 1px solid rgb(238, 238, 238);
 	background: rgb(246, 246, 246);
+	cursor: pointer;
 }
 
 [role=main] article .entry-title:hover {
