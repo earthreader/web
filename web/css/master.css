@@ -183,8 +183,19 @@ input:not([type=button]):not([type=submit]):focus, textarea:focus {
 	cursor: pointer;
 }
 
+[role=main] article .entry-title.opened {
+	background: rgb(223, 223, 223);
+}
+
 [role=main] article .entry-title:hover {
 	background: rgb(235, 235, 235);
+}
+
+[role=main] article .entry-content {
+	padding: 1em 3em;
+	background: rgb(235, 235, 235);
+	line-height: 1.4;
+	box-shadow: 0 1px 2px rgb(100, 100, 100) inset;
 }
 
 @media all and (min-width: 700px) {
