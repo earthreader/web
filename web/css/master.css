@@ -1,0 +1,152 @@
+/* reset */
+html, body, div, span, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+abbr, address, cite, code,
+del, dfn, em, img, ins, kbd, q, samp,
+small, strong, sub, sup, var,
+b, i,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, figcaption, figure, 
+footer, header, hgroup, menu, nav, section, summary,
+time, mark, audio, video {
+	margin:0;
+	padding:0;
+	border:0;
+	outline:0;
+	font-size:100%;
+	vertical-align:baseline;
+	background:transparent;
+	overflow: hidden;
+}
+
+html, body {
+	min-height: 100%;
+	font-family: "Helvetica Neue", clean, sans-serif;
+	min-width: 700px;
+}
+
+body {
+	width: 100%;
+	background: white;
+	line-height: 1.2;
+}
+
+a, a:hover, a:active, a:link, a:visited {
+	text-decoration: none;
+	color: #3bf;
+}
+
+h1 {
+	font-size: 1.6em;
+}
+
+h2 {
+	font-size: 1.2em;
+}
+
+ul, ol {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+
+}
+
+ul > li {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+}
+
+.site-header {
+	position: fixed;
+	z-index: 2;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 47px;
+	padding: .5em 2em;
+	background: white;
+	box-shadow: 0 1px 2px #aaa;
+	box-sizing: border-box;
+}
+
+.site-header h1 {
+	display: inline-block;
+}
+
+.site-header nav {
+	float: right;
+	height: 100%;
+}
+
+.site-header nav .item {
+	height: 100%;
+	padding: 0 1em;
+	display: inline-block;
+}
+
+
+[role=navigation] {
+	position: fixed;
+	z-index: 1;
+	top: 0;
+	left: 0;
+	width: 20%;
+	height: 100%;
+	padding-top: 47px;
+	background: rgb(238, 238, 238);
+	box-shadow: 1px 0 2px #aaa;
+}
+
+.content-wrapper {
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	padding-left: 20%;
+	padding-top: 47px;
+	box-sizing: border-box;
+}
+
+[role=main] {
+	position: relative;
+	width: 100%;
+	height: 100%;
+}
+
+[role=navigation] header {
+	padding: 0.4em 0 .5em .7em;
+	background: rgb(245, 245, 245);
+}
+
+[role=navigation] li {
+	padding: 0.4em 0 .5em .7em;
+}
+
+[role=navigation] li:hover {
+	background: rgb(230, 230, 230);
+}
+
+[role=navigation] ul.feedlist ul li {
+	margin-left: 1em;
+}
+
+[role=navigation] ul.feedlist header.closed + ul {
+	height: 0;
+}
+
+[role=main] header {
+	border-bottom: 1px solid rgb(235, 235, 235);
+	padding: 1.5em 2em;
+}
+
+[role=main] article .entry-title {
+	padding: .5em 2em;
+	border-bottom: 1px solid rgb(238, 238, 238);
+	background: rgb(246, 246, 246);
+}
+
+[role=main] article .entry-title:hover {
+	background: rgb(235, 235, 235);
+}
