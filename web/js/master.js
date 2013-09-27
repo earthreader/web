@@ -6,7 +6,9 @@ function resizer(event) {
 
 	if (name === "big") {
 		banner = document.querySelector('.banner');
-		banner.parentElement.removeChild(banner);
+		if (banner) {
+			banner.parentElement.removeChild(banner);
+		}
 	} else if (name === "small") {
 		banner = document.querySelector('.banner');
 
@@ -32,7 +34,15 @@ function resizer(event) {
 	}
 }
 
-function folderToggle(event) {
+Element.prototype.toggleClass = function(name) {
+	if (this.classList.contains(name)) {
+		this.classList.remove(name);
+	} else {
+		this.classList.add(name);
+	}
+}
+
+function feedListToggle(event) {
 	var target = event.target;
 	while (target.nodeName !== 'HEADER') {
 		target = target.parentElement;
@@ -41,16 +51,34 @@ function folderToggle(event) {
 		}
 	}
 
-	if (target.classList.contains('closed')) {
-		target.classList.remove('closed');
-	} else {
-		target.classList.add('closed');
+	target.toggleClass('closed');
+}
+
+function persistentToggle(event) {
+	var target = event.target;
+	while (target.nodeName !== 'HEADER') {
+		target = target.parentElement;
+		if (target === null) {
+			return;
+		}
 	}
+
+	target.toggleClass('opened');
+}
+
+function processForm(event) {
+	var target = event.target;
+	console.log(target);
+	event.preventDefault();
 }
 
 function init() {
-	var navi = document.querySelector('[role=navigation]');
-	navi.addEventListener('click', folderToggle, false);
+	var persistent = document.querySelector('[role=navigation] .persistent');
+	var feedList = document.querySelector('[role=navigation] .feedlist');
+	persistent.addEventListener('click', persistentToggle, false);
+	feedList.addEventListener('click', feedListToggle, false);
+
+	window.addEventListener('submit', processForm, false);
 
     var animationEnd;
     if (document.body.style.animation !== undefined) {

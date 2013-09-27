@@ -61,6 +61,25 @@ ul > li {
 	margin: 0;
 }
 
+input, textarea {
+	width: 100%;
+	margin: .5em 0;
+	padding: 1em;
+	display: block;
+	border: 1px solid rgb(130, 130, 130);
+	box-sizing: border-box;
+}
+
+input:not([type=button]):not([type=submit]):focus, textarea:focus {
+	border: 1px solid rgb(0, 130, 240);
+}
+
+.form {
+	padding: 0 .5em;
+	background: rgba(0, 0, 0, .1);
+	box-shadow: 0 1px 2px rgb(136, 136, 136) inset;
+}
+
 .site-header {
 	position: fixed;
 	z-index: 2;
@@ -80,16 +99,15 @@ ul > li {
 
 .site-header nav {
 	float: right;
-	height: 100%;
+	font-size: 1.6em;
 }
 
 .site-header nav .item {
 	height: 100%;
-	padding: 0 1em;
+	padding: 0 .3em;
 	display: inline-block;
 	cursor: pointer;
 }
-
 
 [role=navigation] {
 	position: fixed;
@@ -137,12 +155,20 @@ ul > li {
 	background: rgb(225, 225, 225);
 }
 
+[role=navigation] > ul {
+	border-bottom: 2px solid white;
+}
+
 [role=navigation] ul.feedlist ul.category {
 	margin-left: 1em;
 }
 
+[role=navigation] ul.persistent header:not(.opened) + div {
+	display: none;
+}
+
 [role=navigation] ul.feedlist header.closed + ul {
-	height: 0;
+	display: none;
 }
 
 [role=main] header {
