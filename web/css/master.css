@@ -128,7 +128,7 @@ ul > li {
 	background: rgb(230, 230, 230);
 }
 
-[role=navigation] ul.feedlist ul li {
+[role=navigation] ul.feedlist ul.category {
 	margin-left: 1em;
 }
 
