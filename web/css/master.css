@@ -145,12 +145,12 @@ input:not([type=button]):not([type=submit]):focus, textarea:focus {
 	cursor: pointer;
 }
 
-[role=navigation] li {
+[role=navigation] li:not(.fold) {
 	padding: 0.4em 0 .5em .7em;
 	cursor: pointer;
 }
 
-[role=navigation] li:hover,
+[role=navigation] li:not(.fold):hover,
 [role=navigation] header:hover {
 	background: rgb(225, 225, 225);
 }
@@ -159,15 +159,12 @@ input:not([type=button]):not([type=submit]):focus, textarea:focus {
 	border-bottom: 2px solid white;
 }
 
-[role=navigation] ul.feedlist ul.category {
+[role=navigation] ul.feedlist li.fold {
 	margin-left: 1em;
 }
 
-[role=navigation] ul.persistent header:not(.opened) + div {
-	display: none;
-}
-
-[role=navigation] ul.feedlist header.closed + ul {
+[role=navigation] ul.persistent li.header:not(.opened) + li.fold,
+[role=navigation] ul.feedlist li.header.closed + li.fold {
 	display: none;
 }
 

@@ -44,7 +44,7 @@ Element.prototype.toggleClass = function(name) {
 
 function feedListToggle(event) {
 	var target = event.target;
-	while (target.nodeName !== 'HEADER') {
+	while (target.classList.contains('header') == false) {
 		target = target.parentElement;
 		if (target === null) {
 			return;
@@ -56,7 +56,7 @@ function feedListToggle(event) {
 
 function persistentToggle(event) {
 	var target = event.target;
-	while (target.nodeName !== 'HEADER') {
+	while (target.classList.contains('header') == false) {
 		target = target.parentElement;
 		if (target === null) {
 			return;
