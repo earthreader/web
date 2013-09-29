@@ -40,7 +40,6 @@ def entries(feed_id):
         return jsonify(entries=entries) 
     except IOError:
         abort(404)
-        
 
 
 @app.route('/feeds/<feed_id>/<entry_id>/')
