@@ -39,10 +39,10 @@ setup(
     author_email='earthreader' '@' 'librelist.com',
     license='AGPLv3 or later',
     packages=find_packages(exclude=['tests']),
-    install_requires=['Flask >= 0.10', 'libearth'],
+    install_requires=['Flask >= 0.10', 'libearth==dev'],
     dependency_links=[
         'https://github.com/earthreader/libearth/archive/master.zip'
-        '#egg=libearth'
+        '#egg=libearth-dev'
     ],
     tests_require=['pytest >= 2.3.0'],
     cmdclass={'test': pytest},
