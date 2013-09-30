@@ -1,0 +1,11 @@
+language: javascript
+script:
+- python web/html5check.py web/index.html
+after_success:
+- coveralls
+notifications:
+  irc:
+    channels:
+    - "irc.ozinger.org#earthreader"
+    on_success: change
+    on_failure: always
