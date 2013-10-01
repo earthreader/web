@@ -71,7 +71,6 @@ def add_feed():
     format = get_document_type(xml)
     result = format(xml, feed_url)
     feed = result[0]
-    print feed
     for link in feed.links:
             if link.relation == 'alternate' and link.mimetype == 'text/html':
                 blog_url = link.uri
