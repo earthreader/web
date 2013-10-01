@@ -1,10 +1,16 @@
 import glob
 import hashlib
 import os.path
+try:
+    import urllib2
+except ImportError:
+    import urllib.request as urllib2
 
 from libearth.compat import text
 from libearth.feed import Feed
-from libearth.schema import read
+from libearth.feedlist import Feed as OutLine, FeedList
+from libearth.parser.autodiscovery import autodiscovery, FeedUrlNotFoundError
+from libearth.parser.heuristic import get_document_type
 from libearth.schema import read, write
 
 from flask import Flask, abort, jsonify, request, url_for
@@ -14,7 +20,8 @@ app = Flask(__name__)
 
 
 app.config.update(dict(
-    repository='repo/'
+    repository='repo/',
+    opml='earthreader.opml'
 ))
 
 
@@ -36,6 +43,46 @@ def feeds():
                     _external=True)
                 })
     return jsonify(feeds=feeds)
+
+
+@app.route('/feeds/', methods=['POST'])
+def add_feed():
+    REPOSITORY = app.config['repository']
+    OPML = app.config['opml']
+    if not os.path.exists(REPOSITORY + OPML):
+        if not os.path.isdir(REPOSITORY):
+            os.mkdir(REPOSITORY)
+        feed_list = FeedList()
+    else:
+        feed_list = FeedList(REPOSITORY + OPML)
+    url = request.form['url']
+    f = urllib2.urlopen(url)
+    document = f.read()
+    try:
+        feed_url = autodiscovery(document, url)
+    except FeedUrlNotFoundError:
+        return 'error'
+    if not feed_url == url:
+        f.close()
+        f = urllib2.urlopen(feed_url)
+        xml = f.read()
+    else:
+        xml=document
+    format = get_document_type(xml)
+    result = format(xml, feed_url)
+    feed = result[0]
+    print feed
+    for link in feed.links:
+            if link.relation == 'alternate' and link.mimetype == 'text/html':
+                blog_url = link.uri
+    outline = OutLine('atom', feed.title.value, feed_url, blog_url)
+    feed_list.append(outline)
+    feed_list.save_file(REPOSITORY + OPML)
+    file_name = hashlib.sha1(feed_url).hexdigest() + '.xml'
+    with open(os.path.join(REPOSITORY, file_name), 'w') as f:
+        for chunk in write(feed, indent='    ', canonical_order=True):
+            f.write(chunk)
+    return 'success'
 
 
 @app.route('/feeds/<feed_id>/')

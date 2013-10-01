@@ -15,12 +15,13 @@ import httpretty
 from pytest import fixture
 
 app.config.update(dict(
-    repository='tests/repo/'
+    repository='tests/repo/',
+    opml='test.opml'
 ))
 
 
 REPOSITORY = app.config['repository']
-
+OPML = app.config['opml']
 
 atom_xml = """
 <feed xmlns="http://www.w3.org/2005/Atom">
@@ -159,6 +160,29 @@ def test_feeds(xmls):
         assert r.status_code == 200
         result = json.loads(r.data)
         assert len(result['feeds']) == 2
+
+
+added_feed = '''
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <id>http://addedfeed.com/atom</id>
+    <title>It will be added in opml and repository</title>
+    <updated>2013-10-01T16:53:22Z</updated>
+    <link rel="alternate" type="text/html" href="http://addedfeed.com" />
+</feed>
+'''
+
+
+def test_add_feed(xmls):
+    httpretty.enable()
+    httpretty.register_uri(httpretty.GET, 'http://addedfeed.com/atom',
+                           body=added_feed)
+    with app.test_client() as client:
+        r = client.post('/feeds/', data=dict(url='http://addedfeed.com/atom'))
+        assert r.status_code == 200
+        feed_list = FeedList(REPOSITORY + OPML)
+        assert len(feed_list) == 3
+    httpretty.disable()
+
 
 
 def test_entries(xmls):
