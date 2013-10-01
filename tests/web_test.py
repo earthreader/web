@@ -145,12 +145,14 @@ def xmls(request):
         feed = Feed('atom', feed_title, feed_url, blog_url)
         feed_list.append(feed)
     feed_list.save_file(REPOSITORY + 'test.opml')
+
     def remove_test_repo():
         files = glob.glob(REPOSITORY + '*')
         for file in files:
             os.remove(file)
         os.rmdir(REPOSITORY)
         httpretty.disable()
+
     request.addfinalizer(remove_test_repo)
 
 
@@ -182,7 +184,6 @@ def test_add_feed(xmls):
         feed_list = FeedList(REPOSITORY + OPML)
         assert len(feed_list) == 3
     httpretty.disable()
-
 
 
 def test_entries(xmls):

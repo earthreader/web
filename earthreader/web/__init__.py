@@ -67,7 +67,7 @@ def add_feed():
         f = urllib2.urlopen(feed_url)
         xml = f.read()
     else:
-        xml=document
+        xml = document
     format = get_document_type(xml)
     result = format(xml, feed_url)
     feed = result[0]
