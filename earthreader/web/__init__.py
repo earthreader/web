@@ -12,6 +12,11 @@ app = Flask(__name__)
 
 
 @app.route('/feeds/', methods=['GET', 'POST', 'DELETE'])
+app.config.update(dict(
+    repository='repo/'
+))
+
+
 def feeds():
     if request.method == 'GET':
         pass
@@ -23,8 +28,9 @@ def feeds():
 
 @app.route('/feeds/<feed_id>/')
 def entries(feed_id):
+    REPOSITORY = app.config['repository']
     try:
-        with open(os.path.join('repo', feed_id + '.xml')) as f:
+        with open(os.path.join(REPOSITORY, feed_id + '.xml')) as f:
             feed = read(Feed, f)
             entries = []
             for entry in feed.entries:
@@ -37,7 +43,7 @@ def entries(feed_id):
                         _external=True
                     )
                 })
-        return jsonify(entries=entries) 
+        return jsonify(entries=entries)
     except IOError:
         abort(404)
         
