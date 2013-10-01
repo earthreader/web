@@ -138,7 +138,7 @@ input:not([type=button]):not([type=submit]):focus, textarea:focus {
 	overflow: scroll;
 }
 
-[role=navigation] header {
+[role=navigation] .header {
 	padding: 0.4em 0 .5em .7em;
 	border-bottom: 1px solid rgb(237, 237, 237);
 	background: rgb(245, 245, 245);
@@ -151,7 +151,7 @@ input:not([type=button]):not([type=submit]):focus, textarea:focus {
 }
 
 [role=navigation] li:not(.fold):hover,
-[role=navigation] header:hover {
+[role=navigation] .header:hover {
 	background: rgb(225, 225, 225);
 }
 
@@ -163,8 +163,7 @@ input:not([type=button]):not([type=submit]):focus, textarea:focus {
 	margin-left: 1em;
 }
 
-[role=navigation] ul.persistent li.header:not(.opened) + li.fold,
-[role=navigation] ul.feedlist li.header.closed + li.fold {
+[role=navigation] li.header.closed + li.fold {
 	display: none;
 }
 

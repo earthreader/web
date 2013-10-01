@@ -42,7 +42,7 @@ Element.prototype.toggleClass = function(name) {
 	}
 }
 
-function feedListToggle(event) {
+function toggleFolding(event) {
 	var target = event.target;
 	while (target.classList.contains('header') == false) {
 		target = target.parentElement;
@@ -54,18 +54,6 @@ function feedListToggle(event) {
 	target.toggleClass('closed');
 }
 
-function persistentToggle(event) {
-	var target = event.target;
-	while (target.classList.contains('header') == false) {
-		target = target.parentElement;
-		if (target === null) {
-			return;
-		}
-	}
-
-	target.toggleClass('opened');
-}
-
 function processForm(event) {
 	var target = event.target;
 	console.log(target);
@@ -73,10 +61,8 @@ function processForm(event) {
 }
 
 function init() {
-	var persistent = document.querySelector('[role=navigation] .persistent');
-	var feedList = document.querySelector('[role=navigation] .feedlist');
-	persistent.addEventListener('click', persistentToggle, false);
-	feedList.addEventListener('click', feedListToggle, false);
+	var navi = document.querySelector('[role=navigation]');
+	navi.addEventListener('click', toggleFolding, false);
 
 	window.addEventListener('submit', processForm, false);
 
