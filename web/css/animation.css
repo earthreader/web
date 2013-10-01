@@ -1,0 +1,9 @@
+@keyframes big {
+	from { clip: rect(1px, auto, auto, auto); }
+	to { clip: rect(0px, auto, auto, auto); }
+}
+
+@keyframes small {
+	from { clip: rect(1px, auto, auto, auto); }
+	to { clip: rect(0px, auto, auto, auto); }
+}

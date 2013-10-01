@@ -24,13 +24,15 @@ time, mark, audio, video {
 html, body {
 	min-height: 100%;
 	font-family: "Helvetica Neue", clean, sans-serif;
-	min-width: 700px;
 }
 
 body {
 	width: 100%;
 	background: white;
 	line-height: 1.2;
+	/* for responsible UI */
+	animation-name: small;
+	animation-duration: .001s;
 }
 
 a, a:hover, a:active, a:link, a:visited {
@@ -59,6 +61,25 @@ ul > li {
 	margin: 0;
 }
 
+input, textarea {
+	width: 100%;
+	margin: .5em 0;
+	padding: 1em;
+	display: block;
+	border: 1px solid rgb(130, 130, 130);
+	box-sizing: border-box;
+}
+
+input:not([type=button]):not([type=submit]):focus, textarea:focus {
+	border: 1px solid rgb(0, 130, 240);
+}
+
+.form {
+	padding: 0 .5em;
+	background: rgba(0, 0, 0, .1);
+	box-shadow: 0 1px 2px rgb(136, 136, 136) inset;
+}
+
 .site-header {
 	position: fixed;
 	z-index: 2;
@@ -78,15 +99,15 @@ ul > li {
 
 .site-header nav {
 	float: right;
-	height: 100%;
+	font-size: 1.6em;
 }
 
 .site-header nav .item {
 	height: 100%;
-	padding: 0 1em;
+	padding: 0 .3em;
 	display: inline-block;
+	cursor: pointer;
 }
-
 
 [role=navigation] {
 	position: fixed;
@@ -97,6 +118,7 @@ ul > li {
 	height: 100%;
 	padding-top: 47px;
 	background: rgb(238, 238, 238);
+	overflow: scroll;
 	box-shadow: 1px 0 2px #aaa;
 }
 
@@ -113,27 +135,37 @@ ul > li {
 	position: relative;
 	width: 100%;
 	height: 100%;
+	overflow: scroll;
 }
 
 [role=navigation] header {
 	padding: 0.4em 0 .5em .7em;
+	border-bottom: 1px solid rgb(237, 237, 237);
 	background: rgb(245, 245, 245);
+	cursor: pointer;
 }
 
-[role=navigation] li {
+[role=navigation] li:not(.fold) {
 	padding: 0.4em 0 .5em .7em;
+	cursor: pointer;
 }
 
-[role=navigation] li:hover {
-	background: rgb(230, 230, 230);
+[role=navigation] li:not(.fold):hover,
+[role=navigation] header:hover {
+	background: rgb(225, 225, 225);
 }
 
-[role=navigation] ul.feedlist ul li {
+[role=navigation] > ul {
+	border-bottom: 2px solid white;
+}
+
+[role=navigation] ul.feedlist li.fold {
 	margin-left: 1em;
 }
 
-[role=navigation] ul.feedlist header.closed + ul {
-	height: 0;
+[role=navigation] ul.persistent li.header:not(.opened) + li.fold,
+[role=navigation] ul.feedlist li.header.closed + li.fold {
+	display: none;
 }
 
 [role=main] header {
@@ -145,8 +177,27 @@ ul > li {
 	padding: .5em 2em;
 	border-bottom: 1px solid rgb(238, 238, 238);
 	background: rgb(246, 246, 246);
+	cursor: pointer;
+}
+
+[role=main] article .entry-title.opened {
+	background: rgb(223, 223, 223);
 }
 
 [role=main] article .entry-title:hover {
 	background: rgb(235, 235, 235);
+}
+
+[role=main] article .entry-content {
+	padding: 1em 3em;
+	background: rgb(235, 235, 235);
+	line-height: 1.4;
+	box-shadow: 0 1px 2px rgb(100, 100, 100) inset;
+}
+
+@media all and (min-width: 700px) {
+	body {
+		/* for responsible UI */
+		animation-name: big;
+	}
 }
