@@ -1,45 +1,44 @@
-function resizer(event) {
-	var name = event.animationName;
-	var banner;
-
-	console.log(name);
-
-	if (name === "big") {
-		banner = document.querySelector('.banner');
-		if (banner) {
-			banner.parentElement.removeChild(banner);
-		}
-	} else if (name === "small") {
-		banner = document.querySelector('.banner');
-
-		if (banner) {
-			return;
-		}
-
-		banner = document.createElement('div');
-		banner.style.position = "fixed";
-		banner.style.width = "100%";
-		banner.style.height = "100%";
-		banner.style.left = "0";
-		banner.style.top = "0";
-		banner.style.background = "white";
-		banner.style.textAlign = "center";
-		banner.style.zIndex = "10";
-		banner.style.fontSize = "2em";
-		banner.className = "banner";
-
-		banner.textContent = "Earth Reader doesn't support small screen.";
-
-		document.body.appendChild(banner);
-	}
-}
-
 Element.prototype.toggleClass = function(name) {
 	if (this.classList.contains(name)) {
 		this.classList.remove(name);
 	} else {
 		this.classList.add(name);
 	}
+};
+
+Element.prototype.removeClass = function(name) {
+	if (this.classList.contains(name)) {
+		this.classList.remove(name);
+	}
+};
+
+Element.prototype.addClass = function(name) {
+	if (this.classList.contains(name) === false) {
+		this.classList.add(name);
+	}
+}
+
+function resizer(event) {
+	var name = event.animationName;
+
+	console.log(name);
+
+	if (name === "big") {
+		document.body.removeClass('menu-open');
+	} else if (name === "small") {
+	}
+}
+
+function toggleMenu(event) {
+	var target = event.target;
+	while (target.classList.contains('off-canvas-menu') == false) {
+		target = target.parentElement;
+		if (target === null) {
+			return;
+		}
+	}
+
+	document.body.toggleClass('menu-open');
 }
 
 function toggleFolding(event) {
@@ -63,6 +62,8 @@ function processForm(event) {
 function init() {
 	var navi = document.querySelector('[role=navigation]');
 	navi.addEventListener('click', toggleFolding, false);
+
+	document.addEventListener('click', toggleMenu, false);
 
 	window.addEventListener('submit', processForm, false);
 

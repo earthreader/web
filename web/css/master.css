@@ -18,7 +18,6 @@ time, mark, audio, video {
 	font-size:100%;
 	vertical-align:baseline;
 	background:transparent;
-	overflow: hidden;
 }
 
 html, body {
@@ -30,9 +29,55 @@ body {
 	width: 100%;
 	background: white;
 	line-height: 1.2;
-	/* for responsible UI */
+	overflow: hidden;
+
 	animation-name: small;
 	animation-duration: .001s;
+}
+
+.site-header {
+	position: relative;
+	z-index: 2;
+	padding: .5em 2em;
+	background: white;
+	box-shadow: 0 1px 2px #aaa;
+}
+
+.off-canvas-menu {
+	font-size: 1.3em;
+	cursor: pointer;
+}
+
+[role=navigation],
+[role=main] {
+	width: 100%;
+	transition: all .2s ease 0s;
+	overflow: hidden;
+}
+
+[role=navigation] {
+	position: relative;
+	z-index: 1;
+	float: left;
+	box-shadow: 1px 0 2px #aaa;
+	background: rgb(238, 238, 238);
+
+	margin-left: -100%;
+}
+
+[role=main] {
+	float: left;
+	background: white;
+	position: relative;
+}
+
+.menu-open [role=navigation] {
+	width: 80%;
+	margin-left: 0;
+}
+
+.menu-open [role=main] {
+	margin-right: -100%;
 }
 
 a, a:hover, a:active, a:link, a:visited {
@@ -80,19 +125,6 @@ input:not([type=button]):not([type=submit]):focus, textarea:focus {
 	box-shadow: 0 1px 2px rgb(136, 136, 136) inset;
 }
 
-.site-header {
-	position: fixed;
-	z-index: 2;
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 47px;
-	padding: .5em 2em;
-	background: white;
-	box-shadow: 0 1px 2px #aaa;
-	box-sizing: border-box;
-}
-
 .site-header h1 {
 	display: inline-block;
 }
@@ -107,35 +139,6 @@ input:not([type=button]):not([type=submit]):focus, textarea:focus {
 	padding: 0 .3em;
 	display: inline-block;
 	cursor: pointer;
-}
-
-[role=navigation] {
-	position: fixed;
-	z-index: 1;
-	top: 0;
-	left: 0;
-	width: 20%;
-	height: 100%;
-	padding-top: 47px;
-	background: rgb(238, 238, 238);
-	overflow: scroll;
-	box-shadow: 1px 0 2px #aaa;
-}
-
-.content-wrapper {
-	position: absolute;
-	width: 100%;
-	height: 100%;
-	padding-left: 20%;
-	padding-top: 47px;
-	box-sizing: border-box;
-}
-
-[role=main] {
-	position: relative;
-	width: 100%;
-	height: 100%;
-	overflow: scroll;
 }
 
 [role=navigation] .header {
@@ -196,7 +199,19 @@ input:not([type=button]):not([type=submit]):focus, textarea:focus {
 
 @media all and (min-width: 700px) {
 	body {
-		/* for responsible UI */
 		animation-name: big;
+	}
+
+	.off-canvas-menu {
+		display: none;
+	}
+
+	[role=navigation] {
+		width: 20%;
+		margin-left: 0;
+	}
+
+	[role=main] {
+		width: 80%;
 	}
 }
