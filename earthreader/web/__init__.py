@@ -1,9 +1,11 @@
+import glob
 import hashlib
 import os.path
 
 from libearth.compat import text
 from libearth.feed import Feed
 from libearth.schema import read
+from libearth.schema import read, write
 
 from flask import Flask, abort, jsonify, request, url_for
 
@@ -11,19 +13,29 @@ from flask import Flask, abort, jsonify, request, url_for
 app = Flask(__name__)
 
 
-@app.route('/feeds/', methods=['GET', 'POST', 'DELETE'])
 app.config.update(dict(
     repository='repo/'
 ))
 
 
+@app.route('/feeds/', methods=['GET'])
 def feeds():
-    if request.method == 'GET':
-        pass
-    elif request.method == 'POST':
-        pass
-    elif request.method == 'DELETE':
-        pass
+    REPOSITORY = app.config['repository']
+    feedlist = glob.glob(REPOSITORY+'*')
+    feeds = []
+    for xml in feedlist:
+        if not xml.endswith('.xml'):
+            continue
+        with open(xml) as f:
+            feed = read(Feed, f)
+            feeds.append({
+                'title': text(feed.title),
+                'feed_url': url_for(
+                    'entries',
+                    feed_id=xml,
+                    _external=True)
+                })
+    return jsonify(feeds=feeds)
 
 
 @app.route('/feeds/<feed_id>/')

@@ -153,6 +153,14 @@ def xmls(request):
     request.addfinalizer(remove_test_repo)
 
 
+def test_feeds(xmls):
+    with app.test_client() as client:
+        r = client.get('/feeds/')
+        assert r.status_code == 200
+        result = json.loads(r.data)
+        assert len(result['feeds']) == 2
+
+
 def test_entries(xmls):
     with app.test_client() as client:
         # 404 Not Found
