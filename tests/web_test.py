@@ -141,7 +141,6 @@ def xmls(request):
         for link in feed_data.links:
             if link.relation == 'alternate' and link.mimetype == 'text/html':
                 blog_url = link.uri
-                print blog_url
         feed = Feed('atom', feed_title, feed_url, blog_url)
         feed_list.append(feed)
     feed_list.save_file(REPOSITORY + 'test.opml')
