@@ -62,7 +62,7 @@ function toggleMenu(event) {
 		}
 	}
 
-	document.body.removeClass('side-open');
+	closeSide();
 	document.body.toggleClass('menu-open');
 }
 
@@ -75,8 +75,16 @@ function toggleSide(event) {
 		}
 	}
 
-	document.body.removeClass('menu-open');
+	closeMenu();
 	document.body.toggleClass('side-open');
+}
+
+function closeMenu() {
+	document.body.removeClass('menu-open');
+}
+
+function closeSide() {
+	document.body.removeClass('side-open');
 }
 
 function toggleFolding(event) {
@@ -115,9 +123,59 @@ function refreshFeedList() {
 	});
 }
 
+function getEntries(feed_url, title) {
+	var main = document.querySelector('[role=main]');
+	main.innerHTML = "";
+
+
+	//FIXME: use obj.title instead of title argument
+	var header = document.createElement('header');
+	var h2 = document.createElement('h2');
+	header.appendChild(h2);
+	h2.textContent = title;
+
+	main.appendChild(header);
+	getJSON(feed_url, function(obj) {
+		var feed_title = obj.title;
+		var entries = obj.entries;
+
+		for (var i=0; i<entries.length; i++) {
+			var entry = entries[i];
+			var article = document.createElement('article');
+			var title = document.createElement('div');
+
+			article.setAttribute('data-url', entry.entry_url);
+			title.addClass('entry-title');
+			title.textContent = entry.title;
+
+			article.appendChild(title);
+			main.appendChild(article);
+		}
+	});
+}
+
+function click_feed(event) {
+	var target = event.target;
+
+	while (target.classList.contains('feed') === false) {
+		target = target.parentElement;
+		if (target === null) {
+			return;
+		}
+	}
+
+	var title = target.textContent;
+	var url = target.getAttribute('data-url');
+
+	closeMenu();
+
+	getEntries(url, title);
+}
+
 function init() {
 	var navi = document.querySelector('[role=navigation]');
 	navi.addEventListener('click', toggleFolding, false);
+	navi.addEventListener('click', click_feed, false);
 
 	document.addEventListener('click', toggleMenu, false);
 	document.addEventListener('click', toggleSide, false);
