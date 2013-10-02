@@ -144,6 +144,7 @@ function getEntries(feed_url, title) {
 			var article = document.createElement('article');
 			var title = document.createElement('div');
 
+			article.addClass('entry');
 			article.setAttribute('data-url', entry.entry_url);
 			title.addClass('entry-title');
 			title.textContent = entry.title;
@@ -172,10 +173,39 @@ function click_feed(event) {
 	getEntries(url, title);
 }
 
+function clickEntry(event) {
+	var target = event.target;
+
+	while (target.classList.contains('entry') === false) {
+		target = target.parentElement;
+		if (target === null) {
+			return;
+		}
+	}
+
+	//remove content
+	var contents = document.querySelectorAll('.entry-content');
+	for (var i=0; i<contents.length; i++) {
+		contents[i].parentElement.removeChild(contents[i]);
+	}
+
+	var entry_url = target.getAttribute('data-url');
+	getJSON(entry_url, function(obj) {
+		var content = obj.content;
+		var elem = document.createElement('div');
+		elem.addClass('entry-content');
+		elem.innerHTML = content;
+		target.appendChild(elem);
+	});
+}
+
 function init() {
 	var navi = document.querySelector('[role=navigation]');
 	navi.addEventListener('click', toggleFolding, false);
 	navi.addEventListener('click', click_feed, false);
+
+	var main = document.querySelector('[role=main]');
+	main.addEventListener('click', clickEntry, false);
 
 	document.addEventListener('click', toggleMenu, false);
 	document.addEventListener('click', toggleSide, false);
