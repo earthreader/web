@@ -6,7 +6,7 @@ try:
 except ImportError:
     import urllib.request as urllib2
 
-from libearth.compat import text, binary
+from libearth.compat import binary
 from libearth.feed import Feed
 from libearth.feedlist import Feed as OutLine, FeedList
 from libearth.parser.autodiscovery import autodiscovery, FeedUrlNotFoundError
@@ -36,7 +36,7 @@ def feeds():
         with open(xml) as f:
             feed = read(Feed, f)
             feeds.append({
-                'title': text(feed.title),
+                'title': feed.title,
                 'feed_url': url_for(
                     'entries',
                     feed_id=hashlib.sha1(binary(feed.id)).hexdigest(),
@@ -125,7 +125,7 @@ def entries(feed_id):
             entries = []
             for entry in feed.entries:
                 entries.append({
-                    'title': text(entry.title),
+                    'title': entry.title,
                     'entry_url': url_for(
                         'entry',
                         feed_id=feed_id,
@@ -152,7 +152,7 @@ def entry(feed_id, entry_id):
             for entry in feed.entries:
                 if entry_id == hashlib.sha1(binary(entry.id)).hexdigest():
                     return jsonify(
-                        content=text(entry.content)
+                        content=entry.content
                     )
             r = jsonify(
                 error='entry-not-found',
