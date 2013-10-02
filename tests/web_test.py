@@ -192,9 +192,11 @@ def test_feeds(xmls):
         r = client.get('/feeds/')
         assert r.status_code == 200
         result = json.loads(r.data)
-        assert len(result['feeds']) == 2
-        assert result['feeds'][0].get(u'feed_url') == \
-            'http://localhost/feeds/514b201a62952b3183c4e7939629a9f29f0a40e0/'
+        feeds = result['feeds']
+        title_list = ['Atom Test', 'Vio Blog']
+        assert len(feeds) == 2
+        for feed in feeds:
+            assert feed['title'] in title_list
 
 
 added_feed = '''
