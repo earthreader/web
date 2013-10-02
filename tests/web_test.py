@@ -2,6 +2,7 @@ import glob
 import hashlib
 import os
 import os.path
+import traceback
 
 from flask import json
 
@@ -14,6 +15,35 @@ from earthreader.web import app
 
 import httpretty
 from pytest import fixture
+
+
+@app.errorhandler(400)
+def bad_request_handler_for_testing(exception):
+    """Custom error handler of :http:statuscode:`400` for unit testing
+    to know how it's going in the application.
+
+    """
+    traceback.print_exc(exception)
+    return (
+        traceback.format_exc(exception),
+        400,
+        {'Content-Type': 'text/plain; charset=utf-8'}
+    )
+
+
+@app.errorhandler(500)
+def server_error_handler_for_testing(exception):
+    """Custom error handler of :http:statuscode:`500` for unit testing
+    to know how it's going in the application.
+
+    """
+    traceback.print_exc(exception)
+    return (
+        traceback.format_exc(exception),
+        500,
+        {'Content-Type': 'text/plain; charset=utf-8'}
+    )
+
 
 app.config.update(dict(
     REPOSITORY='tests/repo/',
@@ -225,7 +255,7 @@ def test_entry_content(xmls):
         entry_id = hashlib.sha1(
             binary('http://vio.atomtest.com/feed/one')
         ).hexdigest()
-        r = client.get('/feeds/' + feed_id + '/'+ entry_id + '/')
+        r = client.get('/feeds/' + feed_id + '/' + entry_id + '/')
         assert r.status_code == 200
         result = json.loads(r.data)
         assert result.get(u'content') == 'Hello World'
