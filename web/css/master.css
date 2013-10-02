@@ -69,9 +69,8 @@ body {
 
 [role=navigation] {
 	position: relative;
-	z-index: 1;
 	float: left;
-	box-shadow: 1px 0 2px #aaa;
+	box-shadow: -1px 0 2px #aaa inset;
 	background: rgb(238, 238, 238);
 
 	margin-left: -100%;
@@ -79,9 +78,8 @@ body {
 
 [role=complementary] {
 	position: relative;
-	z-index: 1;
 	float: left;
-	box-shadow: -1px 0 2px #aaa;
+	box-shadow: 1px 0 2px #aaa inset;
 	background: rgb(238, 238, 238);
 
 	margin-right: -100%;
@@ -100,6 +98,11 @@ body {
 
 .menu-open [role=main] {
 	margin-right: -100%;
+}
+
+.menu-open [role=complementary] {
+	margin-right: -100%;
+	float: right;
 }
 
 .side-open [role=complementary] {
