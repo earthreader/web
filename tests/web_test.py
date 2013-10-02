@@ -192,9 +192,11 @@ def test_feeds(xmls):
         r = client.get('/feeds/')
         assert r.status_code == 200
         result = json.loads(r.data)
-        assert len(result['feeds']) == 2
-        assert result['feeds'][0].get(u'feed_url') == \
-            'http://localhost/feeds/514b201a62952b3183c4e7939629a9f29f0a40e0/'
+        feeds = result['feeds']
+        title_list = ['Atom Test', 'Vio Blog']
+        assert len(feeds) == 2
+        for feed in feeds:
+            assert feed['title'] in title_list
 
 
 added_feed = '''
@@ -207,15 +209,41 @@ added_feed = '''
 '''
 
 
+html_with_no_feed_url = '''
+<html>
+<head>
+<body>
+</body>
+</head>
+</html>
+'''
+
+
 def test_add_feed(xmls):
     httpretty.enable()
     httpretty.register_uri(httpretty.GET, 'http://addedfeed.com/atom',
                            body=added_feed)
+    httpretty.register_uri(httpretty.GET, 'http://nofeedhtml.com/',
+                           body=html_with_no_feed_url)
     with app.test_client() as client:
+        # 200 OK
         r = client.post('/feeds/', data=dict(url='http://addedfeed.com/atom'))
         assert r.status_code == 200
         feed_list = FeedList(REPOSITORY + OPML)
         assert len(feed_list) == 3
+        assert r.data == client.get('/feeds/').data
+        # 400 Bad Request: unreachable-url
+        r = client.post('/feeds/', data=dict(url='not-exists-url'))
+        assert r.status_code == 400
+        result = json.loads(r.data)
+        assert result['error'] == 'unreachable-url'
+        assert result['message'] == 'Cannot connect to given url'
+        # 400 Bad Request: unreachable-feed-url
+        r = client.post('/feeds/', data=dict(url='http://nofeedhtml.com/'))
+        assert r.status_code == 400
+        result = json.loads(r.data)
+        assert result['error'] == 'unreachable-feed-url'
+        assert result['message'] == 'Cannot find feed url'
     httpretty.disable()
 
 
@@ -229,6 +257,7 @@ def test_delete_feed(xmls):
         feed_list = FeedList(REPOSITORY + OPML)
         assert len(feed_list) == 1
         assert not os.path.exists(REPOSITORY + feed_id + '.xml')
+        assert r.data == client.get('/feeds/').data
 
 
 def test_entries(xmls):
@@ -236,6 +265,9 @@ def test_entries(xmls):
         # 404 Not Found
         r = client.get('/feeds/does-not-exist/')
         assert r.status_code == 404
+        result = json.loads(r.data)
+        assert result['error'] == 'feed-not-found'
+        assert result['message'] == 'Given feed does not exist'
         # 200 OK
         file_name = \
             hashlib.sha1(
@@ -244,7 +276,9 @@ def test_entries(xmls):
         r = client.get('/feeds/' + file_name + '/')
         assert r.status_code == 200
         result = json.loads(r.data)
-        assert len(result['entries']) == 2
+        assert result['title'] == 'Atom Test'
+        assert result['entries'][0]['title'] == 'Title One'
+        assert result['entries'][1]['title'] == 'xml base test'
 
 
 def test_entry_content(xmls):
@@ -259,3 +293,17 @@ def test_entry_content(xmls):
         assert r.status_code == 200
         result = json.loads(r.data)
         assert result.get(u'content') == 'Hello World'
+        # 404 Not Found: entry-not-found
+        entry_id = 'not-exists'
+        r = client.get('/feeds/' + feed_id + '/' + entry_id + '/')
+        assert r.status_code == 404
+        result = json.loads(r.data)
+        assert result['error'] == 'entry-not-found'
+        assert result['message'] == 'Given entry does not exist'
+        # 404 Not Found: feed-not-found
+        feed_id = 'not-exists'
+        r = client.get('/feeds/' + feed_id + '/' + entry_id + '/')
+        assert r.status_code == 404
+        result = json.loads(r.data)
+        assert result['error'] == 'feed-not-found'
+        assert result['message'] == 'Given feed does not exist'
