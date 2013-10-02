@@ -201,3 +201,15 @@ def test_entries(xmls):
         assert r.status_code == 200
         result = json.loads(r.data)
         assert len(result['entries']) == 2
+
+
+def test_entry_content(xmls):
+    with app.test_client() as client:
+        feed_id = hashlib.sha1('http://vio.atomtest.com/feed/atom').hexdigest()
+        entry_id = hashlib.sha1(
+            'http://vio.atomtest.com/feed/one'
+        ).hexdigest()
+        r = client.get('/feeds/' + feed_id + '/'+ entry_id + '/')
+        assert r.status_code == 200
+        result = json.loads(r.data)
+        assert result.get(u'content') == 'Hello World'

@@ -108,4 +108,15 @@ def entries(feed_id):
 
 @app.route('/feeds/<feed_id>/<entry_id>/')
 def entry(feed_id, entry_id):
-    pass
+    REPOSITORY = app.config['repository']
+    try:
+        with open(os.path.join(REPOSITORY, feed_id + '.xml')) as f:
+            feed = read(Feed, f)
+            for entry in feed.entries:
+                if entry_id == hashlib.sha1(binary(entry.id)).hexdigest():
+                    return jsonify(
+                        content=text(entry.content)
+                    )
+            abort(404)
+    except:
+        abort(404)
