@@ -39,7 +39,7 @@ def feeds():
                 'title': text(feed.title),
                 'feed_url': url_for(
                     'entries',
-                    feed_id=hashlib.sha1(text(feed.id)).hexdigest(),
+                    feed_id=hashlib.sha1(binary(feed.id)).hexdigest(),
                     _external=True)
                 })
     return jsonify(feeds=feeds)

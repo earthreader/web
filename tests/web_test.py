@@ -208,7 +208,9 @@ def test_entries(xmls):
         assert r.status_code == 404
         # 200 OK
         file_name = \
-            hashlib.sha1('http://vio.atomtest.com/feed/atom').hexdigest()
+            hashlib.sha1(
+                binary('http://vio.atomtest.com/feed/atom')
+            ).hexdigest()
         r = client.get('/feeds/' + file_name + '/')
         assert r.status_code == 200
         result = json.loads(r.data)
@@ -217,9 +219,11 @@ def test_entries(xmls):
 
 def test_entry_content(xmls):
     with app.test_client() as client:
-        feed_id = hashlib.sha1('http://vio.atomtest.com/feed/atom').hexdigest()
+        feed_id = hashlib.sha1(
+            binary('http://vio.atomtest.com/feed/atom')
+        ).hexdigest()
         entry_id = hashlib.sha1(
-            'http://vio.atomtest.com/feed/one'
+            binary('http://vio.atomtest.com/feed/one')
         ).hexdigest()
         r = client.get('/feeds/' + feed_id + '/'+ entry_id + '/')
         assert r.status_code == 200
