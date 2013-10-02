@@ -16,13 +16,13 @@ import httpretty
 from pytest import fixture
 
 app.config.update(dict(
-    repository='tests/repo/',
-    opml='test.opml'
+    REPOSITORY='tests/repo/',
+    OPML='test.opml'
 ))
 
 
-REPOSITORY = app.config['repository']
-OPML = app.config['opml']
+REPOSITORY = app.config['REPOSITORY']
+OPML = app.config['OPML']
 
 atom_xml = """
 <feed xmlns="http://www.w3.org/2005/Atom">

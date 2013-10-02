@@ -20,14 +20,14 @@ app = Flask(__name__)
 
 
 app.config.update(dict(
-    repository='repo/',
-    opml='earthreader.opml'
+    REPOSITORY='repo/',
+    OPML='earthreader.opml'
 ))
 
 
 @app.route('/feeds/', methods=['GET'])
 def feeds():
-    REPOSITORY = app.config['repository']
+    REPOSITORY = app.config['REPOSITORY']
     feedlist = glob.glob(REPOSITORY+'*')
     feeds = []
     for xml in feedlist:
@@ -47,8 +47,8 @@ def feeds():
 
 @app.route('/feeds/', methods=['POST'])
 def add_feed():
-    REPOSITORY = app.config['repository']
-    OPML = app.config['opml']
+    REPOSITORY = app.config['REPOSITORY']
+    OPML = app.config['OPML']
     if not os.path.exists(REPOSITORY + OPML):
         if not os.path.isdir(REPOSITORY):
             os.mkdir(REPOSITORY)
@@ -105,7 +105,7 @@ def delete_feed(feed_id):
 
 @app.route('/feeds/<feed_id>/')
 def entries(feed_id):
-    REPOSITORY = app.config['repository']
+    REPOSITORY = app.config['REPOSITORY']
     try:
         with open(os.path.join(REPOSITORY, feed_id + '.xml')) as f:
             feed = read(Feed, f)
@@ -127,7 +127,7 @@ def entries(feed_id):
 
 @app.route('/feeds/<feed_id>/<entry_id>/')
 def entry(feed_id, entry_id):
-    REPOSITORY = app.config['repository']
+    REPOSITORY = app.config['REPOSITORY']
     try:
         with open(os.path.join(REPOSITORY, feed_id + '.xml')) as f:
             feed = read(Feed, f)
