@@ -6,14 +6,14 @@ try:
 except ImportError:
     import urllib.request as urllib2
 
-from libearth.compat import text, binary
+from libearth.compat import binary
 from libearth.feed import Feed
 from libearth.feedlist import Feed as OutLine, FeedList
 from libearth.parser.autodiscovery import autodiscovery, FeedUrlNotFoundError
 from libearth.parser.heuristic import get_format
 from libearth.schema import read, write
 
-from flask import Flask, abort, jsonify, render_template, request, url_for
+from flask import Flask, jsonify, render_template, request, url_for
 
 
 app = Flask(__name__)
@@ -39,7 +39,7 @@ def feeds():
         with open(xml) as f:
             feed = read(Feed, f)
             feeds.append({
-                'title': text(feed.title),
+                'title': feed.title,
                 'feed_url': url_for(
                     'entries',
                     feed_id=hashlib.sha1(binary(feed.id)).hexdigest(),
@@ -52,19 +52,32 @@ def feeds():
 def add_feed():
     REPOSITORY = app.config['REPOSITORY']
     OPML = app.config['OPML']
-    if not os.path.exists(REPOSITORY + OPML):
+    if not os.path.isfile(REPOSITORY + OPML):
         if not os.path.isdir(REPOSITORY):
             os.mkdir(REPOSITORY)
         feed_list = FeedList()
     else:
         feed_list = FeedList(REPOSITORY + OPML)
-    url = request.form['url']
-    f = urllib2.urlopen(url)
-    document = f.read()
+    try:
+        url = request.form['url']
+        f = urllib2.urlopen(url)
+        document = f.read()
+    except ValueError:
+        r = jsonify(
+            error='unreachable-url',
+            message='Cannot connect to given url'
+        )
+        r.status_code = 400
+        return r
     try:
         feed_url = autodiscovery(document, url)
     except FeedUrlNotFoundError:
-        return 'error'
+        r = jsonify(
+            error='unreachable-feed-url',
+            message='Cannot find feed url'
+        )
+        r.status_code = 400
+        return r
     if not feed_url == url:
         f.close()
         f = urllib2.urlopen(feed_url)
@@ -84,15 +97,15 @@ def add_feed():
     with open(os.path.join(REPOSITORY, file_name), 'w') as f:
         for chunk in write(feed, indent='    ', canonical_order=True):
             f.write(chunk)
-    return 'success'
+    return feeds()
 
 
 @app.route('/feeds/<feed_id>/', methods=['DELETE'])
 def delete_feed(feed_id):
     REPOSITORY = app.config['REPOSITORY']
     OPML = app.config['OPML']
-    if not os.path.exists(REPOSITORY + OPML):
-        return 'opml not found'
+    if not os.path.isfile(REPOSITORY + OPML):
+        pass
     else:
         feed_list = FeedList(REPOSITORY + OPML)
     for feed in feed_list:
@@ -103,7 +116,7 @@ def delete_feed(feed_id):
     for xml in xml_list:
         if xml == REPOSITORY + feed_id + '.xml':
             os.remove(xml)
-    return 'delete success'
+    return feeds()
 
 
 @app.route('/feeds/<feed_id>/')
@@ -115,7 +128,7 @@ def entries(feed_id):
             entries = []
             for entry in feed.entries:
                 entries.append({
-                    'title': text(entry.title),
+                    'title': entry.title,
                     'entry_url': url_for(
                         'entry',
                         feed_id=feed_id,
@@ -123,9 +136,17 @@ def entries(feed_id):
                         _external=True
                     )
                 })
-        return jsonify(entries=entries)
+        return jsonify(
+            title=feed.title,
+            entries=entries
+        )
     except IOError:
-        abort(404)
+        r = jsonify(
+            error='feed-not-found',
+            message='Given feed does not exist'
+        )
+        r.status_code = 404
+        return r
 
 
 @app.route('/feeds/<feed_id>/<entry_id>/')
@@ -137,8 +158,19 @@ def entry(feed_id, entry_id):
             for entry in feed.entries:
                 if entry_id == hashlib.sha1(binary(entry.id)).hexdigest():
                     return jsonify(
-                        content=text(entry.content)
+                        content=entry.content
                     )
-            abort(404)
-    except:
-        abort(404)
+            r = jsonify(
+                error='entry-not-found',
+                message='Given entry does not exist'
+            )
+            r.status_code = 404
+            return r
+
+    except IOError:
+        r = jsonify(
+            error='feed-not-found',
+            message='Given feed does not exist'
+        )
+        r.status_code = 404
+        return r
