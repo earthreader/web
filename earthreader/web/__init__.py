@@ -24,9 +24,11 @@ app.config.update(dict(
     OPML='earthreader.opml'
 ))
 
+
 @app.route('/', methods=['GET'])
 def index():
     return render_template('index.html')
+
 
 @app.route('/feeds/', methods=['GET'])
 def feeds():
