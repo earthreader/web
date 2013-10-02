@@ -40,10 +40,46 @@ function getJSON(url, onSuccess, onFail) {
 	xhr.send();
 }
 
+function post(url, parameter, onSuccess, onFail) {
+	var xhr = new XMLHttpRequest();
+	xhr.open('post', url);
+	xhr.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+	xhr.onreadystatechange = function() {
+		if (xhr.readyState !== 4) {
+			return;
+		}
+
+		if (xhr.status === 200) {
+			if (onSuccess instanceof Function) {
+				(onSuccess)(xhr.responseText);
+			}
+		} else {
+			if(onFail instanceof Function) {
+				(onFail)(xhr);
+			}
+		}
+	}
+
+	xhr.send(parameter);
+}
+
+function serializeForm(form) {
+	var elements = form.querySelectorAll('input, textarea, select');
+	var serialized = [];
+
+	for (var i=0; i<elements.length; i++) {
+		if (elements[i].name) {
+			var name = encodeURIComponent(elements[i].name);
+			var value = encodeURIComponent(elements[i].value);
+			serialized.push(name + '=' + value);
+		}
+	}
+
+	return serialized.join('&');
+}
+
 function resizer(event) {
 	var name = event.animationName;
-
-	console.log(name);
 
 	if (name === "big") {
 		document.body.removeClass('menu-open');
@@ -101,8 +137,13 @@ function toggleFolding(event) {
 
 function processForm(event) {
 	var target = event.target;
-	console.log(target);
 	event.preventDefault();
+
+	var data = serializeForm(target);
+	post(target.action, data, function(res) {
+		alert(res);
+		target.reset();
+	});
 }
 
 function refreshFeedList() {
