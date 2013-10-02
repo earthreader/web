@@ -10,7 +10,7 @@ from libearth.compat import text, binary
 from libearth.feed import Feed
 from libearth.feedlist import Feed as OutLine, FeedList
 from libearth.parser.autodiscovery import autodiscovery, FeedUrlNotFoundError
-from libearth.parser.heuristic import get_document_type
+from libearth.parser.heuristic import get_format
 from libearth.schema import read, write
 
 from flask import Flask, abort, jsonify, request, url_for
@@ -68,7 +68,7 @@ def add_feed():
         xml = f.read()
     else:
         xml = document
-    format = get_document_type(xml)
+    format = get_format(xml)
     result = format(xml, feed_url)
     feed = result[0]
     for link in feed.links:
