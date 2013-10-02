@@ -5,7 +5,7 @@ python:
 - 2.7
 - 3.3
 install:
-- pip install pytest pytest-cov coveralls
+- pip install pytest pytest-cov httpretty coveralls
 - pip install -e .
 script:
 - py.test --cov earthreader --durations=10
