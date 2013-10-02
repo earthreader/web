@@ -42,6 +42,7 @@ body {
 	padding: .5em 0;
 	background: white;
 	box-shadow: 0 1px 2px #aaa;
+	user-select: none;
 }
 
 .site-header h1 {
@@ -53,10 +54,19 @@ body {
 	padding: 0 .5em;
 	font-size: 1.3em;
 	cursor: pointer;
+	user-select: none;
 }
 
 .off-canvas-side {
 	float: right;
+}
+
+.off-canvas-menu:before {
+	content: "\2630";
+}
+
+.off-canvas-side:before {
+	content: "\2637";
 }
 
 [role=navigation],
@@ -72,6 +82,7 @@ body {
 	float: left;
 	box-shadow: -1px 0 2px #aaa inset;
 	background: rgb(238, 238, 238);
+	user-select: none;
 
 	margin-left: -100%;
 }
@@ -81,12 +92,14 @@ body {
 	float: left;
 	box-shadow: 1px 0 2px #aaa inset;
 	background: rgb(238, 238, 238);
+	user-select: none;
 
 	margin-right: -100%;
 }
 
 [role=main] {
 	float: left;
+	z-index: 1;
 	background: white;
 	position: relative;
 }
@@ -176,7 +189,7 @@ input:not([type=button]):not([type=submit]):focus, textarea:focus {
 }
 
 [role=navigation] .header,
-[role=complementary]j .header {
+[role=complementary] .header {
 	padding: 0.4em 0 .5em .7em;
 	border-bottom: 1px solid rgb(237, 237, 237);
 	background: rgb(245, 245, 245);
