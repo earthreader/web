@@ -9,7 +9,7 @@ install:
 - pip install -e .
 script:
 - py.test --cov earthreader --durations=10
-- python -c "from earthreader.web import app; print app.test_client().get('/').data" | python web/html5check.py -h
+- python -c "from earthreader.web import app; print app.test_client().get('/').data" | python tests/html5check.py -h
 after_success:
 - coveralls
 notifications:
