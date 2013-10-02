@@ -15,8 +15,38 @@ from libearth.schema import read, write
 
 from flask import Flask, abort, jsonify, request, url_for
 
+import traceback
+
 
 app = Flask(__name__)
+
+
+@app.errorhandler(400)
+def bad_request_handler_for_testing(exception):
+    """Custom error handler of :http:statuscode:`400` for unit testing
+    to know how it's going in the application.
+
+    """
+    traceback.print_exc(exception)
+    return (
+        traceback.format_exc(exception),
+        400,
+        {'Content-Type': 'text/plain; charset=utf-8'}
+    )
+
+
+@app.errorhandler(500)
+def server_error_handler_for_testing(exception):
+    """Custom error handler of :http:statuscode:`500` for unit testing
+    to know how it's going in the application.
+
+    """
+    traceback.print_exc(exception)
+    return (
+        traceback.format_exc(exception),
+        500,
+        {'Content-Type': 'text/plain; charset=utf-8'}
+    )
 
 
 app.config.update(dict(
