@@ -44,7 +44,7 @@ setup(
         'https://github.com/earthreader/libearth/archive/master.zip'
         '#egg=libearth-dev'
     ],
-    tests_require=['pytest >= 2.3.0'],
+    tests_require=['pytest >= 2.3.0', 'httpretty'],
     cmdclass={'test': pytest},
     classifiers=[
         'Development Status :: 1 - Planning',  # FIXME

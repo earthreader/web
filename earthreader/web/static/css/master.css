@@ -18,7 +18,6 @@ time, mark, audio, video {
 	font-size:100%;
 	vertical-align:baseline;
 	background:transparent;
-	overflow: hidden;
 }
 
 html, body {
@@ -30,9 +29,102 @@ body {
 	width: 100%;
 	background: white;
 	line-height: 1.2;
-	/* for responsible UI */
+	overflow-x: hidden;
+	overflow-y: auto;
+
 	animation-name: small;
 	animation-duration: .001s;
+}
+
+.site-header {
+	position: relative;
+	z-index: 2;
+	padding: .5em 0;
+	background: white;
+	box-shadow: 0 1px 2px #aaa;
+	user-select: none;
+}
+
+.site-header h1 {
+	padding-left: .5em;
+}
+
+.off-canvas-menu,
+.off-canvas-side {
+	padding: 0 .5em;
+	font-size: 1.3em;
+	cursor: pointer;
+	user-select: none;
+}
+
+.off-canvas-side {
+	float: right;
+}
+
+.off-canvas-menu:before {
+	content: "\2630";
+}
+
+.off-canvas-side:before {
+	content: "\2637";
+}
+
+[role=navigation],
+[role=main],
+[role=complementary] {
+	width: 100%;
+	transition: all .2s ease 0s;
+	overflow: hidden;
+}
+
+[role=navigation] {
+	position: relative;
+	float: left;
+	box-shadow: -1px 0 2px #aaa inset;
+	background: rgb(238, 238, 238);
+	user-select: none;
+
+	margin-left: -100%;
+}
+
+[role=complementary] {
+	position: relative;
+	float: left;
+	box-shadow: 1px 0 2px #aaa inset;
+	background: rgb(238, 238, 238);
+	user-select: none;
+
+	margin-right: -100%;
+}
+
+[role=main] {
+	float: left;
+	z-index: 1;
+	background: white;
+	position: relative;
+}
+
+.menu-open [role=navigation] {
+	width: 90%;
+	margin-left: 0;
+}
+
+.menu-open [role=main] {
+	margin-right: -100%;
+}
+
+.menu-open [role=complementary] {
+	margin-right: -100%;
+	float: right;
+}
+
+.side-open [role=complementary] {
+	width: 90%;
+	margin-right: 0;
+}
+
+.side-open [role=main] {
+	margin-left: -90%;
 }
 
 a, a:hover, a:active, a:link, a:visited {
@@ -80,19 +172,6 @@ input:not([type=button]):not([type=submit]):focus, textarea:focus {
 	box-shadow: 0 1px 2px rgb(136, 136, 136) inset;
 }
 
-.site-header {
-	position: fixed;
-	z-index: 2;
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 47px;
-	padding: .5em 2em;
-	background: white;
-	box-shadow: 0 1px 2px #aaa;
-	box-sizing: border-box;
-}
-
 .site-header h1 {
 	display: inline-block;
 }
@@ -109,53 +188,30 @@ input:not([type=button]):not([type=submit]):focus, textarea:focus {
 	cursor: pointer;
 }
 
-[role=navigation] {
-	position: fixed;
-	z-index: 1;
-	top: 0;
-	left: 0;
-	width: 20%;
-	height: 100%;
-	padding-top: 47px;
-	background: rgb(238, 238, 238);
-	overflow: scroll;
-	box-shadow: 1px 0 2px #aaa;
-}
-
-.content-wrapper {
-	position: absolute;
-	width: 100%;
-	height: 100%;
-	padding-left: 20%;
-	padding-top: 47px;
-	box-sizing: border-box;
-}
-
-[role=main] {
-	position: relative;
-	width: 100%;
-	height: 100%;
-	overflow: scroll;
-}
-
-[role=navigation] header {
+[role=navigation] .header,
+[role=complementary] .header {
 	padding: 0.4em 0 .5em .7em;
 	border-bottom: 1px solid rgb(237, 237, 237);
 	background: rgb(245, 245, 245);
 	cursor: pointer;
 }
 
-[role=navigation] li:not(.fold) {
+[role=navigation] li:not(.fold),
+[role=complementary] li:not(.fold) {
 	padding: 0.4em 0 .5em .7em;
+	border-bottom: 1px solid rgba(0, 0, 0, .1);
 	cursor: pointer;
 }
 
 [role=navigation] li:not(.fold):hover,
-[role=navigation] header:hover {
+[role=navigation] .header:hover,
+[role=complementary] li:not(.fold):hover,
+[role=complementary] .header:hover {
 	background: rgb(225, 225, 225);
 }
 
-[role=navigation] > ul {
+[role=navigation] > ul,
+[role=complementary] > ul {
 	border-bottom: 2px solid white;
 }
 
@@ -163,8 +219,7 @@ input:not([type=button]):not([type=submit]):focus, textarea:focus {
 	margin-left: 1em;
 }
 
-[role=navigation] ul.persistent li.header:not(.opened) + li.fold,
-[role=navigation] ul.feedlist li.header.closed + li.fold {
+[role=navigation] li.header.closed + li.fold {
 	display: none;
 }
 
@@ -197,7 +252,36 @@ input:not([type=button]):not([type=submit]):focus, textarea:focus {
 
 @media all and (min-width: 700px) {
 	body {
-		/* for responsible UI */
 		animation-name: big;
+	}
+
+	.off-canvas-menu {
+		display: none;
+	}
+
+	[role=navigation] {
+		width: 20%;
+		margin-left: 0;
+	}
+
+	[role=main] {
+		width: 80%;
+		margin-left: 0;
+	}
+
+	[role=complementary] {
+		width: 20%;
+	}
+
+	.side-open [role=navigation] {
+		margin-left: -20%;
+	}
+
+	.side-open [role=main] {
+		margin-left: 0;
+	}
+
+	.side-open [role=complementary] {
+		width: 20%;
 	}
 }

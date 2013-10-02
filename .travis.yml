@@ -1,14 +1,15 @@
 language: python
 python:
+- pypy
 - 2.6
 - 2.7
 - 3.3
 install:
-- pip install pytest pytest-cov coveralls
+- pip install pytest pytest-cov httpretty coveralls
 - pip install -e .
 script:
 - py.test --cov earthreader --durations=10
-- python web/html5check.py web/index.html
+- python -c "from earthreader.web import app; print app.test_client().get('/').data" | python web/html5check.py -h
 after_success:
 - coveralls
 notifications:
