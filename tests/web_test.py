@@ -163,6 +163,8 @@ def test_feeds(xmls):
         assert r.status_code == 200
         result = json.loads(r.data)
         assert len(result['feeds']) == 2
+        assert result['feeds'][0].get(u'feed_url') == \
+            'http://localhost/feeds/514b201a62952b3183c4e7939629a9f29f0a40e0/'
 
 
 added_feed = '''
