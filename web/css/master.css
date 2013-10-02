@@ -29,7 +29,8 @@ body {
 	width: 100%;
 	background: white;
 	line-height: 1.2;
-	overflow: hidden;
+	overflow-x: hidden;
+	overflow-y: auto;
 
 	animation-name: small;
 	animation-duration: .001s;
@@ -47,14 +48,20 @@ body {
 	padding-left: .5em;
 }
 
-.off-canvas-menu {
+.off-canvas-menu,
+.off-canvas-side {
 	padding: 0 .5em;
 	font-size: 1.3em;
 	cursor: pointer;
 }
 
+.off-canvas-side {
+	float: right;
+}
+
 [role=navigation],
-[role=main] {
+[role=main],
+[role=complementary] {
 	width: 100%;
 	transition: all .2s ease 0s;
 	overflow: hidden;
@@ -70,6 +77,16 @@ body {
 	margin-left: -100%;
 }
 
+[role=complementary] {
+	position: relative;
+	z-index: 1;
+	float: left;
+	box-shadow: -1px 0 2px #aaa;
+	background: rgb(238, 238, 238);
+
+	margin-right: -100%;
+}
+
 [role=main] {
 	float: left;
 	background: white;
@@ -83,6 +100,15 @@ body {
 
 .menu-open [role=main] {
 	margin-right: -100%;
+}
+
+.side-open [role=complementary] {
+	width: 90%;
+	margin-right: 0;
+}
+
+.side-open [role=main] {
+	margin-left: -90%;
 }
 
 a, a:hover, a:active, a:link, a:visited {
@@ -146,24 +172,30 @@ input:not([type=button]):not([type=submit]):focus, textarea:focus {
 	cursor: pointer;
 }
 
-[role=navigation] .header {
+[role=navigation] .header,
+[role=complementary]j .header {
 	padding: 0.4em 0 .5em .7em;
 	border-bottom: 1px solid rgb(237, 237, 237);
 	background: rgb(245, 245, 245);
 	cursor: pointer;
 }
 
-[role=navigation] li:not(.fold) {
+[role=navigation] li:not(.fold),
+[role=complementary] li:not(.fold) {
 	padding: 0.4em 0 .5em .7em;
+	border-bottom: 1px solid rgba(0, 0, 0, .1);
 	cursor: pointer;
 }
 
 [role=navigation] li:not(.fold):hover,
-[role=navigation] .header:hover {
+[role=navigation] .header:hover,
+[role=complementary] li:not(.fold):hover,
+[role=complementary] .header:hover {
 	background: rgb(225, 225, 225);
 }
 
-[role=navigation] > ul {
+[role=navigation] > ul,
+[role=complementary] > ul {
 	border-bottom: 2px solid white;
 }
 
@@ -218,5 +250,22 @@ input:not([type=button]):not([type=submit]):focus, textarea:focus {
 
 	[role=main] {
 		width: 80%;
+		margin-left: 0;
+	}
+
+	[role=complementary] {
+		width: 20%;
+	}
+
+	.side-open [role=navigation] {
+		margin-left: -20%;
+	}
+
+	.side-open [role=main] {
+		margin-left: 0;
+	}
+
+	.side-open [role=complementary] {
+		width: 20%;
 	}
 }

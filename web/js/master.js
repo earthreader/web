@@ -38,7 +38,21 @@ function toggleMenu(event) {
 		}
 	}
 
+	document.body.removeClass('side-open');
 	document.body.toggleClass('menu-open');
+}
+
+function toggleSide(event) {
+	var target = event.target;
+	while (target.classList.contains('off-canvas-side') == false) {
+		target = target.parentElement;
+		if (target === null) {
+			return;
+		}
+	}
+
+	document.body.removeClass('menu-open');
+	document.body.toggleClass('side-open');
 }
 
 function toggleFolding(event) {
@@ -64,6 +78,7 @@ function init() {
 	navi.addEventListener('click', toggleFolding, false);
 
 	document.addEventListener('click', toggleMenu, false);
+	document.addEventListener('click', toggleSide, false);
 
 	window.addEventListener('submit', processForm, false);
 
