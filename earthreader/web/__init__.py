@@ -133,7 +133,10 @@ def entries(feed_id):
                         _external=True
                     )
                 })
-        return jsonify(entries=entries)
+        return jsonify(
+            title=feed.title,
+            entries=entries
+        )
     except IOError:
         r = jsonify(
             error='feed-not-found',

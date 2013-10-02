@@ -274,7 +274,9 @@ def test_entries(xmls):
         r = client.get('/feeds/' + file_name + '/')
         assert r.status_code == 200
         result = json.loads(r.data)
-        assert len(result['entries']) == 2
+        assert result['title'] == 'Atom Test'
+        assert result['entries'][0]['title'] == 'Title One'
+        assert result['entries'][1]['title'] == 'xml base test'
 
 
 def test_entry_content(xmls):
