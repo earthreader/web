@@ -13,7 +13,7 @@ from libearth.parser.autodiscovery import autodiscovery, FeedUrlNotFoundError
 from libearth.parser.heuristic import get_format
 from libearth.schema import read, write
 
-from flask import Flask, abort, jsonify, request, url_for
+from flask import Flask, abort, jsonify, render_template, request, url_for
 
 
 app = Flask(__name__)
@@ -24,6 +24,9 @@ app.config.update(dict(
     OPML='earthreader.opml'
 ))
 
+@app.route('/', methods=['GET'])
+def index():
+    return render_template('index.html')
 
 @app.route('/feeds/', methods=['GET'])
 def feeds():
