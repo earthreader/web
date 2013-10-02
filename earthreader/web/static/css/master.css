@@ -21,16 +21,16 @@ time, mark, audio, video {
 }
 
 html, body {
+	width: 100%;
+	overflow-x: hidden;
+	overflow-y: auto;
 	min-height: 100%;
 	font-family: "Helvetica Neue", clean, sans-serif;
 }
 
 body {
-	width: 100%;
 	background: white;
 	line-height: 1.2;
-	overflow-x: hidden;
-	overflow-y: auto;
 
 	animation-name: small;
 	animation-duration: .001s;
