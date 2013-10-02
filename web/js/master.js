@@ -26,6 +26,8 @@ function resizer(event) {
 	if (name === "big") {
 		document.body.removeClass('menu-open');
 	} else if (name === "small") {
+		document.body.removeClass('menu-open');
+		document.body.removeClass('side-open');
 	}
 }
 
