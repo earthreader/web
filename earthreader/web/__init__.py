@@ -84,6 +84,25 @@ def add_feed():
     return 'success'
 
 
+@app.route('/feeds/<feed_id>/', methods=['DELETE'])
+def delete_feed(feed_id):
+    REPOSITORY = app.config['REPOSITORY']
+    OPML = app.config['OPML']
+    if not os.path.exists(REPOSITORY + OPML):
+        return 'opml not found'
+    else:
+        feed_list = FeedList(REPOSITORY + OPML)
+    for feed in feed_list:
+        if feed_id == hashlib.sha1(binary(feed.xml_url)).hexdigest():
+            feed_list.remove(feed)
+    feed_list.save_file(REPOSITORY + OPML)
+    xml_list = glob.glob(REPOSITORY + '*')
+    for xml in xml_list:
+        if xml == REPOSITORY + feed_id + '.xml':
+            os.remove(xml)
+    return 'delete success'
+
+
 @app.route('/feeds/<feed_id>/')
 def entries(feed_id):
     REPOSITORY = app.config['repository']

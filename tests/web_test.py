@@ -189,6 +189,18 @@ def test_add_feed(xmls):
     httpretty.disable()
 
 
+def test_delete_feed(xmls):
+    with app.test_client() as client:
+        feed_id = hashlib.sha1(
+            binary('http://vio.atomtest.com/feed/atom')
+        ).hexdigest()
+        r = client.delete('/feeds/' + feed_id + '/')
+        assert r.status_code == 200
+        feed_list = FeedList(REPOSITORY + OPML)
+        assert len(feed_list) == 1
+        assert not os.path.exists(REPOSITORY + feed_id + '.xml')
+
+
 def test_entries(xmls):
     with app.test_client() as client:
         # 404 Not Found
