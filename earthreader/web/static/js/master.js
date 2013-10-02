@@ -18,6 +18,28 @@ Element.prototype.addClass = function(name) {
 	}
 }
 
+function getJSON(url, onSuccess, onFail) {
+	var xhr = new XMLHttpRequest();
+	xhr.open('get', url);
+	xhr.onreadystatechange = function() {
+		if (xhr.readyState !== 4) {
+			return;
+		}
+
+		if (xhr.status === 200) {
+			if (onSuccess instanceof Function) {
+				var obj = JSON.parse(xhr.responseText);
+				(onSuccess)(obj);
+			}
+		} else {
+			if(onFail instanceof Function) {
+				(onFail)(xhr);
+			}
+		}
+	}
+	xhr.send();
+}
+
 function resizer(event) {
 	var name = event.animationName;
 
@@ -75,6 +97,24 @@ function processForm(event) {
 	event.preventDefault();
 }
 
+function refreshFeedList() {
+	var feedList = document.querySelector('.feedlist');
+
+	getJSON('/feeds/', function(obj) {
+		var feeds = obj.feeds;
+		feedList.innerHTML = "";
+
+		for (var i=0; i<feeds.length; i++) {
+			var feed = feeds[i];
+			var elem = document.createElement('li');
+			elem.addClass('feed');
+			elem.setAttribute('data-url', feed.feed_url);
+			elem.textContent = feed.title;
+			feedList.appendChild(elem);
+		}
+	});
+}
+
 function init() {
 	var navi = document.querySelector('[role=navigation]');
 	navi.addEventListener('click', toggleFolding, false);
@@ -97,6 +137,8 @@ function init() {
         animationEnd = 'MSAnimaionEnd';
     }
     document.body.addEventListener(animationEnd, resizer, false);
+
+	refreshFeedList();
 }
 
 window.addEventListener('DOMContentLoaded', init, false);
