@@ -5,6 +5,7 @@ import os.path
 
 from flask import json
 
+from libearth.compat import binary
 from libearth.crawler import crawl
 from libearth.feedlist import FeedList, Feed
 from libearth.schema import write
@@ -133,7 +134,7 @@ def xmls(request):
     for result in generator:
         feed_data = result[1][0]
         feed_url = result[0]
-        file_name = hashlib.sha1(feed_url).hexdigest() + '.xml'
+        file_name = hashlib.sha1(binary(feed_url)).hexdigest() + '.xml'
         with open(REPOSITORY + file_name, 'w+') as f:
             for chunk in write(feed_data, indent='    ',
                                canonical_order=True):

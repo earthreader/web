@@ -6,7 +6,7 @@ try:
 except ImportError:
     import urllib.request as urllib2
 
-from libearth.compat import text
+from libearth.compat import text, binary
 from libearth.feed import Feed
 from libearth.feedlist import Feed as OutLine, FeedList
 from libearth.parser.autodiscovery import autodiscovery, FeedUrlNotFoundError
@@ -77,7 +77,7 @@ def add_feed():
     outline = OutLine('atom', feed.title.value, feed_url, blog_url)
     feed_list.append(outline)
     feed_list.save_file(REPOSITORY + OPML)
-    file_name = hashlib.sha1(feed_url).hexdigest() + '.xml'
+    file_name = hashlib.sha1(binary(feed_url)).hexdigest() + '.xml'
     with open(os.path.join(REPOSITORY, file_name), 'w') as f:
         for chunk in write(feed, indent='    ', canonical_order=True):
             f.write(chunk)
@@ -97,7 +97,7 @@ def entries(feed_id):
                     'entry_url': url_for(
                         'entry',
                         feed_id=feed_id,
-                        entry_id=hashlib.sha1(entry.id).hexdigest(),
+                        entry_id=hashlib.sha1(binary(entry.id)).hexdigest(),
                         _external=True
                     )
                 })
