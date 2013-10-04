@@ -9,7 +9,8 @@ from flask import json
 
 from libearth.compat import binary
 from libearth.crawler import crawl
-from libearth.feedlist import FeedList, Feed
+from libearth.feedlist import (Feed as FeedOutline,
+                               FeedCategory as CategoryOutline, FeedList)
 from libearth.schema import write
 
 from earthreader.web import app
@@ -70,7 +71,7 @@ opml = '''
         </outline>
     </outline>
     <outline type="atom" text="Feed Three" title="Feed Three"
-    xmlUrl="http://feedthree.com/atom/" />
+    xmlUrl="http://feedthree.com/feed/atom/" />
     <outline text="categorythree" title="categorythree">
         <outline type="atom" text="Feed Four" title="Feed Four"
         xmlUrl="http://feedfour.com/feed/atom/" />
@@ -85,6 +86,7 @@ feed_one= '''
     <title type="text">Feed One</title>
     <id>http://feedone.com/feed/atom/</id>
     <updated>2013-08-19T07:49:20+07:00</updated>
+    <link type="text/html" rel="alternate" href="http://feedone.com" />
 </feed>
 '''
 
@@ -93,6 +95,7 @@ feed_two= '''
     <title type="text">Feed Two</title>
     <id>http://feedtwo.com/feed/atom/</id>
     <updated>2013-08-19T07:49:20+07:00</updated>
+    <link type="text/html" rel="alternate" href="http://feedtwo.com" />
 </feed>
 '''
 
@@ -102,6 +105,7 @@ feed_three= '''
     <title type="text">Feed Three</title>
     <id>http://feedthree.com/feed/atom/</id>
     <updated>2013-08-19T07:49:20+07:00</updated>
+    <link type="text/html" rel="alternate" href="http://feedthree.com" />
 </feed>
 '''
 
@@ -111,17 +115,47 @@ feed_four = '''
     <title type="text">Feed Four</title>
     <id>http://feedfour.com/feed/atom/</id>
     <updated>2013-08-19T07:49:20+07:00</updated>
+    <link type="text/html" rel="alternate" href="http://feedfour.com" />
 </feed>
 '''
 
 
+def get_feed_urls(category, urls=[]):
+    for child in category:
+        if isinstance(child, FeedOutline):
+            urls.append(child.xml_url)
+        elif isinstance(child, CategoryOutline):
+            get_feed_urls(child, urls)
+    return urls
+
+
 @yield_fixture
 def xmls():
+    httpretty.enable()
+    httpretty.register_uri(httpretty.GET, 'http://feedone.com/feed/atom/',
+                          body=feed_one)
+    httpretty.register_uri(httpretty.GET, 'http://feedtwo.com/feed/atom/',
+                          body=feed_two)
+    httpretty.register_uri(httpretty.GET, 'http://feedthree.com/feed/atom/',
+                          body=feed_three)
+    httpretty.register_uri(httpretty.GET, 'http://feedfour.com/feed/atom/',
+                          body=feed_four)
     os.mkdir(REPOSITORY)
     feed_list = FeedList(opml, is_xml_string=True)
+    feed_urls = get_feed_urls(feed_list)
+    generator = crawl(feed_urls, 4)
+    for result in generator:
+        feed_data = result[1][0]
+        feed_url = result[0]
+        file_name = hashlib.sha1(binary(feed_url)).hexdigest() + '.xml'
+        with open(REPOSITORY + file_name, 'w+') as f:
+            for chunk in write(feed_data, indent='    ',
+                               canonical_order=True):
+                f.write(chunk)
     feed_list.save_file(REPOSITORY + OPML)
     yield
     shutil.rmtree(REPOSITORY)
+    httpretty.disable()
     
 
 def test_all_feeds(xmls):
