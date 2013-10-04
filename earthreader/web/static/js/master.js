@@ -46,6 +46,8 @@ function getJSON(url, onSuccess, onFail) {
 		} else {
 			if(onFail instanceof Function) {
 				(onFail)(xhr);
+			} else {
+				alert(xhr.statusText);
 			}
 		}
 	}
