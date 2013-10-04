@@ -238,28 +238,37 @@ function click_feed(event) {
 function clickEntry(event) {
 	var target = event.target;
 
-	while (target.classList.contains('entry') === false) {
+	while (target.classList.contains('entry-title') === false) {
 		target = target.parentElement;
 		if (target === null) {
 			return;
 		}
 	}
 
+	var entry = target.parentElement;
+
+	//close content
+	var content = entry.querySelector('.entry-content');
+	if (content) {
+		entry.removeChild(content);
+		return;
+	}
+
 	//remove content
-	var contents = document.querySelectorAll('.entry-content');
+	contents = document.querySelectorAll('.entry-content');
 	for (var i=0; i<contents.length; i++) {
 		contents[i].parentElement.removeChild(contents[i]);
 	}
 
-	var entry_url = target.getAttribute('data-url');
+	var entry_url = entry.getAttribute('data-url');
 	getJSON(entry_url, function(obj) {
 		var content = obj.content;
 		var elem = document.createElement('div');
 		elem.addClass('entry-content');
 		elem.innerHTML = content;
-		target.appendChild(elem);
+		entry.appendChild(elem);
 
-		scrollToElement(target);
+		scrollToElement(entry);
 	});
 }
 
