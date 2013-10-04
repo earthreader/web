@@ -40,10 +40,47 @@ function getJSON(url, onSuccess, onFail) {
 	xhr.send();
 }
 
+function post(url, parameter, onSuccess, onFail) {
+	var xhr = new XMLHttpRequest();
+	xhr.open('post', url);
+	xhr.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+	xhr.onreadystatechange = function() {
+		if (xhr.readyState !== 4) {
+			return;
+		}
+
+		if (xhr.status === 200) {
+			if (onSuccess instanceof Function) {
+				var obj = JSON.parse(xhr.responseText);
+				(onSuccess)(obj);
+			}
+		} else {
+			if(onFail instanceof Function) {
+				(onFail)(xhr);
+			}
+		}
+	}
+
+	xhr.send(parameter);
+}
+
+function serializeForm(form) {
+	var elements = form.querySelectorAll('input, textarea, select');
+	var serialized = [];
+
+	for (var i=0; i<elements.length; i++) {
+		if (elements[i].name) {
+			var name = encodeURIComponent(elements[i].name);
+			var value = encodeURIComponent(elements[i].value);
+			serialized.push(name + '=' + value);
+		}
+	}
+
+	return serialized.join('&');
+}
+
 function resizer(event) {
 	var name = event.animationName;
-
-	console.log(name);
 
 	if (name === "big") {
 		document.body.removeClass('menu-open');
@@ -101,26 +138,40 @@ function toggleFolding(event) {
 
 function processForm(event) {
 	var target = event.target;
-	console.log(target);
 	event.preventDefault();
+
+	var data = serializeForm(target);
+	var after = target.getAttribute('data-after');
+	if (after === "makeFeedList") {
+		post(target.action, data, function(res) {
+			makeFeedList(res);
+			target.reset();
+		});
+	} else {
+		post(target.action, data, function(res) {
+			alert(res);
+			target.reset();
+		});
+	}
+}
+
+function makeFeedList(obj) {
+	var feedList = document.querySelector('.feedlist');
+	var feeds = obj.feeds;
+	feedList.innerHTML = "";
+
+	for (var i=0; i<feeds.length; i++) {
+		var feed = feeds[i];
+		var elem = document.createElement('li');
+		elem.addClass('feed');
+		elem.setAttribute('data-url', feed.feed_url);
+		elem.textContent = feed.title;
+		feedList.appendChild(elem);
+	}
 }
 
 function refreshFeedList() {
-	var feedList = document.querySelector('.feedlist');
-
-	getJSON('/feeds/', function(obj) {
-		var feeds = obj.feeds;
-		feedList.innerHTML = "";
-
-		for (var i=0; i<feeds.length; i++) {
-			var feed = feeds[i];
-			var elem = document.createElement('li');
-			elem.addClass('feed');
-			elem.setAttribute('data-url', feed.feed_url);
-			elem.textContent = feed.title;
-			feedList.appendChild(elem);
-		}
-	});
+	getJSON('/feeds/', makeFeedList);
 }
 
 function getEntries(feed_url, title) {
