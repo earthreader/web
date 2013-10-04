@@ -8,7 +8,8 @@ except ImportError:
 
 from libearth.compat import binary
 from libearth.feed import Feed
-from libearth.feedlist import Feed as OutLine, FeedList
+from libearth.feedlist import (Feed as FeedOutline,
+                               FeedCategory as CategoryOutline, FeedList)
 from libearth.parser.autodiscovery import autodiscovery, FeedUrlNotFoundError
 from libearth.parser.heuristic import get_format
 from libearth.schema import read, write
@@ -30,29 +31,49 @@ def index():
     return render_template('index.html')
 
 
-# http://werkzeug.pocoo.org/docs/routing/
-#
-# /feeds/<path:category_path>/
-# /feeds/<path:category_path>/<feed_id>/
-# /feeds/<path:category_path>/<feed_id>/<entry_id>/
+def get_all_feeds(category, parent_categories=[]):
+    result = []
+    categories = []
+    if parent_categories:
+        feed_path = '/'.join(parent_categories)
+        feed_path = '/' + feed_path + '/'
+    else:
+        feed_path = '/'
+    for child in category:
+        if isinstance(child, FeedOutline):
+            feed_id = hashlib.sha1(child.xml_url).hexdigest()
+            feed_url = feed_path + feed_id + '/entries/'
+            result.append({
+                'title': child.title,
+                'feed_url': feed_url
+            })
+        elif isinstance(child, CategoryOutline):
+            categories.append(child)
+    for category in categories:
+        result.append({
+            'title': category.title,
+            'feed_url': feed_path + category.title + '/entries',
+            'feeds': get_all_feeds(category,
+                parent_categories.append(category.title)
+                if parent_categories else [category.title]
+            )
+        })
+    return result
+
 
 @app.route('/feeds/', methods=['GET'])
 def feeds():
     REPOSITORY = app.config['REPOSITORY']
-    feedlist = glob.glob(REPOSITORY+'*')
-    feeds = []
-    for xml in feedlist:
-        if not xml.endswith('.xml'):
-            continue
-        with open(xml) as f:
-            feed = read(Feed, f)
-            feeds.append({
-                'title': feed.title,
-                'feed_url': url_for(
-                    'entries',
-                    feed_id=hashlib.sha1(binary(feed.id)).hexdigest(),
-                    _external=True)
-                })
+    OPML = app.config['OPML']
+    if not os.path.isfile(REPOSITORY + OPML):
+        r = jsonify(
+            error='opml-not-found',
+            message='Cannot open OPML'
+        )
+        r.status_code = 400
+        return r
+    feed_list = FeedList(REPOSITORY + OPML)
+    feeds = get_all_feeds(feed_list, None)
     return jsonify(feeds=feeds)
 
 
