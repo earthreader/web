@@ -18,6 +18,18 @@ Element.prototype.addClass = function(name) {
 	}
 }
 
+function scrollToElement(element) {
+	var x = 0;
+    var y = 0;
+    while( element && !isNaN( element.offsetLeft ) && !isNaN( element.offsetTop ) ) {
+        x += element.offsetLeft - element.scrollLeft;
+        y += element.offsetTop - element.scrollTop;
+        element = element.offsetParent;
+    }
+
+	window.scrollTo(x, y);
+}
+
 function getJSON(url, onSuccess, onFail) {
 	var xhr = new XMLHttpRequest();
 	xhr.open('get', url);
@@ -174,21 +186,21 @@ function refreshFeedList() {
 	getJSON('/feeds/', makeFeedList);
 }
 
-function getEntries(feed_url, title) {
+function getEntries(feed_url) {
 	var main = document.querySelector('[role=main]');
 	main.innerHTML = "";
 
 
-	//FIXME: use obj.title instead of title argument
-	var header = document.createElement('header');
-	var h2 = document.createElement('h2');
-	header.appendChild(h2);
-	h2.textContent = title;
-
-	main.appendChild(header);
 	getJSON(feed_url, function(obj) {
 		var feed_title = obj.title;
 		var entries = obj.entries;
+
+		var header = document.createElement('header');
+		var h2 = document.createElement('h2');
+		header.appendChild(h2);
+		h2.textContent = feed_title;
+
+		main.appendChild(header);
 
 		for (var i=0; i<entries.length; i++) {
 			var entry = entries[i];
@@ -216,12 +228,11 @@ function click_feed(event) {
 		}
 	}
 
-	var title = target.textContent;
 	var url = target.getAttribute('data-url');
 
 	closeMenu();
 
-	getEntries(url, title);
+	getEntries(url);
 }
 
 function clickEntry(event) {
@@ -247,6 +258,8 @@ function clickEntry(event) {
 		elem.addClass('entry-content');
 		elem.innerHTML = content;
 		target.appendChild(elem);
+
+		scrollToElement(target);
 	});
 }
 
