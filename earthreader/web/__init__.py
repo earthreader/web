@@ -24,9 +24,17 @@ app.config.update(dict(
     OPML='earthreader.opml'
 ))
 
+
 @app.route('/', methods=['GET'])
 def index():
     return render_template('index.html')
+
+
+# http://werkzeug.pocoo.org/docs/routing/
+#
+# /feeds/<path:category_path>/
+# /feeds/<path:category_path>/<feed_id>/
+# /feeds/<path:category_path>/<feed_id>/<entry_id>/
 
 @app.route('/feeds/', methods=['GET'])
 def feeds():
