@@ -161,20 +161,32 @@ def xmls():
     
 
 def test_all_feeds(xmls):
-    RE_PATTERN = re.compile('(?:.?)+/feeds/(.+)/entries')
     with app.test_client() as client:
         r = client.get('/feeds/')
         assert r.status_code == 200
         result = json.loads(r.data)
         feeds = result['feeds']
         assert feeds[0]['title'] == 'Feed Three'
+        assert feeds[1]['title'] == 'categoryone'
+        assert feeds[1]['feeds'][0]['title'] == 'Feed One'
+        assert feeds[1]['feeds'][1]['title'] == 'categorytwo'
+        assert feeds[1]['feeds'][1]['feeds'][0]['title'] == 'Feed Two'
+        assert feeds[2]['title'] == 'categorythree'
+        assert feeds[2]['feeds'][0]['title'] == 'Feed Four'
+
+
+def test_feed_entries(xmls):
+    RE_PATTERN = re.compile('(?:.?)+/feeds/(.+)/entries')
+    with app.test_client() as client:
+        r = client.get('/feeds/')
+        assert r.status_code == 200
+        result = json.loads(r.data)
+        feeds = result['feeds']
         feed_url = feeds[0]['feed_url']
         r1 = client.get(feed_url)
         r1_data = json.loads(r1.data)
         assert r1.status_code == 200
         assert r1_data['title'] == 'Feed Three'
-        assert feeds[1]['title'] == 'categoryone'
-        assert feeds[1]['feeds'][0]['title'] == 'Feed One'
         feed_url = feeds[1]['feeds'][0]['feed_url']
         r1 = client.get(feed_url)
         assert r1.status_code == 200
@@ -186,8 +198,6 @@ def test_all_feeds(xmls):
         r2_data = json.loads(r2.data)
         assert r1_data['title'] == 'Feed One'
         assert r1_data == r2_data
-        assert feeds[1]['feeds'][1]['title'] == 'categorytwo'
-        assert feeds[1]['feeds'][1]['feeds'][0]['title'] == 'Feed Two'
         feed_url = feeds[1]['feeds'][1]['feeds'][0]['feed_url']
         r1 = client.get(feed_url)
         assert r1.status_code == 200
@@ -199,8 +209,6 @@ def test_all_feeds(xmls):
         r2_data = json.loads(r2.data)
         assert r1_data['title'] == 'Feed Two'
         assert r1_data == r2_data
-        assert feeds[2]['title'] == 'categorythree'
-        assert feeds[2]['feeds'][0]['title'] == 'Feed Four'
         feed_url = feeds[2]['feeds'][0]['feed_url']
         r1 = client.get(feed_url)
         assert r1.status_code == 200
