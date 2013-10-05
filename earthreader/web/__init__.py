@@ -36,23 +36,25 @@ def get_all_feeds(category, parent_categories=[]):
     categories = []
     if parent_categories:
         feed_path = '/'.join(parent_categories)
-        feed_path = '/' + feed_path + '/'
     else:
         feed_path = '/'
     for child in category:
         if isinstance(child, FeedOutline):
             feed_id = hashlib.sha1(child.xml_url).hexdigest()
-            feed_url = feed_path + feed_id + '/entries/'
             result.append({
                 'title': child.title,
-                'feed_url': feed_url
+                'feed_url': url_for(
+                    'category_feed_entries',
+                    category_id = feed_path,
+                    feed_id = feed_id
+                )
             })
         elif isinstance(child, CategoryOutline):
             categories.append(child)
     for category in categories:
         result.append({
             'title': category.title,
-            'feed_url': feed_path + category.title + '/entries',
+            'feed_url': feed_path + category.title + '/feeds/',
             'feeds': get_all_feeds(category,
                 parent_categories.append(category.title)
                 if parent_categories else [category.title]
@@ -75,3 +77,63 @@ def feeds():
     feed_list = FeedList(REPOSITORY + OPML)
     feeds = get_all_feeds(feed_list, None)
     return jsonify(feeds=feeds)
+
+
+@app.route('/feeds/<feed_id>/entries')
+def feed_entries(feed_id):
+    REPOSITORY = app.config['REPOSITORY']
+    try:
+        with open(os.path.join(REPOSITORY, feed_id + '.xml')) as f:
+            feed = read(Feed, f)
+            entries = []
+            for entry in feed.entries:
+                entries.append({
+                    'title': entry.title,
+                    'entry_url': url_for(
+                        'entry',
+                        feed_id=feed_id,
+                        entry_id=hashlib.sha1(binary(entry.id)).hexdigest(),
+                        _external=True
+                    )
+                })
+        return jsonify(
+            title=feed.title,
+            entries=entries
+        )
+    except IOError:
+        r = jsonify(
+            error='feed-not-found',
+            message='Given feed does not exist'
+        )
+        r.status_code = 404
+        return r
+
+
+@app.route('/<path:category_id>/feeds/<feed_id>/entries')
+def category_feed_entries(category_id, feed_id):
+    REPOSITORY = app.config['REPOSITORY']
+    try:
+        with open(os.path.join(REPOSITORY, feed_id + '.xml')) as f:
+            feed = read(Feed, f)
+            entries = []
+            for entry in feed.entries:
+                entries.append({
+                    'title': entry.title,
+                    'entry_url': url_for(
+                        'entry',
+                        feed_id=feed_id,
+                        entry_id=hashlib.sha1(binary(entry.id)).hexdigest(),
+                        _external=True
+                    )
+                })
+        return jsonify(
+            title=feed.title,
+            entries=entries
+        )
+    except IOError:
+        r = jsonify(
+            error='feed-not-found',
+            message='Given feed does not exist'
+        )
+        r.status_code = 404
+        return r
