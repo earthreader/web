@@ -83,7 +83,7 @@ opml = '''
 '''
 
 
-feed_one= '''
+feed_one = '''
 <feed xmlns="http://www.w3.org/2005/Atom">
     <title type="text">Feed One</title>
     <id>http://feedone.com/feed/atom/</id>
@@ -99,7 +99,7 @@ feed_one= '''
 </feed>
 '''
 
-feed_two= '''
+feed_two = '''
 <feed xmlns="http://www.w3.org/2005/Atom">
     <title type="text">Feed Two</title>
     <id>http://feedtwo.com/feed/atom/</id>
@@ -116,7 +116,7 @@ feed_two= '''
 '''
 
 
-feed_three= '''
+feed_three = '''
 <feed xmlns="http://www.w3.org/2005/Atom">
     <title type="text">Feed Three</title>
     <id>http://feedthree.com/feed/atom/</id>
@@ -163,13 +163,13 @@ def get_feed_urls(category, urls=[]):
 def xmls(request):
     httpretty.enable()
     httpretty.register_uri(httpretty.GET, 'http://feedone.com/feed/atom/',
-                          body=feed_one)
+                           body=feed_one)
     httpretty.register_uri(httpretty.GET, 'http://feedtwo.com/feed/atom/',
-                          body=feed_two)
+                           body=feed_two)
     httpretty.register_uri(httpretty.GET, 'http://feedthree.com/feed/atom/',
-                          body=feed_three)
+                           body=feed_three)
     httpretty.register_uri(httpretty.GET, 'http://feedfour.com/feed/atom/',
-                          body=feed_four)
+                           body=feed_four)
     if not os.path.isdir(REPOSITORY):
         os.mkdir(REPOSITORY)
     feed_list = FeedList(opml, is_xml_string=True)
@@ -192,7 +192,8 @@ def xmls(request):
         os.rmdir(REPOSITORY)
         httpretty.disable()
 
-    request.addfinalizer(remove_test_repo) 
+    request.addfinalizer(remove_test_repo)
+
 
 def test_all_feeds(xmls):
     with app.test_client() as client:
