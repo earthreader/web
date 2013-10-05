@@ -6,7 +6,7 @@ try:
 except ImportError:
     import urllib.request as urllib2
 
-from libearth.compat import binary
+from libearth.compat import binary, binary_type
 from libearth.feed import Feed
 from libearth.feedlist import (Feed as FeedOutline,
                                FeedCategory as CategoryOutline, FeedList)
@@ -79,7 +79,7 @@ def feeds():
     return jsonify(feeds=feeds)
 
 
-@app.route('/feeds/<feed_id>/entries')
+@app.route('/feeds/<feed_id>/entries/')
 def feed_entries(feed_id):
     REPOSITORY = app.config['REPOSITORY']
     try:
@@ -90,11 +90,12 @@ def feed_entries(feed_id):
                 entries.append({
                     'title': entry.title,
                     'entry_url': url_for(
-                        'entry',
+                        'feed_entry',
                         feed_id=feed_id,
                         entry_id=hashlib.sha1(binary(entry.id)).hexdigest(),
                         _external=True
-                    )
+                    ),
+                    'updated': entry.published_at
                 })
         return jsonify(
             title=feed.title,
@@ -109,27 +110,30 @@ def feed_entries(feed_id):
         return r
 
 
-@app.route('/<path:category_id>/feeds/<feed_id>/entries')
+@app.route('/<path:category_id>/feeds/<feed_id>/entries/')
 def category_feed_entries(category_id, feed_id):
+    return feed_entries(feed_id)
+
+
+@app.route('/feeds/<feed_id>/entries/<entry_id>/')
+def feed_entry(feed_id, entry_id):
     REPOSITORY = app.config['REPOSITORY']
     try:
         with open(os.path.join(REPOSITORY, feed_id + '.xml')) as f:
             feed = read(Feed, f)
-            entries = []
             for entry in feed.entries:
-                entries.append({
-                    'title': entry.title,
-                    'entry_url': url_for(
-                        'entry',
-                        feed_id=feed_id,
-                        entry_id=hashlib.sha1(binary(entry.id)).hexdigest(),
-                        _external=True
+                if entry_id == hashlib.sha1(binary(entry.id)).hexdigest():
+                    return jsonify(
+                        content=entry.content,
+                        updated=binary_type(entry.updated_at)
                     )
-                })
-        return jsonify(
-            title=feed.title,
-            entries=entries
-        )
+            r = jsonify(
+                error='entry-not-found',
+                message='Given entry does not exist'
+            )
+            r.status_code = 404
+            return r
+
     except IOError:
         r = jsonify(
             error='feed-not-found',
@@ -137,3 +141,8 @@ def category_feed_entries(category_id, feed_id):
         )
         r.status_code = 404
         return r
+
+
+@app.route('/<path:category_id>/feeds/<feed_id>/entries/<entry_id>/')
+def category_feed_entry(category_id, feed_id, entry_id):
+    return feed_entry(feed_id, entry_id)

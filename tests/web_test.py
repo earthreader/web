@@ -17,7 +17,7 @@ from libearth.schema import write
 from earthreader.web import app
 
 import httpretty
-from pytest import yield_fixture
+from pytest import fixture
 
 
 @app.errorhandler(400)
@@ -89,6 +89,13 @@ feed_one= '''
     <id>http://feedone.com/feed/atom/</id>
     <updated>2013-08-19T07:49:20+07:00</updated>
     <link type="text/html" rel="alternate" href="http://feedone.com" />
+    <entry>
+        <title>Feed One: Entry One</title>
+        <id>http://feedone.com/feed/atom/1/</id>
+        <updated>2013-08-19T07:49:20+07:00</updated>
+        <published>2013-08-19T07:49:20+07:00</published>
+        <content>This is content of Entry One in Feed One</content>
+    </entry>
 </feed>
 '''
 
@@ -96,8 +103,15 @@ feed_two= '''
 <feed xmlns="http://www.w3.org/2005/Atom">
     <title type="text">Feed Two</title>
     <id>http://feedtwo.com/feed/atom/</id>
-    <updated>2013-08-19T07:49:20+07:00</updated>
+    <updated>2013-08-20T07:49:20+07:00</updated>
     <link type="text/html" rel="alternate" href="http://feedtwo.com" />
+    <entry>
+        <title>Feed Two: Entry One</title>
+        <id>http://feedone.com/feed/atom/1/</id>
+        <updated>2013-08-20T07:49:20+07:00</updated>
+        <published>2013-08-20T07:49:20+07:00</published>
+        <content>This is content of Entry One in Feed Two</content>
+    </entry>
 </feed>
 '''
 
@@ -106,8 +120,15 @@ feed_three= '''
 <feed xmlns="http://www.w3.org/2005/Atom">
     <title type="text">Feed Three</title>
     <id>http://feedthree.com/feed/atom/</id>
-    <updated>2013-08-19T07:49:20+07:00</updated>
+    <updated>2013-08-21T07:49:20+07:00</updated>
     <link type="text/html" rel="alternate" href="http://feedthree.com" />
+    <entry>
+        <title>Feed Three: Entry One</title>
+        <id>http://feedone.com/feed/atom/1/</id>
+        <updated>2013-08-21T07:49:20+07:00</updated>
+        <published>2013-08-21T07:49:20+07:00</published>
+        <content>This is content of Entry One in Feed Three</content>
+    </entry>
 </feed>
 '''
 
@@ -116,8 +137,15 @@ feed_four = '''
 <feed xmlns="http://www.w3.org/2005/Atom">
     <title type="text">Feed Four</title>
     <id>http://feedfour.com/feed/atom/</id>
-    <updated>2013-08-19T07:49:20+07:00</updated>
+    <updated>2013-08-22T07:49:20+07:00</updated>
     <link type="text/html" rel="alternate" href="http://feedfour.com" />
+    <entry>
+        <title>Feed Four: Entry One</title>
+        <id>http://feedone.com/feed/atom/1/</id>
+        <updated>2013-08-22T07:49:20+07:00</updated>
+        <published>2013-08-22T07:49:20+07:00</published>
+        <content>This is content of Entry One in Feed Four</content>
+    </entry>
 </feed>
 '''
 
@@ -131,8 +159,8 @@ def get_feed_urls(category, urls=[]):
     return urls
 
 
-@yield_fixture
-def xmls():
+@fixture
+def xmls(request):
     httpretty.enable()
     httpretty.register_uri(httpretty.GET, 'http://feedone.com/feed/atom/',
                           body=feed_one)
@@ -142,7 +170,8 @@ def xmls():
                           body=feed_three)
     httpretty.register_uri(httpretty.GET, 'http://feedfour.com/feed/atom/',
                           body=feed_four)
-    os.mkdir(REPOSITORY)
+    if not os.path.isdir(REPOSITORY):
+        os.mkdir(REPOSITORY)
     feed_list = FeedList(opml, is_xml_string=True)
     feed_urls = get_feed_urls(feed_list)
     generator = crawl(feed_urls, 4)
@@ -155,10 +184,15 @@ def xmls():
                                canonical_order=True):
                 f.write(chunk)
     feed_list.save_file(REPOSITORY + OPML)
-    yield
-    shutil.rmtree(REPOSITORY)
-    httpretty.disable()
-    
+
+    def remove_test_repo():
+        files = glob.glob(REPOSITORY + '*')
+        for file in files:
+            os.remove(file)
+        os.rmdir(REPOSITORY)
+        httpretty.disable()
+
+    request.addfinalizer(remove_test_repo) 
 
 def test_all_feeds(xmls):
     with app.test_client() as client:
@@ -176,47 +210,89 @@ def test_all_feeds(xmls):
 
 
 def test_feed_entries(xmls):
-    RE_PATTERN = re.compile('(?:.?)+/feeds/(.+)/entries')
+    FEED_ID_PATTERN = re.compile('(?:.?)+/feeds/(.+)/entries/')
+    ENTRY_ID_PATTERN = re.compile('(?:.?)+/feeds/(?:.+)/entries/(.+)/')
     with app.test_client() as client:
         r = client.get('/feeds/')
         assert r.status_code == 200
         result = json.loads(r.data)
         feeds = result['feeds']
+        # Feed Three
         feed_url = feeds[0]['feed_url']
         r1 = client.get(feed_url)
-        r1_data = json.loads(r1.data)
         assert r1.status_code == 200
+        r1_data = json.loads(r1.data)
         assert r1_data['title'] == 'Feed Three'
+        entry_url = r1_data['entries'][0]['entry_url']
+        entry_r1 = client.get(entry_url)
+        entry_r1_data = json.loads(entry_r1.data)
+        assert entry_r1_data['content'] == \
+            'This is content of Entry One in Feed Three'
+        assert entry_r1_data['updated'] == \
+            '2013-08-21 07:49:20+07:00'
+        # Feed One
         feed_url = feeds[1]['feeds'][0]['feed_url']
         r1 = client.get(feed_url)
         assert r1.status_code == 200
         r1_data = json.loads(r1.data)
-        match = RE_PATTERN.match(feed_url)
+        match = FEED_ID_PATTERN.match(feed_url)
         feed_id = match.group(1)
-        r2 = client.get('/feeds/' + feed_id + '/entries')
+        r2 = client.get('/feeds/' + feed_id + '/entries/')
         assert r2.status_code == 200
         r2_data = json.loads(r2.data)
-        assert r1_data['title'] == 'Feed One'
-        assert r1_data == r2_data
+        assert r1_data['title'] == r2_data['title'] == 'Feed One'
+        entry_url = r1_data['entries'][0]['entry_url']
+        entry_r1 = client.get(entry_url)
+        entry_r1_data = json.loads(entry_r1.data)
+        entry_id = ENTRY_ID_PATTERN.match(entry_url).group(1)
+        entry_r2 = client.get('/feeds/' + feed_id + '/entries/' +
+                              entry_id + '/')
+        entry_r2_data = json.loads(entry_r2.data)
+        assert entry_r1_data['content'] == entry_r2_data['content'] == \
+            'This is content of Entry One in Feed One'
+        assert entry_r1_data['updated'] == entry_r2_data['updated'] == \
+            '2013-08-19 07:49:20+07:00'
+        # Feed Two
         feed_url = feeds[1]['feeds'][1]['feeds'][0]['feed_url']
         r1 = client.get(feed_url)
         assert r1.status_code == 200
         r1_data = json.loads(r1.data)
-        match = RE_PATTERN.match(feed_url)
+        match = FEED_ID_PATTERN.match(feed_url)
         feed_id = match.group(1)
-        r2 = client.get('/feeds/' + feed_id + '/entries')
+        r2 = client.get('/feeds/' + feed_id + '/entries/')
         assert r2.status_code == 200
         r2_data = json.loads(r2.data)
-        assert r1_data['title'] == 'Feed Two'
-        assert r1_data == r2_data
+        assert r1_data['title'] == r2_data['title'] == 'Feed Two'
+        entry_url = r1_data['entries'][0]['entry_url']
+        entry_r1 = client.get(entry_url)
+        entry_r1_data = json.loads(entry_r1.data)
+        entry_id = ENTRY_ID_PATTERN.match(entry_url).group(1)
+        entry_r2 = client.get('/feeds/' + feed_id + '/entries/' +
+                              entry_id + '/')
+        entry_r2_data = json.loads(entry_r2.data)
+        assert entry_r1_data['content'] == entry_r2_data['content'] == \
+            'This is content of Entry One in Feed Two'
+        assert entry_r1_data['updated'] == entry_r2_data['updated'] == \
+            '2013-08-20 07:49:20+07:00'
+        # Feed Four
         feed_url = feeds[2]['feeds'][0]['feed_url']
         r1 = client.get(feed_url)
         assert r1.status_code == 200
         r1_data = json.loads(r1.data)
-        match = RE_PATTERN.match(feed_url)
+        match = FEED_ID_PATTERN.match(feed_url)
         feed_id = match.group(1)
-        r2 = client.get('/feeds/' + feed_id + '/entries')
+        r2 = client.get('/feeds/' + feed_id + '/entries/')
         assert r2.status_code == 200
         r2_data = json.loads(r2.data)
-        assert r1_data['title'] == 'Feed Four'
-        assert r1_data == r2_data
+        assert r1_data['title'] == r2_data['title'] == 'Feed Four'
+        entry_url = r1_data['entries'][0]['entry_url']
+        entry_r1 = client.get(entry_url)
+        entry_r1_data = json.loads(entry_r1.data)
+        entry_id = ENTRY_ID_PATTERN.match(entry_url).group(1)
+        entry_r2 = client.get('/feeds/' + feed_id + '/entries/' +
+                              entry_id + '/')
+        entry_r2_data = json.loads(entry_r2.data)
+        assert entry_r1_data['content'] == entry_r2_data['content'] == \
+            'This is content of Entry One in Feed Four'
+        assert entry_r1_data['updated'] == entry_r2_data['updated'] == \
+            '2013-08-22 07:49:20+07:00'
