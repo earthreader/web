@@ -55,7 +55,7 @@ def get_all_feeds(category, parent_categories=[]):
     for category in categories:
         result.append({
             'title': category.title,
-            'feed_url': feed_path + category.title + '/feeds/',
+            'feed_url': feed_path + '/' + category.title + '/feeds/',
             'feeds': get_all_feeds(
                 category,
                 parent_categories.append(category.title)
