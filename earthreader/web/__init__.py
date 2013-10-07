@@ -218,7 +218,7 @@ def post_feed_in_category(category_id):
     elif request.form['type'] == POST_CATEGORY:
         title = request.form['title']
         add_category(title, (feed_list, cursor))
-        return  category_feeds(category_id)
+        return category_feeds(category_id)
 
 
 @app.route('/feeds/<feed_id>/entries/')

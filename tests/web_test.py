@@ -313,7 +313,6 @@ def test_category_feeds(xmls):
         assert result['feeds'][0]['title'] == 'Feed Two'
 
 
-
 def test_invalid_path(xmls):
     with app.test_client() as client:
         feed_id = hashlib.sha1('http://feedone.com/feed/atom/').hexdigest()
@@ -345,8 +344,8 @@ def test_add_feed(xmls):
                            body=feed_to_add)
     with app.test_client() as client:
         r = client.post('/feeds/',
-                         data=dict(type=POST_FEED,
-                                   url='http://feedfive.com/feed/atom/'))
+                        data=dict(type=POST_FEED,
+                                  url='http://feedfive.com/feed/atom/'))
         assert r.status_code == 200
         result = json.loads(r.data)
         assert result['feeds'][1]['title'] == 'Feed Five'
@@ -359,8 +358,8 @@ def test_add_feed_in_category(xmls):
                            body=feed_to_add)
     with app.test_client() as client:
         r = client.post('/categoryone/categorytwo/feeds/',
-                         data=dict(type=POST_FEED,
-                                   url='http://feedfive.com/feed/atom/'))
+                        data=dict(type=POST_FEED,
+                                  url='http://feedfive.com/feed/atom/'))
         assert r.status_code == 200
         result = json.loads(r.data)
         assert result['feeds'][0]['title'] == 'Feed Two'
