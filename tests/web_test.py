@@ -375,3 +375,19 @@ def test_add_category(xmls):
                         data=dict(type=POST_CATEGORY,
                                   title='addedcategory'))
         assert r.status_code == 200
+        result = json.loads(r.data)
+        assert result['feeds'][3]['title'] == 'addedcategory'
+        opml = FeedList(REPOSITORY + OPML)
+        assert opml[3].text == 'addedcategory'
+
+
+def test_add_category_in_category(xmls):
+    with app.test_client() as client:
+        r = client.post('/categoryone/feeds/',
+                        data=dict(type=POST_CATEGORY,
+                                  title='addedcategory'))
+        assert r.status_code == 200
+        result = json.loads(r.data)
+        assert result['feeds'][2]['title'] == 'addedcategory'
+        opml = FeedList(REPOSITORY + OPML)
+        assert opml[0][2].text == 'addedcategory'
