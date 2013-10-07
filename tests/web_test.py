@@ -3,7 +3,6 @@ import hashlib
 import os
 import os.path
 import re
-import shutil
 import traceback
 
 from flask import json
@@ -303,4 +302,6 @@ def test_invalid_path(xmls):
     with app.test_client() as client:
         feed_id = hashlib.sha1('http://feedone.com/feed/atom/').hexdigest()
         r = client.get('/non-exist-category/feeds/' + feed_id + '/entries/')
+        result = json.loads(r.data)
         assert r.status_code == 404
+        assert result['error'] == 'category-path-invalid'
