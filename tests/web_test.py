@@ -390,3 +390,41 @@ def test_add_category_in_category(xmls):
         assert result['feeds'][2]['title'] == 'addedcategory'
         opml = FeedList(REPOSITORY + OPML)
         assert opml[0][2].text == 'addedcategory'
+
+
+def test_add_category_without_opml():
+    with app.test_client() as client:
+        r = client.post('/feeds/',
+                        data=dict(type=POST_CATEGORY,
+                                  title='testcategory'))
+        assert r.status_code == 200
+        result = json.loads(r.data)
+        assert result['feeds'][0]['title'] == 'testcategory'
+        REPOSITORY = app.config['REPOSITORY']
+        OPML = app.config['OPML']
+        feed_list = FeedList(REPOSITORY + OPML)
+        assert feed_list[0].text == 'testcategory'
+        os.remove(REPOSITORY + OPML)
+        os.rmdir(REPOSITORY)
+
+
+def test_add_feed_without_opml():
+    httpretty.enable()
+    httpretty.register_uri(httpretty.GET, 'http://feedone.com/feed/atom/',
+                           body=feed_one)
+    with app.test_client() as client:
+        r = client.post('/feeds/',
+                        data=dict(type=POST_FEED,
+                                  url='http://feedone.com/feed/atom/'))
+        assert r.status_code == 200
+        result = json.loads(r.data)
+        assert result['feeds'][0]['title'] == 'Feed One'
+        REPOSITORY = app.config['REPOSITORY']
+        OPML = app.config['OPML']
+        feed_list = FeedList(REPOSITORY + OPML)
+        assert feed_list[0].title == 'Feed One'
+    files = glob.glob(REPOSITORY + '*')
+    for file in files:
+        os.remove(file)
+    os.rmdir(REPOSITORY)
+    httpretty.disable()
