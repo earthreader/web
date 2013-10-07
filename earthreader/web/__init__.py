@@ -79,8 +79,8 @@ def check_path_valid(category_id):
                 cursor = category
                 break
         if not is_searched:
-            return False
-    return True
+            return None
+    return cursor
 
 
 @app.route('/feeds/', methods=['GET'])
