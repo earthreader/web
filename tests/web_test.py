@@ -297,3 +297,10 @@ def test_feed_entries(xmls):
             'This is content of Entry One in Feed Four'
         assert entry_r1_data['updated'] == entry_r2_data['updated'] == \
             '2013-08-22 07:49:20+07:00'
+
+
+def test_invalid_path(xmls):
+    with app.test_client() as client:
+        feed_id = hashlib.sha1('http://feedone.com/feed/atom/').hexdigest()
+        r = client.get('/non-exist-category/feeds/' + feed_id + '/entries/')
+        assert r.status_code == 404

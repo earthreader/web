@@ -1,3 +1,4 @@
+from collections import deque
 import glob
 import hashlib
 import os.path
@@ -64,6 +65,24 @@ def get_all_feeds(category, parent_categories=[]):
     return result
 
 
+def check_path_valid(category_id):
+    REPOSITORY = app.config['REPOSITORY']
+    OPML = app.config['OPML']
+    categories = deque(category_id.split('/'))
+    cursor = FeedList(REPOSITORY + OPML)
+    while categories:
+        is_searched = False
+        looking_for = categories.popleft()
+        for category in cursor:
+            if category.text == looking_for:
+                is_searched = True
+                cursor = category
+                break
+        if not is_searched:
+            return False
+    return True
+
+
 @app.route('/feeds/', methods=['GET'])
 def feeds():
     REPOSITORY = app.config['REPOSITORY']
@@ -113,7 +132,15 @@ def feed_entries(feed_id):
 
 @app.route('/<path:category_id>/feeds/<feed_id>/entries/')
 def category_feed_entries(category_id, feed_id):
-    return feed_entries(feed_id)
+    if check_path_valid(category_id):
+        return feed_entries(feed_id)
+    else:
+        r = jsonify(
+            error='category-path-invalid',
+            message='Given category path is not valid'
+        )
+        r.status_code = 404
+        return r
 
 
 @app.route('/feeds/<feed_id>/entries/<entry_id>/')
@@ -146,4 +173,12 @@ def feed_entry(feed_id, entry_id):
 
 @app.route('/<path:category_id>/feeds/<feed_id>/entries/<entry_id>/')
 def category_feed_entry(category_id, feed_id, entry_id):
-    return feed_entry(feed_id, entry_id)
+    if check_path_valid(category_id):
+        return feed_entry(feed_id, entry_id)
+    else:
+        r = jsonify(
+            error='category-path-invalid',
+            message='Given category path is not valid'
+        )
+        r.status_code = 404
+        return r
