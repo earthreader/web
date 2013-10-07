@@ -13,7 +13,7 @@ from libearth.feedlist import (Feed as FeedOutline,
                                FeedCategory as CategoryOutline, FeedList)
 from libearth.schema import write
 
-from earthreader.web import app
+from earthreader.web import app, POST_FEED, POST_CATEGORY
 
 import httpretty
 from pytest import fixture
@@ -321,3 +321,57 @@ def test_invalid_path(xmls):
         result = json.loads(r.data)
         assert r.status_code == 404
         assert result['error'] == 'category-path-invalid'
+
+
+feed_to_add = '''
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <title type="text">Feed Five</title>
+    <id>http://feedfive.com/feed/atom/</id>
+    <updated>2013-08-23T07:49:20+07:00</updated>
+    <link type="text/html" rel="alternate" href="http://feedfive.com" />
+    <entry>
+        <title>Feed Five: Entry One</title>
+        <id>http://feedone.com/feed/atom/1/</id>
+        <updated>2013-08-22T07:49:20+07:00</updated>
+        <published>2013-08-22T07:49:20+07:00</published>
+        <content>This is content of Entry One in Feed Four</content>
+    </entry>
+</feed>
+'''
+
+
+def test_add_feed(xmls):
+    httpretty.register_uri(httpretty.GET, 'http://feedfive.com/feed/atom/',
+                           body=feed_to_add)
+    with app.test_client() as client:
+        r = client.post('/feeds/',
+                         data=dict(type=POST_FEED,
+                                   url='http://feedfive.com/feed/atom/'))
+        assert r.status_code == 200
+        result = json.loads(r.data)
+        assert result['feeds'][1]['title'] == 'Feed Five'
+        opml = FeedList(REPOSITORY + OPML)
+        assert opml[3].title == 'Feed Five'
+
+
+def test_add_feed_in_category(xmls):
+    httpretty.register_uri(httpretty.GET, 'http://feedfive.com/feed/atom/',
+                           body=feed_to_add)
+    with app.test_client() as client:
+        r = client.post('/categoryone/categorytwo/feeds/',
+                         data=dict(type=POST_FEED,
+                                   url='http://feedfive.com/feed/atom/'))
+        assert r.status_code == 200
+        result = json.loads(r.data)
+        assert result['feeds'][0]['title'] == 'Feed Two'
+        assert result['feeds'][1]['title'] == 'Feed Five'
+        opml = FeedList(REPOSITORY + OPML)
+        assert opml[0][1][1].title == 'Feed Five'
+
+
+def test_add_category(xmls):
+    with app.test_client() as client:
+        r = client.post('/feeds/',
+                        data=dict(type=POST_CATEGORY,
+                                  title='addedcategory'))
+        assert r.status_code == 200

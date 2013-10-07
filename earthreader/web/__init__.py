@@ -84,6 +84,77 @@ def check_path_valid(category_id):
     return feed_list, cursor
 
 
+def add_feed(url, (feed_list, cursor)=(None, None)):
+    REPOSITORY = app.config['REPOSITORY']
+    OPML = app.config['OPML']
+    if not feed_list:
+        if not os.path.isfile(REPOSITORY + OPML):
+            if not os.path.isdir(REPOSITORY):
+                os.mkdir(REPOSITORY)
+            feed_list = FeedList()
+        else:
+            feed_list = FeedList(REPOSITORY + OPML)
+        cursor = feed_list
+    try:
+        url = request.form['url']
+        f = urllib2.urlopen(url)
+        document = f.read()
+    except ValueError:
+        r = jsonify(
+            error='unreachable-url',
+            message='Cannot connect to given url'
+        )
+        r.status_code = 400
+        return r
+    try:
+        feed_url = autodiscovery(document, url)
+    except FeedUrlNotFoundError:
+        r = jsonify(
+            error='unreachable-feed-url',
+            message='Cannot find feed url'
+        )
+        r.status_code = 400
+        return r
+    if not feed_url == url:
+        f.close()
+        f = urllib2.urlopen(feed_url)
+        xml = f.read()
+    else:
+        xml = document
+    format = get_format(xml)
+    result = format(xml, feed_url)
+    feed = result[0]
+    outline = FeedOutline('atom', feed.title.value, feed_url)
+    for link in feed.links:
+            if link.relation == 'alternate' and \
+                    link.mimetype == 'text/html':
+                outline.blog_url = link.uri
+    cursor.append(outline)
+    feed_list.save_file(REPOSITORY + OPML)
+    feed_list = FeedList(REPOSITORY + OPML)
+    file_name = hashlib.sha1(binary(feed_url)).hexdigest() + '.xml'
+    with open(os.path.join(REPOSITORY, file_name), 'w') as f:
+        for chunk in write(feed, indent='    ', canonical_order=True):
+            f.write(chunk)
+
+
+def add_category(title, (feed_list, cursor)=(None, None)):
+    REPOSITORY = app.config['REPOSITORY']
+    OPML = app.config['OPML']
+    if not feed_list:
+        if not os.path.isfile(REPOSITORY + OPML):
+            if not os.path.isdir(REPOSITORY):
+                os.mkdir(REPOSITORY)
+            feed_list = FeedList()
+        else:
+            feed_list = FeedList(REPOSITORY + OPML)
+        cursor = feed_list
+    title = request.form['title']
+    outline = CategoryOutline(title)
+    cursor.append(outline)
+    feed_list.save_file(REPOSITORY + OPML)
+
+
 @app.route('/feeds/', methods=['GET'])
 def feeds():
     REPOSITORY = app.config['REPOSITORY']
@@ -96,13 +167,13 @@ def feeds():
         r.status_code = 400
         return r
     feed_list = FeedList(REPOSITORY + OPML)
-    feeds = get_all_feeds(feed_list, None)
+    feeds = get_all_feeds(feed_list)
     return jsonify(feeds=feeds)
 
 
 @app.route('/<path:category_id>/feeds/')
 def category_feeds(category_id):
-    cursor = check_path_valid(category_id)
+    feed_list, cursor = check_path_valid(category_id)
     if not cursor:
         r = jsonify(
             error='category-path-invalid',
@@ -112,6 +183,42 @@ def category_feeds(category_id):
         return r
     feeds = get_all_feeds(cursor, [category_id])
     return jsonify(feeds=feeds)
+
+
+POST_FEED = 'feed'
+POST_CATEGORY = 'category'
+
+
+@app.route('/feeds/', methods=['POST'])
+def post_feed():
+    if request.form['type'] == POST_FEED:
+        url = request.form['url']
+        add_feed(url)
+        return feeds()
+    elif request.form['type'] == POST_CATEGORY:
+        title = request.form['title']
+        add_category(title)
+        return feeds()
+
+
+@app.route('/<path:category_id>/feeds/', methods=['POST'])
+def post_feed_in_category(category_id):
+    feed_list, cursor = check_path_valid(category_id)
+    if not cursor:
+        r = jsonify(
+            error='category-path-invalid',
+            message='Given category path is not valid'
+        )
+        r.status_code = 404
+        return r
+    if request.form['type'] == POST_FEED:
+        url = request.form['url']
+        add_feed(url, (feed_list, cursor))
+        return category_feeds(category_id)
+    elif request.form['type'] == POST_CATEGORY:
+        title = request.form['title']
+        add_category(title, (feed_list, cursor))
+        return  category_feeds(category_id)
 
 
 @app.route('/feeds/<feed_id>/entries/')
