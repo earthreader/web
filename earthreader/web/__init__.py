@@ -69,7 +69,8 @@ def check_path_valid(category_id):
     REPOSITORY = app.config['REPOSITORY']
     OPML = app.config['OPML']
     categories = deque(category_id.split('/'))
-    cursor = FeedList(REPOSITORY + OPML)
+    feed_list = FeedList(REPOSITORY + OPML)
+    cursor = feed_list
     while categories:
         is_searched = False
         looking_for = categories.popleft()
@@ -80,7 +81,7 @@ def check_path_valid(category_id):
                 break
         if not is_searched:
             return None
-    return cursor
+    return feed_list, cursor
 
 
 @app.route('/feeds/', methods=['GET'])
