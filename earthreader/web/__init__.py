@@ -99,6 +99,20 @@ def feeds():
     return jsonify(feeds=feeds)
 
 
+@app.route('/<path:category_id>/feeds/')
+def category_feeds(category_id):
+    cursor = check_path_valid(category_id)
+    if not cursor:
+        r = jsonify(
+            error='category-path-invalid',
+            message='Given category path is not valid'
+        )
+        r.status_code = 404
+        return r
+    feeds = get_all_feeds(cursor, [category_id])
+    return jsonify(feeds=feeds)
+
+
 @app.route('/feeds/<feed_id>/entries/')
 def feed_entries(feed_id):
     REPOSITORY = app.config['REPOSITORY']

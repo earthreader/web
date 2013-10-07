@@ -298,6 +298,22 @@ def test_feed_entries(xmls):
             '2013-08-22 07:49:20+07:00'
 
 
+def test_category_feeds(xmls):
+    with app.test_client() as client:
+        # categoryone
+        r = client.get('/categoryone/feeds/')
+        assert r.status_code == 200
+        result = json.loads(r.data)
+        assert result['feeds'][0]['title'] == 'Feed One'
+        # categorytwo
+        url = result['feeds'][1]['feed_url']
+        r = client.get(url)
+        assert r.status_code == 200
+        result = json.loads(r.data)
+        assert result['feeds'][0]['title'] == 'Feed Two'
+
+
+
 def test_invalid_path(xmls):
     with app.test_client() as client:
         feed_id = hashlib.sha1('http://feedone.com/feed/atom/').hexdigest()
