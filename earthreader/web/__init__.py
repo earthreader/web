@@ -33,20 +33,34 @@ def index():
 @app.route('/feeds/', methods=['GET'])
 def feeds():
     REPOSITORY = app.config['REPOSITORY']
-    feedlist = glob.glob(REPOSITORY+'*')
-    feeds = []
-    for xml in feedlist:
-        if not xml.endswith('.xml'):
-            continue
-        with open(xml) as f:
-            feed = read(Feed, f)
-            feeds.append({
-                'title': feed.title,
-                'feed_url': url_for(
-                    'entries',
-                    feed_id=hashlib.sha1(binary(feed.id)).hexdigest(),
-                    _external=True)
+    OPML = REPOSITORY + app.config['OPML']
+    feedlist = FeedList(OPML)
+
+    def makeCategory(category):
+        feeds = []
+        for obj in category:
+            if isinstance(obj, OutLine):
+                feeds.append({
+                    'title': obj.title,
+                    'feed_url': url_for(
+                        'entries',
+                        feed_id=hashlib.sha1(binary(obj.xml_url)).hexdigest(),
+                        _external=True)
                 })
+            else:
+                feeds.append({
+                    'title': obj.title,
+                    'feed_url': url_for(
+                        'entries',
+                        feed_id=hashlib.sha1(binary(obj.title)).hexdigest(),
+                        _external=True),
+                    'feeds': makeCategory(obj)
+                })
+
+        return feeds
+
+    feeds = makeCategory(feedlist)
+
     return jsonify(feeds=feeds)
 
 
