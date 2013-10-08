@@ -24,6 +24,7 @@ app.config.update(dict(
     OPML='earthreader.opml'
 ))
 
+
 def get_feedlist():
     REPOSITORY = app.config['REPOSITORY']
     OPML = app.config['OPML']
