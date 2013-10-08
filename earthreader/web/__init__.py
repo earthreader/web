@@ -292,6 +292,30 @@ def delete_feed_in_root(feed_id):
     return feeds()
 
 
+@app.route('/<path:category_id>/', methods=['DELETE'])
+def delete_category(category_id):
+    REPOSITORY = app.config['REPOSITORY']
+    OPML = app.config['OPML']
+    feed_list, cursor, target = check_path_valid(category_id, True)
+    if not cursor:
+        r = jsonify(
+            error='category-path-invalid',
+            message='Given category path is not valid'
+        )
+        r.status_code = 404
+        return r
+    for child in cursor:
+        if isinstance(child, CategoryOutline):
+            if child.text == target:
+                cursor.remove(child)
+    feed_list.save_file(REPOSITORY + OPML)
+    index = category_id.rfind('/')
+    if index == -1:
+        return feeds()
+    else:
+        return category_feeds(category_id[:index])
+
+
 @app.route('/<path:category_id>/feeds/<feed_id>/', methods=['DELETE'])
 def delete_feed_in_category(category_id, feed_id):
     feed_list, cursor, _ = check_path_valid(category_id)
