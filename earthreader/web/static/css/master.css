@@ -109,7 +109,11 @@ body {
 	margin-left: -90%;
 }
 
-.current {
+[role=navigation] .current {
+	font-weight: bold;
+}
+
+[role=main] .current .entry-title {
 	font-weight: bold;
 }
 
