@@ -174,14 +174,53 @@ function makeFeedList(obj) {
 	var feeds = obj.feeds;
 	feedList.innerHTML = "";
 
-	for (var i=0; i<feeds.length; i++) {
-		var feed = feeds[i];
+	var makeCategory = function(parentObj, obj) {
+		var header = document.createElement('li');
+		var list = document.createElement('li');
+
+		header.addClass('header');
+		header.textContent = obj.title;
+
+		list.addClass('fold');
+
+		var ul = document.createElement('ul');
+		for (var i=0; i<obj.feeds.length; i++) {
+			var feed = obj.feeds[i];
+			if (feed.feeds) {
+				makeCategory(ul, feed);
+			} else {
+				makeFeed(ul, feed);
+			}
+		}
+
+		list.appendChild(ul);
+
+		parentObj.appendChild(header);
+		parentObj.appendChild(list);
+	};
+
+	var makeFeed = function(parentObj, obj) {
 		var elem = document.createElement('li');
 		elem.addClass('feed');
-		elem.setAttribute('data-url', feed.feed_url);
-		elem.textContent = feed.title;
-		feedList.appendChild(elem);
+		elem.setAttribute('data-url', obj.feed_url);
+		elem.textContent = obj.title;
+
+		parentObj.appendChild(elem);
+	};
+
+	for (var i=0; i<feeds.length; i++) {
+		var feed = feeds[i];
+		if (feed.feeds) {
+			makeCategory(feedList, feed);
+		} else {
+			makeFeed(feedList, feed);
+		}
 	}
+
+	list.appendChild(ul);
+
+	parentObj.appendChild(header);
+	parentObj.appendChild(list);
 }
 
 function refreshFeedList() {
