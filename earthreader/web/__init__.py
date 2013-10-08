@@ -114,7 +114,7 @@ def find_feed_in_opml(feed_id, category, parent_categories=[], result=[]):
     return result
 
 
-def add_feed(url, (feed_list, cursor)=(None, None)):
+def add_feed(url, feed_list=None, cursor=None):
     REPOSITORY = app.config['REPOSITORY']
     OPML = app.config['OPML']
     if not feed_list:
@@ -168,7 +168,7 @@ def add_feed(url, (feed_list, cursor)=(None, None)):
             f.write(chunk)
 
 
-def add_category(title, (feed_list, cursor)=(None, None)):
+def add_category(title, feed_list=None, cursor=None):
     REPOSITORY = app.config['REPOSITORY']
     OPML = app.config['OPML']
     if not feed_list:
@@ -185,7 +185,7 @@ def add_category(title, (feed_list, cursor)=(None, None)):
     feed_list.save_file(REPOSITORY + OPML)
 
 
-def delete_feed(feed_id, (feed_list, cursor)=(None, None)):
+def delete_feed(feed_id, feed_list=None, cursor=None):
     REPOSITORY = app.config['REPOSITORY']
     OPML = app.config['OPML']
     if not feed_list:
