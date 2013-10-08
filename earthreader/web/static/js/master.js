@@ -216,11 +216,6 @@ function makeFeedList(obj) {
 			makeFeed(feedList, feed);
 		}
 	}
-
-	list.appendChild(ul);
-
-	parentObj.appendChild(header);
-	parentObj.appendChild(list);
 }
 
 function refreshFeedList() {
@@ -259,8 +254,9 @@ function getEntries(feed_url) {
 	});
 }
 
-function click_feed(event) {
+function clickFeed(event) {
 	var target = event.target;
+	var navi = document.querySelector('[role=navigation]');
 
 	while (target.classList.contains('feed') === false) {
 		target = target.parentElement;
@@ -268,6 +264,13 @@ function click_feed(event) {
 			return;
 		}
 	}
+
+	//set current marker
+	var list = navi.querySelectorAll('.current');
+	for (var i=0; i<list.length; i++) {
+		list[i].removeClass('current');
+	}
+	target.addClass('current');
 
 	var url = target.getAttribute('data-url');
 
@@ -278,6 +281,7 @@ function click_feed(event) {
 
 function clickEntry(event) {
 	var target = event.target;
+	var main = document.querySelector('[role=main]');
 
 	while (target.classList.contains('entry-title') === false) {
 		target = target.parentElement;
@@ -285,6 +289,13 @@ function clickEntry(event) {
 			return;
 		}
 	}
+
+	//set current marker
+	var list = main.querySelectorAll('.current');
+	for (var i=0; i<list.length; i++) {
+		list[i].removeClass('current');
+	}
+	target.parentElement.addClass('current');
 
 	var entry = target.parentElement;
 
@@ -296,7 +307,7 @@ function clickEntry(event) {
 	}
 
 	//remove content
-	contents = document.querySelectorAll('.entry-content');
+	contents = main.querySelectorAll('.entry-content');
 	for (var i=0; i<contents.length; i++) {
 		contents[i].parentElement.removeChild(contents[i]);
 	}
@@ -313,10 +324,41 @@ function clickEntry(event) {
 	});
 }
 
+function keyboardShortcut(event) {
+	if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') {
+		return;
+	}
+
+	var main = document.querySelector('[role=main]');
+
+	switch (event.keyCode) {
+		case 74: //j
+			var entry = main.querySelector('.current');
+			if (entry == null) {
+				main.querySelector('.entry').querySelector('.entry-title').click();
+				return;
+			}
+			var next = entry.nextElementSibling;
+			if (next == null) {
+				return;
+			}
+			next.querySelector('.entry-title').click();
+			break;
+		case 75: //k
+			var entry = main.querySelector('.current');
+			var prev = entry.previousElementSibling;
+			if (prev == null) {
+				return;
+			}
+			prev.querySelector('.entry-title').click();
+			break;
+	}
+}
+
 function init() {
 	var navi = document.querySelector('[role=navigation]');
 	navi.addEventListener('click', toggleFolding, false);
-	navi.addEventListener('click', click_feed, false);
+	navi.addEventListener('click', clickFeed, false);
 
 	var main = document.querySelector('[role=main]');
 	main.addEventListener('click', clickEntry, false);
@@ -325,6 +367,7 @@ function init() {
 	document.addEventListener('click', toggleSide, false);
 
 	window.addEventListener('submit', processForm, false);
+	window.addEventListener('keydown', keyboardShortcut, false);
 
     var animationEnd;
     if (document.body.style.animation !== undefined) {

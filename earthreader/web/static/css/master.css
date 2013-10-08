@@ -109,6 +109,10 @@ body {
 	margin-left: -90%;
 }
 
+.current {
+	font-weight: bold;
+}
+
 a, a:hover, a:active, a:link, a:visited {
 	text-decoration: none;
 	color: #3bf;
