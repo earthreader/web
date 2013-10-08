@@ -73,7 +73,7 @@ def check_path_valid(category_id, return_category_parent=False):
         target = category_list.pop()
         categories = deque(category_list)
     else:
-        taget = None
+        target = None
         categories = deque(category_id.split('/'))
     feed_list = FeedList(REPOSITORY + OPML)
     cursor = feed_list
