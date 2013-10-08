@@ -482,6 +482,8 @@ def test_delete_non_exists_feed(xmls):
     with app.test_client() as client:
         r = client.delete('/feeds/non-exists-feed/')
         assert r.status_code == 400
+        result = json.loads(r.data)
+        assert result['error'] == 'feed-not-found-in-path'
 
 
 def test_delete_category_in_root(xmls):
