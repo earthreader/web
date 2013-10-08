@@ -334,7 +334,7 @@ def feed_entries(feed_id):
 
 @app.route('/<path:category_id>/feeds/<feed_id>/entries/')
 def category_feed_entries(category_id, feed_id):
-    if check_path_valid(category_id):
+    if check_path_valid(category_id)[0]:
         return feed_entries(feed_id)
     else:
         r = jsonify(
@@ -375,7 +375,7 @@ def feed_entry(feed_id, entry_id):
 
 @app.route('/<path:category_id>/feeds/<feed_id>/entries/<entry_id>/')
 def category_feed_entry(category_id, feed_id, entry_id):
-    if check_path_valid(category_id):
+    if check_path_valid(category_id)[0]:
         return feed_entry(feed_id, entry_id)
     else:
         r = jsonify(
