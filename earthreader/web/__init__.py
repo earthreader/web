@@ -86,7 +86,7 @@ def check_path_valid(category_id, return_category_parent=False):
                 cursor = category
                 break
         if not is_searched:
-            return None
+            return None, None, None
     return feed_list, cursor, target
 
 
@@ -236,7 +236,7 @@ def feeds():
 
 @app.route('/<path:category_id>/feeds/')
 def category_feeds(category_id):
-    feed_list, cursor = check_path_valid(category_id)
+    feed_list, cursor, _ = check_path_valid(category_id)
     if not isinstance(cursor, CategoryOutline):
         r = jsonify(
             error='category-path-invalid',
@@ -266,7 +266,7 @@ def post_feed():
 
 @app.route('/<path:category_id>/feeds/', methods=['POST'])
 def post_feed_in_category(category_id):
-    feed_list, cursor = check_path_valid(category_id)
+    feed_list, cursor, _ = check_path_valid(category_id)
     if not cursor:
         r = jsonify(
             error='category-path-invalid',
@@ -294,7 +294,7 @@ def delete_feed_in_root(feed_id):
 
 @app.route('/<path:category_id>/feeds/<feed_id>/', methods=['DELETE'])
 def delete_feed_in_category(category_id, feed_id):
-    feed_list, cursor = check_path_valid(category_id)
+    feed_list, cursor, _ = check_path_valid(category_id)
     r = delete_feed(feed_id, (feed_list, cursor))
     if r:
         return r
