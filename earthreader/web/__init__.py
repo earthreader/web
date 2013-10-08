@@ -185,7 +185,7 @@ def add_category(title, (feed_list, cursor)=(None, None)):
     feed_list.save_file(REPOSITORY + OPML)
 
 
-def delete_feed(feed_id, (feed_list,cursor)=(None,None)):
+def delete_feed(feed_id, (feed_list, cursor)=(None, None)):
     REPOSITORY = app.config['REPOSITORY']
     OPML = app.config['OPML']
     if not feed_list:
@@ -206,7 +206,7 @@ def delete_feed(feed_id, (feed_list,cursor)=(None,None)):
                 target = feed
     if target:
         cursor.remove(target)
-    else:   
+    else:
         r = jsonify(
             error='feed-not-found-in-path',
             message='Given feed does not exists in the path'
@@ -330,7 +330,7 @@ def delete_feed_in_category(category_id, feed_id):
     if r:
         return r
     return category_feeds(category_id)
-        
+
 
 @app.route('/feeds/<feed_id>/entries/')
 def feed_entries(feed_id):
