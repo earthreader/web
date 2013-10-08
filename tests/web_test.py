@@ -428,3 +428,57 @@ def test_add_feed_without_opml():
         os.remove(file)
     os.rmdir(REPOSITORY)
     httpretty.disable()
+
+
+def test_delete_feed(xmls):
+    REPOSITORY = app.config['REPOSITORY']
+    with app.test_client() as client:
+        feed_id = hashlib.sha1(
+            binary('http://feedthree.com/feed/atom/')).hexdigest()
+        r = client.delete('/feeds/' + feed_id + '/')
+        assert r.status_code == 200
+        result = json.loads(r.data)
+        for child in result['feeds']:
+            assert child['title'] != 'Feed Three'
+        assert not REPOSITORY + feed_id + '.xml' in glob.glob(REPOSITORY + '*')
+
+
+def test_delete_feed_in_category(xmls):
+    REPOSITORY = app.config['REPOSITORY']
+    with app.test_client() as client:
+        feed_id = hashlib.sha1(
+            binary('http://feedtwo.com/feed/atom/')).hexdigest()
+        r = client.delete('/categoryone/categorytwo/feeds/' + feed_id + '/')
+        assert r.status_code == 200
+        result = json.loads(r.data)
+        assert len(result['feeds']) == 0
+        assert not REPOSITORY + feed_id + '.xml' in glob.glob(REPOSITORY + '*')
+
+
+def test_delete_feed_in_two_category(xmls):
+    REPOSITORY = app.config['REPOSITORY']
+    httpretty.register_uri(httpretty.GET, 'http://feedone.com/feed/atom/',
+                           body=feed_one)
+    with app.test_client() as client:
+        r = client.post('/feeds/',
+                        data=dict(type=POST_FEED,
+                                  url='http://feedone.com/feed/atom/'))
+        assert r.status_code == 200
+        feed_list = FeedList(REPOSITORY + OPML)
+        assert feed_list[0][0].title == 'Feed One'
+        assert feed_list[3].title == 'Feed One'
+        feed_id = hashlib.sha1(
+            binary('http://feedone.com/feed/atom/')).hexdigest()
+        r = client.delete('/categoryone/feeds/' + feed_id + '/')
+        assert r.status_code == 200
+        feed_list = FeedList(REPOSITORY + OPML)
+        for child in feed_list[0]:
+            assert not child.title == 'Feed One'
+        assert feed_list[3].title == 'Feed One'
+        assert REPOSITORY + feed_id + '.xml' in glob.glob(REPOSITORY + '*')
+
+
+def test_delete_non_exists_feed(xmls):
+    with app.test_client() as client:
+        r = client.delete('/feeds/non-exists-feed/')
+        assert r.status_code == 400
