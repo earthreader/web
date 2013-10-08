@@ -69,7 +69,7 @@ def check_path_valid(category_id, return_category_parent=False):
     REPOSITORY = app.config['REPOSITORY']
     OPML = app.config['OPML']
     if return_category_parent:
-        category_list = category_id.splid('/')
+        category_list = category_id.split('/')
         target = category_list.pop()
         categories = deque(category_list)
     else:
