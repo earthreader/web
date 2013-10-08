@@ -13,7 +13,7 @@ if not os.path.isdir(REPOSITORY):
 
 try:
     feedlist = FeedList(os.path.join(REPOSITORY, OPML))
-    urllist = [feed.xml_url for feed in feedlist.all_feeds.itervalues()]
+    urllist = [feed.xml_url for feed in feedlist.get_all_feeds()]
 except IOError as e:
     pass
 

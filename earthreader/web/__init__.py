@@ -24,6 +24,19 @@ app.config.update(dict(
     OPML='earthreader.opml'
 ))
 
+def get_feedlist():
+    REPOSITORY = app.config['REPOSITORY']
+    OPML = app.config['OPML']
+    if not os.path.isfile(REPOSITORY + OPML):
+        if not os.path.isdir(REPOSITORY):
+            os.mkdir(REPOSITORY)
+        feed_list = FeedList()
+        feed_list.save_file(REPOSITORY + OPML)
+
+    feed_list = FeedList(REPOSITORY + OPML)
+
+    return feed_list
+
 
 @app.route('/', methods=['GET'])
 def index():
@@ -32,9 +45,7 @@ def index():
 
 @app.route('/feeds/', methods=['GET'])
 def feeds():
-    REPOSITORY = app.config['REPOSITORY']
-    OPML = REPOSITORY + app.config['OPML']
-    feedlist = FeedList(OPML)
+    feedlist = get_feedlist()
 
     def makeCategory(category):
         feeds = []
@@ -68,12 +79,8 @@ def feeds():
 def add_feed():
     REPOSITORY = app.config['REPOSITORY']
     OPML = app.config['OPML']
-    if not os.path.isfile(REPOSITORY + OPML):
-        if not os.path.isdir(REPOSITORY):
-            os.mkdir(REPOSITORY)
-        feed_list = FeedList()
-    else:
-        feed_list = FeedList(REPOSITORY + OPML)
+
+    feed_list = get_feedlist()
     try:
         url = request.form['url']
         f = urllib2.urlopen(url)
@@ -108,7 +115,7 @@ def add_feed():
                 blog_url = link.uri
     outline = OutLine('atom', feed.title.value, feed_url, blog_url)
     feed_list.append(outline)
-    feed_list.save_file(REPOSITORY + OPML)
+    feed_list.save_file()
     file_name = hashlib.sha1(binary(feed_url)).hexdigest() + '.xml'
     with open(os.path.join(REPOSITORY, file_name), 'w') as f:
         for chunk in write(feed, indent='    ', canonical_order=True):
@@ -127,7 +134,7 @@ def delete_feed(feed_id):
     for feed in feed_list:
         if feed_id == hashlib.sha1(binary(feed.xml_url)).hexdigest():
             feed_list.remove(feed)
-    feed_list.save_file(REPOSITORY + OPML)
+    feed_list.save_file()
     xml_list = glob.glob(REPOSITORY + '*')
     for xml in xml_list:
         if xml == REPOSITORY + feed_id + '.xml':
