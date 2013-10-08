@@ -65,10 +65,16 @@ def get_all_feeds(category, parent_categories=[]):
     return result
 
 
-def check_path_valid(category_id):
+def check_path_valid(category_id, return_category_parent=False):
     REPOSITORY = app.config['REPOSITORY']
     OPML = app.config['OPML']
-    categories = deque(category_id.split('/'))
+    if return_category_parent:
+        category_list = category_id.splid('/')
+        target = category_list.pop()
+        categories = deque(category_list)
+    else:
+        taget = None
+        categories = deque(category_id.split('/'))
     feed_list = FeedList(REPOSITORY + OPML)
     cursor = feed_list
     while categories:
@@ -81,7 +87,7 @@ def check_path_valid(category_id):
                 break
         if not is_searched:
             return None
-    return feed_list, cursor
+    return feed_list, cursor, target
 
 
 def find_feed_in_opml(feed_id, category, parent_categories=[], result=[]):
