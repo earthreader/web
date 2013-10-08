@@ -290,30 +290,30 @@ function clickEntry(event) {
 		}
 	}
 
-	//set current marker
-	var list = main.querySelectorAll('.current');
-	for (var i=0; i<list.length; i++) {
-		list[i].removeClass('current');
-	}
-	target.parentElement.addClass('current');
-
 	var entry = target.parentElement;
-
-	//close content
-	var content = entry.querySelector('.entry-content');
-	if (content) {
-		entry.removeChild(content);
-		return;
-	}
-
-	//remove content
-	contents = main.querySelectorAll('.entry-content');
-	for (var i=0; i<contents.length; i++) {
-		contents[i].parentElement.removeChild(contents[i]);
-	}
-
 	var entry_url = entry.getAttribute('data-url');
+
 	getJSON(entry_url, function(obj) {
+		//set current marker
+		var list = main.querySelectorAll('.current');
+		for (var i=0; i<list.length; i++) {
+			list[i].removeClass('current');
+		}
+		target.parentElement.addClass('current');
+
+		//close content
+		var content = entry.querySelector('.entry-content');
+		if (content) {
+			entry.removeChild(content);
+			return;
+		}
+
+		//remove content
+		contents = main.querySelectorAll('.entry-content');
+		for (var i=0; i<contents.length; i++) {
+			contents[i].parentElement.removeChild(contents[i]);
+		}
+
 		var content = obj.content;
 		var elem = document.createElement('div');
 		elem.addClass('entry-content');
