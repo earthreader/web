@@ -295,6 +295,13 @@ def delete_feed_in_root(feed_id):
 @app.route('/<path:category_id>/feeds/<feed_id>/', methods=['DELETE'])
 def delete_feed_in_category(category_id, feed_id):
     feed_list, cursor, _ = check_path_valid(category_id)
+    if not cursor:
+        r = jsonify(
+            error='category-path-invalid',
+            message='Given category path is not valid'
+        )
+        r.status_code = 404
+        return r
     r = delete_feed(feed_id, (feed_list, cursor))
     if r:
         return r
