@@ -18,6 +18,18 @@ Element.prototype.addClass = function(name) {
 	}
 }
 
+function scrollToElement(element) {
+	var x = 0;
+    var y = 0;
+    while( element && !isNaN( element.offsetLeft ) && !isNaN( element.offsetTop ) ) {
+        x += element.offsetLeft - element.scrollLeft;
+        y += element.offsetTop - element.scrollTop;
+        element = element.offsetParent;
+    }
+
+	window.scrollTo(x, y);
+}
+
 function getJSON(url, onSuccess, onFail) {
 	var xhr = new XMLHttpRequest();
 	xhr.open('get', url);
@@ -34,6 +46,8 @@ function getJSON(url, onSuccess, onFail) {
 		} else {
 			if(onFail instanceof Function) {
 				(onFail)(xhr);
+			} else {
+				alert(xhr.statusText);
 			}
 		}
 	}
@@ -160,13 +174,47 @@ function makeFeedList(obj) {
 	var feeds = obj.feeds;
 	feedList.innerHTML = "";
 
-	for (var i=0; i<feeds.length; i++) {
-		var feed = feeds[i];
+	var makeCategory = function(parentObj, obj) {
+		var header = document.createElement('li');
+		var list = document.createElement('li');
+
+		header.addClass('header');
+		header.textContent = obj.title;
+
+		list.addClass('fold');
+
+		var ul = document.createElement('ul');
+		for (var i=0; i<obj.feeds.length; i++) {
+			var feed = obj.feeds[i];
+			if (feed.feeds) {
+				makeCategory(ul, feed);
+			} else {
+				makeFeed(ul, feed);
+			}
+		}
+
+		list.appendChild(ul);
+
+		parentObj.appendChild(header);
+		parentObj.appendChild(list);
+	};
+
+	var makeFeed = function(parentObj, obj) {
 		var elem = document.createElement('li');
 		elem.addClass('feed');
-		elem.setAttribute('data-url', feed.feed_url);
-		elem.textContent = feed.title;
-		feedList.appendChild(elem);
+		elem.setAttribute('data-url', obj.feed_url);
+		elem.textContent = obj.title;
+
+		parentObj.appendChild(elem);
+	};
+
+	for (var i=0; i<feeds.length; i++) {
+		var feed = feeds[i];
+		if (feed.feeds) {
+			makeCategory(feedList, feed);
+		} else {
+			makeFeed(feedList, feed);
+		}
 	}
 }
 
@@ -174,21 +222,21 @@ function refreshFeedList() {
 	getJSON('/feeds/', makeFeedList);
 }
 
-function getEntries(feed_url, title) {
+function getEntries(feed_url) {
 	var main = document.querySelector('[role=main]');
 	main.innerHTML = "";
 
 
-	//FIXME: use obj.title instead of title argument
-	var header = document.createElement('header');
-	var h2 = document.createElement('h2');
-	header.appendChild(h2);
-	h2.textContent = title;
-
-	main.appendChild(header);
 	getJSON(feed_url, function(obj) {
 		var feed_title = obj.title;
 		var entries = obj.entries;
+
+		var header = document.createElement('header');
+		var h2 = document.createElement('h2');
+		header.appendChild(h2);
+		h2.textContent = feed_title;
+
+		main.appendChild(header);
 
 		for (var i=0; i<entries.length; i++) {
 			var entry = entries[i];
@@ -206,8 +254,9 @@ function getEntries(feed_url, title) {
 	});
 }
 
-function click_feed(event) {
+function clickFeed(event) {
 	var target = event.target;
+	var navi = document.querySelector('[role=navigation]');
 
 	while (target.classList.contains('feed') === false) {
 		target = target.parentElement;
@@ -216,44 +265,100 @@ function click_feed(event) {
 		}
 	}
 
-	var title = target.textContent;
+	//set current marker
+	var list = navi.querySelectorAll('.current');
+	for (var i=0; i<list.length; i++) {
+		list[i].removeClass('current');
+	}
+	target.addClass('current');
+
 	var url = target.getAttribute('data-url');
 
 	closeMenu();
 
-	getEntries(url, title);
+	getEntries(url);
 }
 
 function clickEntry(event) {
 	var target = event.target;
+	var main = document.querySelector('[role=main]');
 
-	while (target.classList.contains('entry') === false) {
+	while (target.classList.contains('entry-title') === false) {
 		target = target.parentElement;
 		if (target === null) {
 			return;
 		}
 	}
 
-	//remove content
-	var contents = document.querySelectorAll('.entry-content');
-	for (var i=0; i<contents.length; i++) {
-		contents[i].parentElement.removeChild(contents[i]);
-	}
+	var entry = target.parentElement;
+	var entry_url = entry.getAttribute('data-url');
 
-	var entry_url = target.getAttribute('data-url');
 	getJSON(entry_url, function(obj) {
+		//set current marker
+		var list = main.querySelectorAll('.current');
+		for (var i=0; i<list.length; i++) {
+			list[i].removeClass('current');
+		}
+		target.parentElement.addClass('current');
+
+		//close content
+		var content = entry.querySelector('.entry-content');
+		if (content) {
+			entry.removeChild(content);
+			return;
+		}
+
+		//remove content
+		contents = main.querySelectorAll('.entry-content');
+		for (var i=0; i<contents.length; i++) {
+			contents[i].parentElement.removeChild(contents[i]);
+		}
+
 		var content = obj.content;
 		var elem = document.createElement('div');
 		elem.addClass('entry-content');
 		elem.innerHTML = content;
-		target.appendChild(elem);
+		entry.appendChild(elem);
+
+		scrollToElement(entry);
 	});
+}
+
+function keyboardShortcut(event) {
+	if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') {
+		return;
+	}
+
+	var main = document.querySelector('[role=main]');
+
+	switch (event.keyCode) {
+		case 74: //j
+			var entry = main.querySelector('.current');
+			if (entry == null) {
+				main.querySelector('.entry').querySelector('.entry-title').click();
+				return;
+			}
+			var next = entry.nextElementSibling;
+			if (next == null) {
+				return;
+			}
+			next.querySelector('.entry-title').click();
+			break;
+		case 75: //k
+			var entry = main.querySelector('.current');
+			var prev = entry.previousElementSibling;
+			if (prev == null) {
+				return;
+			}
+			prev.querySelector('.entry-title').click();
+			break;
+	}
 }
 
 function init() {
 	var navi = document.querySelector('[role=navigation]');
 	navi.addEventListener('click', toggleFolding, false);
-	navi.addEventListener('click', click_feed, false);
+	navi.addEventListener('click', clickFeed, false);
 
 	var main = document.querySelector('[role=main]');
 	main.addEventListener('click', clickEntry, false);
@@ -262,6 +367,7 @@ function init() {
 	document.addEventListener('click', toggleSide, false);
 
 	window.addEventListener('submit', processForm, false);
+	window.addEventListener('keydown', keyboardShortcut, false);
 
     var animationEnd;
     if (document.body.style.animation !== undefined) {

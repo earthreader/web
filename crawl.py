@@ -1,17 +1,23 @@
 import hashlib
 import os
 
-from libearth import crawler
+from libearth.crawler import crawl
+from libearth.feedlist import FeedList
 from libearth.schema import write
 
-feedlist = ['https://github.com/blog.atom',
-            'http://feeds.feedburner.com/CodeMetaphor',
-            'http://rss.egloos.com/blog/agile']
+REPOSITORY = 'repo'
+OPML = 'earthreader.opml'
 
-if not os.path.isdir('repo'):
-    os.mkdir('repo')
+if not os.path.isdir(REPOSITORY):
+    os.mkdir(REPOSITORY)
 
-generator = crawler.crawl(feedlist, 2)
+try:
+    feedlist = FeedList(os.path.join(REPOSITORY, OPML))
+    urllist = [feed.xml_url for feed in feedlist.get_all_feeds()]
+except IOError as e:
+    pass
+
+generator = crawl(urllist, 2)
 
 for feed_url, (feed_data, crawler_hints) in generator:
     file_name = hashlib.sha1(feed_url).hexdigest()
