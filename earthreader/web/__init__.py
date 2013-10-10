@@ -329,7 +329,6 @@ def delete_feed_in_category(category_id, feed_id):
     return category_feeds(category_id)
 
 
-
 @app.route('/feeds/<feed_id>/entries/')
 def feed_entries(feed_id):
     REPOSITORY = app.config['REPOSITORY']
