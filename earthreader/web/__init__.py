@@ -79,7 +79,6 @@ def feeds():
 @app.route('/feeds/', methods=['POST'])
 def add_feed():
     REPOSITORY = app.config['REPOSITORY']
-    OPML = app.config['OPML']
 
     feed_list = get_feedlist()
     try:
@@ -127,11 +126,7 @@ def add_feed():
 @app.route('/feeds/<feed_id>/', methods=['DELETE'])
 def delete_feed(feed_id):
     REPOSITORY = app.config['REPOSITORY']
-    OPML = app.config['OPML']
-    if not os.path.isfile(REPOSITORY + OPML):
-        pass
-    else:
-        feed_list = FeedList(REPOSITORY + OPML)
+    feed_list = get_feedlist()
     for feed in feed_list:
         if feed_id == hashlib.sha1(binary(feed.xml_url)).hexdigest():
             feed_list.remove(feed)
