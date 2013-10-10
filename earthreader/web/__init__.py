@@ -41,7 +41,7 @@ def get_all_feeds(category, parent_categories=[]):
         feed_path = '/'
     for child in category:
         if isinstance(child, FeedOutline):
-            feed_id = hashlib.sha1(child.xml_url).hexdigest()
+            feed_id = hashlib.sha1(binary(child.xml_url)).hexdigest()
             result.append({
                 'title': child.title,
                 'feed_url': url_for(
@@ -98,7 +98,7 @@ def find_feed_in_opml(feed_id, category, parent_categories=[], result=[]):
         feed_path = '/'
     for child in category:
         if isinstance(child, FeedOutline):
-            current_feed_id = hashlib.sha1(child.xml_url).hexdigest()
+            current_feed_id = hashlib.sha1(binary(child.xml_url)).hexdigest()
             if current_feed_id == feed_id:
                 result.append(feed_path)
         elif isinstance(child, CategoryOutline):
