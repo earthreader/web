@@ -535,3 +535,12 @@ def test_delete_category_in_category(xmls):
         assert result == json.loads(client.get('/categoryone/feeds/').data)
         for child in result['feeds']:
             assert not child['title'] == 'categorytwo'
+
+
+def test_category_all_entries(xmls):
+    with app.test_client() as client:
+        r = client.get('/categoryone/entries/')
+        assert r.status_code == 200
+        result = json.loads(r.data)
+        print(result)
+        assert len(result['entries']) == 2
