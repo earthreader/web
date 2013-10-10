@@ -276,11 +276,11 @@ def post_feed_in_category(category_id):
         return r
     if request.form['type'] == POST_FEED:
         url = request.form['url']
-        add_feed(url, (feed_list, cursor))
+        add_feed(url, feed_list, cursor)
         return category_feeds(category_id)
     elif request.form['type'] == POST_CATEGORY:
         title = request.form['title']
-        add_category(title, (feed_list, cursor))
+        add_category(title, feed_list, cursor)
         return category_feeds(category_id)
 
 
@@ -326,7 +326,7 @@ def delete_feed_in_category(category_id, feed_id):
         )
         r.status_code = 404
         return r
-    r = delete_feed(feed_id, (feed_list, cursor))
+    r = delete_feed(feed_id, feed_list, cursor)
     if r:
         return r
     return category_feeds(category_id)
