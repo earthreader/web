@@ -38,6 +38,9 @@ def get_feedlist():
 
     return feed_list
 
+def get_hash(name):
+    return hashlib.sha1(binary(name)).hexdigest()
+
 
 @app.route('/', methods=['GET'])
 def index():
@@ -56,7 +59,7 @@ def feeds():
                     'title': obj.title,
                     'feed_url': url_for(
                         'entries',
-                        feed_id=hashlib.sha1(binary(obj.xml_url)).hexdigest(),
+                        feed_id=get_hash(obj.xml_url),
                         _external=True)
                 })
             else:
@@ -64,7 +67,7 @@ def feeds():
                     'title': obj.title,
                     'feed_url': url_for(
                         'entries',
-                        feed_id=hashlib.sha1(binary(obj.title)).hexdigest(),
+                        feed_id=get_hash(obj.title),
                         _external=True),
                     'feeds': makeCategory(obj)
                 })
@@ -116,7 +119,7 @@ def add_feed():
     outline = OutLine('atom', feed.title.value, feed_url, blog_url)
     feed_list.append(outline)
     feed_list.save_file()
-    file_name = hashlib.sha1(binary(feed_url)).hexdigest() + '.xml'
+    file_name = get_hash(feed_url) + '.xml'
     with open(os.path.join(REPOSITORY, file_name), 'w') as f:
         for chunk in write(feed, indent='    ', canonical_order=True):
             f.write(chunk)
@@ -128,7 +131,7 @@ def delete_feed(feed_id):
     REPOSITORY = app.config['REPOSITORY']
     feed_list = get_feedlist()
     for feed in feed_list:
-        if feed_id == hashlib.sha1(binary(feed.xml_url)).hexdigest():
+        if feed_id == get_hash(feed.xml_url):
             feed_list.remove(feed)
     feed_list.save_file()
     xml_list = glob.glob(REPOSITORY + '*')
@@ -151,7 +154,7 @@ def entries(feed_id):
                     'entry_url': url_for(
                         'entry',
                         feed_id=feed_id,
-                        entry_id=hashlib.sha1(binary(entry.id)).hexdigest(),
+                        entry_id=get_hash(entry.id),
                         _external=True
                     )
                 })
@@ -175,7 +178,7 @@ def entry(feed_id, entry_id):
         with open(os.path.join(REPOSITORY, feed_id + '.xml')) as f:
             feed = read(Feed, f)
             for entry in feed.entries:
-                if entry_id == hashlib.sha1(binary(entry.id)).hexdigest():
+                if entry_id == get_hash(entry.id):
                     return jsonify(
                         content=entry.content
                     )
