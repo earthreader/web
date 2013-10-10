@@ -376,25 +376,33 @@ def category_all_entries(category_id):
         return r
 
     #FIXME: print all entries with sub-category
+    def get_child_feeds(feedlist):
+        childrens = set()
+        for children in childrens:
+            if isinstance(children, FeedOutline):
+                childrens.add(children)
+            else:
+                childrens = childrens.union(get_child_feeds(children))
+        return childrens
+
     entries = []
-    for child in cursor:
+    for child in get_child_feeds(cursor):
         feed_id = get_hash(child.xml_url)
-        if isinstance(child, FeedOutline):
-            with open(os.path.join(
-                    REPOSITORY, feed_id + '.xml'
-            )) as f:
-                feed = read(Feed, f)
-                for entry in feed.entries:
-                    entries.append({
-                        'title': entry.title,
-                        'entry_url': url_for(
-                            'feed_entry',
-                            feed_id=feed_id,
-                            entry_id=get_hash(entry.id),
-                            _external=True
-                        ),
-                        'updated': entry.published_at
-                    })
+        with open(os.path.join(
+                REPOSITORY, feed_id + '.xml'
+        )) as f:
+            feed = read(Feed, f)
+            for entry in feed.entries:
+                entries.append({
+                    'title': entry.title,
+                    'entry_url': url_for(
+                        'feed_entry',
+                        feed_id=feed_id,
+                        entry_id=get_hash(entry.id),
+                        _external=True
+                    ),
+                    'updated': entry.published_at
+                })
     return jsonify(
         title=category_id,
         entries=entries
