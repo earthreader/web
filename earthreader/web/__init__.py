@@ -329,6 +329,7 @@ def delete_feed_in_category(category_id, feed_id):
     return category_feeds(category_id)
 
 
+
 @app.route('/feeds/<feed_id>/entries/')
 def feed_entries(feed_id):
     REPOSITORY = app.config['REPOSITORY']
@@ -358,6 +359,45 @@ def feed_entries(feed_id):
         )
         r.status_code = 404
         return r
+
+
+@app.route('/<path:category_id>/entries/')
+def category_all_entries(category_id):
+    REPOSITORY = app.config['REPOSITORY']
+    lst, cursor, target = check_path_valid(category_id)
+
+    if not cursor:
+        r = jsonify(
+            error='category-path-invalid',
+            message='Given category was not found'
+        )
+        r.status_code = 404
+        return r
+
+    #FIXME: print all entries with sub-category
+    entries = []
+    for child in cursor:
+        feed_id = get_hash(child.xml_url)
+        if isinstance(child, FeedOutline):
+            with open(os.path.join(
+                    REPOSITORY, feed_id + '.xml'
+            )) as f:
+                feed = read(Feed, f)
+                for entry in feed.entries:
+                    entries.append({
+                        'title': entry.title,
+                        'entry_url': url_for(
+                            'feed_entry',
+                            feed_id=feed_id,
+                            entry_id=get_hash(entry.id),
+                            _external=True
+                        ),
+                        'updated': entry.published_at
+                    })
+    return jsonify(
+        title=category_id,
+        entries=entries
+    )
 
 
 @app.route('/<path:category_id>/feeds/<feed_id>/entries/')
