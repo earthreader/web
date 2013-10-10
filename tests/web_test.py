@@ -256,11 +256,11 @@ def test_all_feeds(xmls):
         assert r.status_code == 200
         result = json.loads(r.data)
         feeds = result['feeds']
-        assert feeds[0]['title'] == 'Feed Three'
-        assert feeds[1]['title'] == 'categoryone'
-        assert feeds[1]['feeds'][0]['title'] == 'Feed One'
-        assert feeds[1]['feeds'][1]['title'] == 'categorytwo'
-        assert feeds[1]['feeds'][1]['feeds'][0]['title'] == 'Feed Two'
+        assert feeds[0]['title'] == 'categoryone'
+        assert feeds[0]['feeds'][0]['title'] == 'Feed One'
+        assert feeds[0]['feeds'][1]['title'] == 'categorytwo'
+        assert feeds[0]['feeds'][1]['feeds'][0]['title'] == 'Feed Two'
+        assert feeds[1]['title'] == 'Feed Three'
         assert feeds[2]['title'] == 'categorythree'
         assert feeds[2]['feeds'][0]['title'] == 'Feed Four'
 
@@ -274,7 +274,7 @@ def test_feed_entries(xmls):
         result = json.loads(r.data)
         feeds = result['feeds']
         # Feed Three
-        feed_url = feeds[0]['feed_url']
+        feed_url = feeds[1]['feed_url']
         r1 = client.get(feed_url)
         assert r1.status_code == 200
         r1_data = json.loads(r1.data)
@@ -287,7 +287,7 @@ def test_feed_entries(xmls):
         assert entry_r1_data['updated'] == \
             '2013-08-21 07:49:20+07:00'
         # Feed One
-        feed_url = feeds[1]['feeds'][0]['feed_url']
+        feed_url = feeds[0]['feeds'][0]['feed_url']
         r1 = client.get(feed_url)
         assert r1.status_code == 200
         r1_data = json.loads(r1.data)
@@ -309,7 +309,7 @@ def test_feed_entries(xmls):
         assert entry_r1_data['updated'] == entry_r2_data['updated'] == \
             '2013-08-19 07:49:20+07:00'
         # Feed Two
-        feed_url = feeds[1]['feeds'][1]['feeds'][0]['feed_url']
+        feed_url = feeds[0]['feeds'][1]['feeds'][0]['feed_url']
         r1 = client.get(feed_url)
         assert r1.status_code == 200
         r1_data = json.loads(r1.data)
@@ -363,6 +363,7 @@ def test_category_feeds(xmls):
         assert result['feeds'][0]['title'] == 'Feed One'
         # categorytwo
         url = result['feeds'][1]['feed_url']
+        print(url)
         r = client.get(url)
         assert r.status_code == 200
         result = json.loads(r.data)
@@ -386,7 +387,7 @@ def test_add_feed(xmls):
                                   url='http://feedfive.com/feed/atom/'))
         assert r.status_code == 200
         result = json.loads(r.data)
-        assert result['feeds'][1]['title'] == 'Feed Five'
+        assert result['feeds'][3]['title'] == 'Feed Five'
         opml = FeedList(REPOSITORY + OPML)
         assert opml[3].title == 'Feed Five'
 
