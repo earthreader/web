@@ -26,45 +26,63 @@ app.config.update(dict(
 ))
 
 
+def is_exist_feedlist():
+    REPOSITORY = app.config['REPOSITORY']
+    OPML = app.config['OPML']
+    if not os.path.isfile(REPOSITORY + OPML):
+        return False
+    return True
+
+
+def get_feedlist():
+    REPOSITORY = app.config['REPOSITORY']
+    OPML = app.config['OPML']
+    if not os.path.isfile(REPOSITORY + OPML):
+        if not os.path.isdir(REPOSITORY):
+            os.mkdir(REPOSITORY)
+        feed_list = FeedList()
+        feed_list.save_file(REPOSITORY + OPML)
+
+    feed_list = FeedList(REPOSITORY + OPML)
+
+    return feed_list
+
+
+def get_hash(name):
+    return hashlib.sha1(binary(name)).hexdigest()
+
+
 @app.route('/', methods=['GET'])
 def index():
     return render_template('index.html')
 
 
-def get_all_feeds(category, parent_categories=[]):
-    result = []
-    categories = []
-    if parent_categories:
-        feed_path = '/'.join(parent_categories)
-    else:
-        feed_path = '/'
-    for child in category:
-        if isinstance(child, FeedOutline):
-            feed_id = hashlib.sha1(binary(child.xml_url)).hexdigest()
-            result.append({
-                'title': child.title,
+def get_all_feeds(category, parents=[]):
+    feeds = []
+    feed_path = '/'.join(parents)
+    for obj in category:
+        if isinstance(obj, FeedOutline):
+            feeds.append({
+                'title': obj.title,
                 'feed_url': url_for(
                     'category_feed_entries',
                     category_id=feed_path,
-                    feed_id=feed_id
-                )
+                    feed_id=get_hash(obj.xml_url),
+                    _external=True)
             })
-        elif isinstance(child, CategoryOutline):
-            result.append({
-                'title': child.title,
-                'feed_url': feed_path + '/' + child.title + '/feeds/',
-                'feeds': get_all_feeds(
-                    child,
-                    parent_categories.append(child.title)
-                    if parent_categories else [child.title]
-                )
+        else:
+            feeds.append({
+                'title': obj.title,
+                'feed_url': url_for(
+                    'feed_entries',
+                    feed_id=obj.title,
+                    _external=True),
+                'feeds': get_all_feeds(obj)
             })
-    return result
+    return feeds
 
 
 def check_path_valid(category_id, return_category_parent=False):
-    REPOSITORY = app.config['REPOSITORY']
-    OPML = app.config['OPML']
     if return_category_parent:
         category_list = category_id.split('/')
         target = category_list.pop()
@@ -72,7 +90,7 @@ def check_path_valid(category_id, return_category_parent=False):
     else:
         target = None
         categories = deque(category_id.split('/'))
-    feed_list = FeedList(REPOSITORY + OPML)
+    feed_list = get_feedlist()
     cursor = feed_list
     while categories:
         is_searched = False
@@ -113,14 +131,8 @@ def find_feed_in_opml(feed_id, category, parent_categories=[], result=[]):
 
 def add_feed(url, feed_list=None, cursor=None):
     REPOSITORY = app.config['REPOSITORY']
-    OPML = app.config['OPML']
     if not feed_list:
-        if not os.path.isfile(REPOSITORY + OPML):
-            if not os.path.isdir(REPOSITORY):
-                os.mkdir(REPOSITORY)
-            feed_list = FeedList()
-        else:
-            feed_list = FeedList(REPOSITORY + OPML)
+        feed_list = get_feedlist()
         cursor = feed_list
     try:
         url = request.form['url']
@@ -157,8 +169,7 @@ def add_feed(url, feed_list=None, cursor=None):
                     link.mimetype == 'text/html':
                 outline.blog_url = link.uri
     cursor.append(outline)
-    feed_list.save_file(REPOSITORY + OPML)
-    feed_list = FeedList(REPOSITORY + OPML)
+    feed_list.save_file()
     file_name = hashlib.sha1(binary(feed_url)).hexdigest() + '.xml'
     with open(os.path.join(REPOSITORY, file_name), 'w') as f:
         for chunk in write(feed, indent='    ', canonical_order=True):
@@ -167,26 +178,19 @@ def add_feed(url, feed_list=None, cursor=None):
 
 def add_category(title, feed_list=None, cursor=None):
     REPOSITORY = app.config['REPOSITORY']
-    OPML = app.config['OPML']
     if not feed_list:
-        if not os.path.isfile(REPOSITORY + OPML):
-            if not os.path.isdir(REPOSITORY):
-                os.mkdir(REPOSITORY)
-            feed_list = FeedList()
-        else:
-            feed_list = FeedList(REPOSITORY + OPML)
+        feed_list = get_feedlist()
         cursor = feed_list
     title = request.form['title']
     outline = CategoryOutline(title)
     cursor.append(outline)
-    feed_list.save_file(REPOSITORY + OPML)
+    feed_list.save_file()
 
 
 def delete_feed(feed_id, feed_list=None, cursor=None):
     REPOSITORY = app.config['REPOSITORY']
-    OPML = app.config['OPML']
     if not feed_list:
-        if not os.path.isfile(REPOSITORY + OPML):
+        if not is_exist_feedlist():
             r = jsonify(
                 error='opml-not-found',
                 message='Cannot open OPML'
@@ -194,7 +198,7 @@ def delete_feed(feed_id, feed_list=None, cursor=None):
             r.status_code = 400
             return r
         else:
-            feed_list = FeedList(REPOSITORY + OPML)
+            feed_list = get_feedlist()
         cursor = feed_list
     target = None
     for feed in cursor:
@@ -210,23 +214,21 @@ def delete_feed(feed_id, feed_list=None, cursor=None):
         )
         r.status_code = 400
         return r
-    feed_list.save_file(REPOSITORY + OPML)
+    feed_list.save_file()
     if not find_feed_in_opml(feed_id, feed_list):
         os.remove(REPOSITORY + feed_id + '.xml')
 
 
 @app.route('/feeds/', methods=['GET'])
 def feeds():
-    REPOSITORY = app.config['REPOSITORY']
-    OPML = app.config['OPML']
-    if not os.path.isfile(REPOSITORY + OPML):
+    if not is_exist_feedlist():
         r = jsonify(
             error='opml-not-found',
             message='Cannot open OPML'
         )
         r.status_code = 400
         return r
-    feed_list = FeedList(REPOSITORY + OPML)
+    feed_list = get_feedlist()
     feeds = get_all_feeds(feed_list)
     return jsonify(feeds=feeds)
 
@@ -291,8 +293,6 @@ def delete_feed_in_root(feed_id):
 
 @app.route('/<path:category_id>/', methods=['DELETE'])
 def delete_category(category_id):
-    REPOSITORY = app.config['REPOSITORY']
-    OPML = app.config['OPML']
     feed_list, cursor, target = check_path_valid(category_id, True)
     if not cursor:
         r = jsonify(
@@ -305,7 +305,7 @@ def delete_category(category_id):
         if isinstance(child, CategoryOutline):
             if child.text == target:
                 cursor.remove(child)
-    feed_list.save_file(REPOSITORY + OPML)
+    feed_list.save_file()
     index = category_id.rfind('/')
     if index == -1:
         return feeds()
@@ -342,7 +342,7 @@ def feed_entries(feed_id):
                     'entry_url': url_for(
                         'feed_entry',
                         feed_id=feed_id,
-                        entry_id=hashlib.sha1(binary(entry.id)).hexdigest(),
+                        entry_id=get_hash(entry.id),
                         _external=True
                     ),
                     'updated': entry.published_at
@@ -380,7 +380,7 @@ def feed_entry(feed_id, entry_id):
         with open(os.path.join(REPOSITORY, feed_id + '.xml')) as f:
             feed = read(Feed, f)
             for entry in feed.entries:
-                if entry_id == hashlib.sha1(binary(entry.id)).hexdigest():
+                if entry_id == get_hash(entry.id):
                     return jsonify(
                         content=entry.content,
                         updated=entry.updated_at.__str__()
