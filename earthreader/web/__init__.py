@@ -38,6 +38,7 @@ def get_feedlist():
 
     return feed_list
 
+
 def get_hash(name):
     return hashlib.sha1(binary(name)).hexdigest()
 
