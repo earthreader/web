@@ -50,17 +50,15 @@ def get_all_feeds(category, parent_categories=[]):
                 )
             })
         elif isinstance(child, CategoryOutline):
-            categories.append(child)
-    for category in categories:
-        result.append({
-            'title': category.title,
-            'feed_url': feed_path + '/' + category.title + '/feeds/',
-            'feeds': get_all_feeds(
-                category,
-                parent_categories.append(category.title)
-                if parent_categories else [category.title]
-            )
-        })
+            result.append({
+                'title': child.title,
+                'feed_url': feed_path + '/' + child.title + '/feeds/',
+                'feeds': get_all_feeds(
+                    child,
+                    parent_categories.append(child.title)
+                    if parent_categories else [child.title]
+                )
+            })
     return result
 
 
