@@ -363,11 +363,10 @@ def test_category_feeds(xmls):
         assert result['feeds'][0]['title'] == 'Feed One'
         # categorytwo
         url = result['feeds'][1]['feed_url']
-        print(url)
         r = client.get(url)
         assert r.status_code == 200
         result = json.loads(r.data)
-        assert result['feeds'][0]['title'] == 'Feed Two'
+        assert result['entries'][0]['title'] == 'Feed Two: Entry One'
 
 
 def test_invalid_path(xmls):

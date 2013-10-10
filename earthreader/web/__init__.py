@@ -75,8 +75,7 @@ def get_all_feeds(category, parents=[]):
                 'title': obj.title,
                 'feed_url': url_for(
                     'category_all_entries',
-                    #FIXME: working with sub-category
-                    category_id=obj.title,
+                    category_id=feed_path + '/' + obj.title,
                     _external=True),
                 'feeds': get_all_feeds(obj)
             })
@@ -378,7 +377,6 @@ def category_all_entries(category_id):
     entries = []
     for child in cursor.get_all_feeds():
         feed_id = get_hash(child.xml_url)
-        print child.xml_url
         with open(os.path.join(
                 REPOSITORY, feed_id + '.xml'
         )) as f:
