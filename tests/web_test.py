@@ -185,31 +185,31 @@ def get_feed_urls(category, urls=[]):
 def mock_response(req):
     if req.get_full_url() == 'http://feedone.com/feed/atom/':
         resp = urllib2.addinfourl(StringIO(feed_one), 'mock message',
-            req.get_full_url())
+                                  req.get_full_url())
         resp.code = 200
         resp.msg = "OK"
         return resp
     if req.get_full_url() == 'http://feedtwo.com/feed/atom/':
         resp = urllib2.addinfourl(StringIO(feed_two), 'mock message',
-            req.get_full_url())
+                                  req.get_full_url())
         resp.code = 200
         resp.msg = "OK"
         return resp
     if req.get_full_url() == 'http://feedthree.com/feed/atom/':
         resp = urllib2.addinfourl(StringIO(feed_three), 'mock message',
-            req.get_full_url())
+                                  req.get_full_url())
         resp.code = 200
         resp.msg = "OK"
         return resp
     if req.get_full_url() == 'http://feedfour.com/feed/atom/':
         resp = urllib2.addinfourl(StringIO(feed_four), 'mock message',
-            req.get_full_url())
+                                  req.get_full_url())
         resp.code = 200
         resp.msg = "OK"
         return resp
     if req.get_full_url() == 'http://feedfive.com/feed/atom/':
         resp = urllib2.addinfourl(StringIO(feed_to_add), 'mock message',
-            req.get_full_url())
+                                  req.get_full_url())
         resp.code = 200
         resp.msg = "OK"
         return resp
