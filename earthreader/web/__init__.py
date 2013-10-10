@@ -7,7 +7,7 @@ try:
 except ImportError:
     import urllib.request as urllib2
 
-from libearth.compat import binary, binary_type
+from libearth.compat import binary
 from libearth.feed import Feed
 from libearth.feedlist import (Feed as FeedOutline,
                                FeedCategory as CategoryOutline, FeedList)
@@ -386,7 +386,7 @@ def feed_entry(feed_id, entry_id):
                 if entry_id == hashlib.sha1(binary(entry.id)).hexdigest():
                     return jsonify(
                         content=entry.content,
-                        updated=binary_type(entry.updated_at)
+                        updated=entry.updated_at.__str__()
                     )
             r = jsonify(
                 error='entry-not-found',
