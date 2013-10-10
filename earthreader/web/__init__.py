@@ -74,8 +74,9 @@ def get_all_feeds(category, parents=[]):
             feeds.append({
                 'title': obj.title,
                 'feed_url': url_for(
-                    'feed_entries',
-                    feed_id=obj.title,
+                    'category_all_entries',
+                    #FIXME: working with sub-category
+                    category_id=obj.title,
                     _external=True),
                 'feeds': get_all_feeds(obj)
             })
