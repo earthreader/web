@@ -1,9 +1,17 @@
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 import glob
 import hashlib
 import os
 import os.path
 import re
 import traceback
+try:
+    import urllib2
+except ImportError:
+    import urllib.request as urllib2
 
 from flask import json
 
@@ -15,7 +23,6 @@ from libearth.schema import write
 
 from earthreader.web import app, POST_FEED, POST_CATEGORY
 
-import httpretty
 from pytest import fixture
 
 
@@ -149,6 +156,23 @@ feed_four = '''
 '''
 
 
+feed_to_add = '''
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <title type="text">Feed Five</title>
+    <id>http://feedfive.com/feed/atom/</id>
+    <updated>2013-08-23T07:49:20+07:00</updated>
+    <link type="text/html" rel="alternate" href="http://feedfive.com" />
+    <entry>
+        <title>Feed Five: Entry One</title>
+        <id>http://feedone.com/feed/atom/1/</id>
+        <updated>2013-08-22T07:49:20+07:00</updated>
+        <published>2013-08-22T07:49:20+07:00</published>
+        <content>This is content of Entry One in Feed Four</content>
+    </entry>
+</feed>
+'''
+
+
 def get_feed_urls(category, urls=[]):
     for child in category:
         if isinstance(child, FeedOutline):
@@ -158,17 +182,48 @@ def get_feed_urls(category, urls=[]):
     return urls
 
 
+def mock_response(req):
+    if req.get_full_url() == 'http://feedone.com/feed/atom/':
+        resp = urllib2.addinfourl(StringIO(feed_one), 'mock message',
+            req.get_full_url())
+        resp.code = 200
+        resp.msg = "OK"
+        return resp
+    if req.get_full_url() == 'http://feedtwo.com/feed/atom/':
+        resp = urllib2.addinfourl(StringIO(feed_two), 'mock message',
+            req.get_full_url())
+        resp.code = 200
+        resp.msg = "OK"
+        return resp
+    if req.get_full_url() == 'http://feedthree.com/feed/atom/':
+        resp = urllib2.addinfourl(StringIO(feed_three), 'mock message',
+            req.get_full_url())
+        resp.code = 200
+        resp.msg = "OK"
+        return resp
+    if req.get_full_url() == 'http://feedfour.com/feed/atom/':
+        resp = urllib2.addinfourl(StringIO(feed_four), 'mock message',
+            req.get_full_url())
+        resp.code = 200
+        resp.msg = "OK"
+        return resp
+    if req.get_full_url() == 'http://feedfive.com/feed/atom/':
+        resp = urllib2.addinfourl(StringIO(feed_to_add), 'mock message',
+            req.get_full_url())
+        resp.code = 200
+        resp.msg = "OK"
+        return resp
+
+
+class TestHTTPHandler(urllib2.HTTPHandler):
+    def http_open(self, req):
+        return mock_response(req)
+
+
 @fixture
 def xmls(request):
-    httpretty.enable()
-    httpretty.register_uri(httpretty.GET, 'http://feedone.com/feed/atom/',
-                           body=feed_one)
-    httpretty.register_uri(httpretty.GET, 'http://feedtwo.com/feed/atom/',
-                           body=feed_two)
-    httpretty.register_uri(httpretty.GET, 'http://feedthree.com/feed/atom/',
-                           body=feed_three)
-    httpretty.register_uri(httpretty.GET, 'http://feedfour.com/feed/atom/',
-                           body=feed_four)
+    my_opener = urllib2.build_opener(TestHTTPHandler)
+    urllib2.install_opener(my_opener)
     if not os.path.isdir(REPOSITORY):
         os.mkdir(REPOSITORY)
     feed_list = FeedList(opml, is_xml_string=True)
@@ -189,7 +244,6 @@ def xmls(request):
         for file in files:
             os.remove(file)
         os.rmdir(REPOSITORY)
-        httpretty.disable()
 
     request.addfinalizer(remove_test_repo)
 
@@ -315,33 +369,15 @@ def test_category_feeds(xmls):
 
 def test_invalid_path(xmls):
     with app.test_client() as client:
-        feed_id = hashlib.sha1('http://feedone.com/feed/atom/').hexdigest()
+        feed_id = hashlib.sha1(
+            binary('http://feedone.com/feed/atom/')).hexdigest()
         r = client.get('/non-exist-category/feeds/' + feed_id + '/entries/')
         result = json.loads(r.data)
         assert r.status_code == 404
         assert result['error'] == 'category-path-invalid'
 
 
-feed_to_add = '''
-<feed xmlns="http://www.w3.org/2005/Atom">
-    <title type="text">Feed Five</title>
-    <id>http://feedfive.com/feed/atom/</id>
-    <updated>2013-08-23T07:49:20+07:00</updated>
-    <link type="text/html" rel="alternate" href="http://feedfive.com" />
-    <entry>
-        <title>Feed Five: Entry One</title>
-        <id>http://feedone.com/feed/atom/1/</id>
-        <updated>2013-08-22T07:49:20+07:00</updated>
-        <published>2013-08-22T07:49:20+07:00</published>
-        <content>This is content of Entry One in Feed Four</content>
-    </entry>
-</feed>
-'''
-
-
 def test_add_feed(xmls):
-    httpretty.register_uri(httpretty.GET, 'http://feedfive.com/feed/atom/',
-                           body=feed_to_add)
     with app.test_client() as client:
         r = client.post('/feeds/',
                         data=dict(type=POST_FEED,
@@ -354,8 +390,6 @@ def test_add_feed(xmls):
 
 
 def test_add_feed_in_category(xmls):
-    httpretty.register_uri(httpretty.GET, 'http://feedfive.com/feed/atom/',
-                           body=feed_to_add)
     with app.test_client() as client:
         r = client.post('/categoryone/categorytwo/feeds/',
                         data=dict(type=POST_FEED,
@@ -409,9 +443,6 @@ def test_add_category_without_opml():
 
 
 def test_add_feed_without_opml():
-    httpretty.enable()
-    httpretty.register_uri(httpretty.GET, 'http://feedone.com/feed/atom/',
-                           body=feed_one)
     with app.test_client() as client:
         r = client.post('/feeds/',
                         data=dict(type=POST_FEED,
@@ -427,7 +458,6 @@ def test_add_feed_without_opml():
     for file in files:
         os.remove(file)
     os.rmdir(REPOSITORY)
-    httpretty.disable()
 
 
 def test_delete_feed(xmls):
@@ -457,8 +487,6 @@ def test_delete_feed_in_category(xmls):
 
 def test_delete_feed_in_two_category(xmls):
     REPOSITORY = app.config['REPOSITORY']
-    httpretty.register_uri(httpretty.GET, 'http://feedone.com/feed/atom/',
-                           body=feed_one)
     with app.test_client() as client:
         r = client.post('/feeds/',
                         data=dict(type=POST_FEED,
