@@ -375,19 +375,10 @@ def category_all_entries(category_id):
         r.status_code = 404
         return r
 
-    #FIXME: print all entries with sub-category
-    def get_child_feeds(feedlist):
-        childrens = set()
-        for children in childrens:
-            if isinstance(children, FeedOutline):
-                childrens.add(children)
-            else:
-                childrens = childrens.union(get_child_feeds(children))
-        return childrens
-
     entries = []
-    for child in get_child_feeds(cursor):
+    for child in cursor.get_all_feeds():
         feed_id = get_hash(child.xml_url)
+        print child.xml_url
         with open(os.path.join(
                 REPOSITORY, feed_id + '.xml'
         )) as f:
