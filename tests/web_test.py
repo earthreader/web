@@ -220,10 +220,12 @@ class TestHTTPHandler(urllib2.HTTPHandler):
         return mock_response(req)
 
 
+my_opener = urllib2.build_opener(TestHTTPHandler)
+urllib2.install_opener(my_opener)
+
+
 @fixture
 def xmls(request):
-    my_opener = urllib2.build_opener(TestHTTPHandler)
-    urllib2.install_opener(my_opener)
     if not os.path.isdir(REPOSITORY):
         os.mkdir(REPOSITORY)
     feed_list = FeedList(opml, is_xml_string=True)
