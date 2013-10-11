@@ -342,8 +342,16 @@ def delete_feed_in_category(category_id, feed_id):
     return category_feeds(category_id)
 
 
-@app.route('/feeds/<feed_id>/entries/')
-def feed_entries(feed_id):
+@app.route('/feeds/<feed_id>/entries/', defaults={'category_id': '/'})
+@app.route('/<path:category_id>/feeds/<feed_id>/entries/')
+def feed_entries(category_id, feed_id):
+    if not check_path_valid(category_id)[0]:
+        r = jsonify(
+            error='category-path-invalid',
+            message='Given category path is not valid'
+        )
+        r.status_code = 404
+        return r
     REPOSITORY = app.config['REPOSITORY']
     try:
         with open(os.path.join(REPOSITORY, feed_id + '.xml')) as f:
@@ -354,11 +362,12 @@ def feed_entries(feed_id):
                     'title': entry.title,
                     'entry_url': url_for(
                         'feed_entry',
+                        category_id=category_id,
                         feed_id=feed_id,
                         entry_id=get_hash(entry.id),
                         _external=True
                     ),
-                    'updated': entry.published_at
+                    'updated': entry.updated_at.__str__()
                 })
         return jsonify(
             title=feed.title,
@@ -410,21 +419,17 @@ def category_all_entries(category_id):
     )
 
 
-@app.route('/<path:category_id>/feeds/<feed_id>/entries/')
-def category_feed_entries(category_id, feed_id):
-    if check_path_valid(category_id)[0]:
-        return feed_entries(feed_id)
-    else:
+@app.route('/feeds/<feed_id>/entries/<entry_id>/',
+           defaults={'category_id': '/'})
+@app.route('/<path:category_id>/feeds/<feed_id>/entries/<entry_id>/')
+def feed_entry(category_id, feed_id, entry_id):
+    if not check_path_valid(category_id)[0]:
         r = jsonify(
             error='category-path-invalid',
             message='Given category path is not valid'
         )
         r.status_code = 404
         return r
-
-
-@app.route('/feeds/<feed_id>/entries/<entry_id>/')
-def feed_entry(feed_id, entry_id):
     REPOSITORY = app.config['REPOSITORY']
     try:
         with open(os.path.join(REPOSITORY, feed_id + '.xml')) as f:
@@ -446,19 +451,6 @@ def feed_entry(feed_id, entry_id):
         r = jsonify(
             error='feed-not-found',
             message='Given feed does not exist'
-        )
-        r.status_code = 404
-        return r
-
-
-@app.route('/<path:category_id>/feeds/<feed_id>/entries/<entry_id>/')
-def category_feed_entry(category_id, feed_id, entry_id):
-    if check_path_valid(category_id)[0]:
-        return feed_entry(feed_id, entry_id)
-    else:
-        r = jsonify(
-            error='category-path-invalid',
-            message='Given category path is not valid'
         )
         r.status_code = 404
         return r
