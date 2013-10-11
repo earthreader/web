@@ -230,7 +230,7 @@ def post_feed_or_category(category_id):
                     outline.blog_url = link.uri
         cursor.append(outline)
         feed_list.save_file()
-        file_name = hashlib.sha1(binary(feed_url)).hexdigest() + '.xml'
+        file_name = get_hash(feed.id) + '.xml'
         with open(os.path.join(REPOSITORY, file_name), 'w') as f:
             for chunk in write(feed, indent='    ', canonical_order=True):
                 f.write(chunk)
@@ -323,7 +323,16 @@ def feed_entries(category_id, feed_id):
                         entry_id=get_hash(entry.id),
                         _external=True
                     ),
-                    'updated': entry.updated_at.__str__()
+                    'permalink': entry.id,
+                    'updated': entry.updated_at.__str__(),
+                    'feed': {
+                        'title': feed.title,
+                        'feed_url': url_for(
+                            'feed_entries',
+                            feed_id=get_hash(feed.id)
+                        ),
+                        'permalink': feed.id
+                    }
                 })
         return jsonify(
             title=feed.title,
