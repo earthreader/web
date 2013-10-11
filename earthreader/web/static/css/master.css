@@ -51,7 +51,7 @@ body {
 	content: "\2637";
 }
 
-[rolr=navigation],
+[role=navigation],
 [role=main],
 [role=complementary] {
 	width: 100%;
