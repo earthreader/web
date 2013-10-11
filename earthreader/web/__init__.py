@@ -370,7 +370,7 @@ def category_entries(category_id):
                 entry_id=get_hash(entry.id),
                 _external=True
             ),
-            'permerlink': entry.id,
+            'permalink': entry.id,
             'updated': entry.updated_at.__str__(),
             'feed': {
                 'title': feed.title,
@@ -378,7 +378,7 @@ def category_entries(category_id):
                     'feed_entries',
                     feed_id=get_hash(feed.id)
                 ),
-                'permerlink': feed.id
+                'permalink': feed.id
             }
         })
     return jsonify(
