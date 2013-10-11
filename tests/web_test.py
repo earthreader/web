@@ -113,7 +113,7 @@ feed_two = '''
     <link type="text/html" rel="alternate" href="http://feedtwo.com" />
     <entry>
         <title>Feed Two: Entry One</title>
-        <id>http://feedone.com/feed/atom/1/</id>
+        <id>http://feedtwo.com/feed/atom/1/</id>
         <updated>2013-08-20T07:49:20+07:00</updated>
         <published>2013-08-20T07:49:20+07:00</published>
         <content>This is content of Entry One in Feed Two</content>
@@ -130,7 +130,7 @@ feed_three = '''
     <link type="text/html" rel="alternate" href="http://feedthree.com" />
     <entry>
         <title>Feed Three: Entry One</title>
-        <id>http://feedone.com/feed/atom/1/</id>
+        <id>http://feedthree.com/feed/atom/1/</id>
         <updated>2013-08-21T07:49:20+07:00</updated>
         <published>2013-08-21T07:49:20+07:00</published>
         <content>This is content of Entry One in Feed Three</content>
@@ -147,7 +147,7 @@ feed_four = '''
     <link type="text/html" rel="alternate" href="http://feedfour.com" />
     <entry>
         <title>Feed Four: Entry One</title>
-        <id>http://feedone.com/feed/atom/1/</id>
+        <id>http://feedfour.com/feed/atom/1/</id>
         <updated>2013-08-22T07:49:20+07:00</updated>
         <published>2013-08-22T07:49:20+07:00</published>
         <content>This is content of Entry One in Feed Four</content>
@@ -164,7 +164,7 @@ feed_to_add = '''
     <link type="text/html" rel="alternate" href="http://feedfive.com" />
     <entry>
         <title>Feed Five: Entry One</title>
-        <id>http://feedone.com/feed/atom/1/</id>
+        <id>http://feedfive.com/feed/atom/1/</id>
         <updated>2013-08-22T07:49:20+07:00</updated>
         <published>2013-08-22T07:49:20+07:00</published>
         <content>This is content of Entry One in Feed Four</content>
