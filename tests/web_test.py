@@ -252,7 +252,6 @@ def xmls(request):
 
 def test_all_feeds(xmls):
     FEED_ID_PATTERN = re.compile('(?:.?)+/feeds/(.+)/entries/')
-    ENTRY_ID_PATTERN = re.compile('(?:.?)+/feeds/(?:.+)/entries/(.+)/')
     with app.test_client() as client:
         # /
         r = client.get('/feeds/')
