@@ -80,30 +80,32 @@ def get_all_feeds(category, path=None):
                 'title': child.title,
                 'feeds_url': url_for(
                     'feeds',
-                    category_id=feed_path + '/' + child.title
-                    if path else child.title,
+                    category_id=feed_path + '/-' + child.title
+                    if path else '-' + child.title,
                     _external=True
                 ),
                 'entries_url': url_for(
                     'category_entries',
-                    category_id=feed_path + '/' + child.title
-                    if path else child.title,
+                    category_id=feed_path + '/-' + child.title
+                    if path else '-' + child.title,
                     _external=True
                 ),
                 'add_feed_url': url_for(
                     'add_feed',
-                    category_id=feed_path + '/' + child.title
-                    if path else child.title,
+                    category_id=feed_path + '/-' + child.title
+                    if path else '-' + child.title,
                     _external=True
                 ),
                 'add_category_url': url_for(
                     'add_category',
-                    category_id=feed_path + '/' + child.title
+                    category_id=feed_path + '/-' + child.title
+                    if path else '-' + child.title,
+                    _external=True
                 ),
                 'remove_category_url': url_for(
                     'delete_category',
-                    category_id=feed_path + '/' + child.title
-                    if path else child.title,
+                    category_id=feed_path + '/-' + child.title
+                    if path else '-' + child.title,
                     _external=True
                 ),
             })
@@ -116,11 +118,12 @@ def check_path_valid(category_id, return_category_parent=False):
         return feed_list, feed_list, None
     if return_category_parent:
         category_list = category_id.split('/')
-        target = category_list.pop()
-        categories = deque(category_list)
+        target = category_list.pop()[1:]
+        categories = deque([category[1:] for category in category_list])
     else:
         target = None
-        categories = deque(category_id.split('/'))
+        categories = deque([category[1:] for category in
+                           category_id.split('/')])
     feed_list = get_feedlist()
     cursor = feed_list
     while categories:
@@ -404,7 +407,7 @@ def category_entries(category_id):
             }
         })
     return jsonify(
-        title=category_id.split('/')[-1],
+        title=category_id.split('/')[-1][1:],
         entries=entries
     )
 

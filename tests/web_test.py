@@ -303,10 +303,11 @@ def test_all_feeds(xmls):
         assert result['updated'] == '2013-08-21 07:49:20+07:00'
         # /categoryone
         category_url = root_categories[0]['feeds_url']
+        print category_url
         assert category_url == \
             url_for(
                 'feeds',
-                category_id='categoryone',
+                category_id='-categoryone',
                 _external=True
             )
         one_r = client.get(root_categories[0]['feeds_url'])
@@ -322,7 +323,7 @@ def test_all_feeds(xmls):
         assert feed_url == \
             url_for(
                 'feed_entries',
-                category_id='categoryone',
+                category_id='-categoryone',
                 feed_id=feed_id,
                 _external=True
             )
@@ -334,7 +335,7 @@ def test_all_feeds(xmls):
         assert entries[0]['entry_url'] == \
             url_for(
                 'feed_entry',
-                category_id='categoryone',
+                category_id='-categoryone',
                 feed_id=feed_id,
                 entry_id=get_hash('http://feedone.com/feed/atom/1/'),
                 _external=True
@@ -360,7 +361,7 @@ def test_all_feeds(xmls):
         assert category_url == \
             url_for(
                 'feeds',
-                category_id='categoryone/categorytwo',
+                category_id='-categoryone/-categorytwo',
                 _external=True
             )
 
@@ -369,7 +370,7 @@ def test_all_feeds(xmls):
         assert feed_url == \
             url_for(
                 'feed_entries',
-                category_id='categoryone/categorytwo',
+                category_id='-categoryone/-categorytwo',
                 feed_id=feed_id,
                 _external=True
             )
@@ -381,7 +382,7 @@ def test_all_feeds(xmls):
         assert entries[0]['entry_url'] == \
             url_for(
                 'feed_entry',
-                category_id='categoryone/categorytwo',
+                category_id='-categoryone/-categorytwo',
                 feed_id=feed_id,
                 entry_id=get_hash('http://feedtwo.com/feed/atom/1/'),
                 _external=True
@@ -399,7 +400,7 @@ def test_all_feeds(xmls):
         assert category_url == \
             url_for(
                 'feeds',
-                category_id='categorythree',
+                category_id='-categorythree',
                 _external=True
             )
         three_r = client.get(root_categories[1]['feeds_url'])
@@ -415,7 +416,7 @@ def test_all_feeds(xmls):
         assert feed_url == \
             url_for(
                 'feed_entries',
-                category_id='categorythree',
+                category_id='-categorythree',
                 feed_id=feed_id,
                 _external=True
             )
@@ -427,7 +428,7 @@ def test_all_feeds(xmls):
         assert entries[0]['entry_url'] == \
             url_for(
                 'feed_entry',
-                category_id='categorythree',
+                category_id='-categorythree',
                 feed_id=feed_id,
                 entry_id=get_hash('http://feedfour.com/feed/atom/1/'),
                 _external=True
@@ -465,7 +466,7 @@ def test_add_feed(xmls):
 
 def test_add_feed_in_category(xmls):
     with app.test_client() as client:
-        r = client.get('/categoryone/feeds/')
+        r = client.get('/-categoryone/feeds/')
         assert r.status_code == 200
         result = json.loads(r.data)
         add_feed_url = result['categories'][0]['add_feed_url']
@@ -555,7 +556,7 @@ def test_delete_feed_in_category(xmls):
     with app.test_client() as client:
         feed_id = get_hash('http://feedone.com/feed/atom/')
         assert REPOSITORY + feed_id + '.xml' in glob.glob(REPOSITORY + '*')
-        r = client.get('/categoryone/feeds/')
+        r = client.get('/-categoryone/feeds/')
         assert r.status_code == 200
         result = json.loads(r.data)
         remove_feed_url = result['feeds'][0]['remove_feed_url']
@@ -579,7 +580,7 @@ def test_delete_feed_in_two_category(xmls):
         assert feed_list[3].title == 'Feed One'
         feed_id = hashlib.sha1(
             binary('http://feedone.com/feed/atom/')).hexdigest()
-        r = client.delete('/categoryone/feeds/' + feed_id + '/')
+        r = client.delete('/-categoryone/feeds/' + feed_id + '/')
         assert r.status_code == 200
         feed_list = FeedList(REPOSITORY + OPML)
         for child in feed_list[0]:
@@ -608,21 +609,22 @@ def test_delete_category_in_root(xmls):
 
 def test_delete_category_in_category(xmls):
     with app.test_client() as client:
-        r = client.get('/categoryone/feeds/')
+        r = client.get('/-categoryone/feeds/')
         assert r.status_code == 200
         result = json.loads(r.data)
         remove_category_url = result['categories'][0]['remove_category_url']
         r = client.delete(remove_category_url)
         assert r.status_code == 200
-        result = json.loads(r.data)
-        assert result == json.loads(client.get('/categoryone/feeds/').data)
+        result = json.loads(client.get('/-categoryone/feeds/').data)
         for child in result['categories']:
             assert not child['title'] == 'categorytwo'
+        feed_list = FeedList(REPOSITORY + OPML)
+        assert len(feed_list[0]) == 1
 
 
 def test_category_all_entries(xmls):
     with app.test_client() as client:
-        r = client.get('/categoryone/entries/')
+        r = client.get('/-categoryone/entries/')
         assert r.status_code == 200
         result = json.loads(r.data)
         assert result['title'] == 'categoryone'
@@ -653,7 +655,7 @@ def test_category_all_entries(xmls):
         one_result = json.loads(r.data)
         assert one_result['content'] == \
             'This is content of Entry One in Feed One'
-        r = client.get('/categoryone/categorytwo/entries/')
+        r = client.get('/-categoryone/-categorytwo/entries/')
         assert r.status_code == 200
         result = json.loads(r.data)
         assert result['title'] == 'categorytwo'
