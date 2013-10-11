@@ -26,7 +26,7 @@ app.config.update(dict(
 ))
 
 
-def is_exist_feedlist():
+def feedlist_exists():
     REPOSITORY = app.config['REPOSITORY']
     OPML = app.config['OPML']
     if not os.path.isfile(REPOSITORY + OPML):
@@ -42,9 +42,7 @@ def get_feedlist():
             os.mkdir(REPOSITORY)
         feed_list = FeedList()
         feed_list.save_file(REPOSITORY + OPML)
-
     feed_list = FeedList(REPOSITORY + OPML)
-
     return feed_list
 
 
@@ -317,7 +315,7 @@ def feed_entries(category_id, feed_id):
 
 
 @app.route('/<path:category_id>/entries/')
-def category_all_entries(category_id):
+def category_entries(category_id):
     REPOSITORY = app.config['REPOSITORY']
     lst, cursor, target = check_path_valid(category_id)
 
