@@ -51,7 +51,7 @@ body {
 	content: "\2637";
 }
 
-[role=navigation],
+[rolr=navigation],
 [role=main],
 [role=complementary] {
 	width: 100%;
@@ -110,7 +110,7 @@ body {
 }
 
 [role=navigation] .current {
-	font-weight: bold;
+	font-weight: 900;
 }
 
 [role=main] .current .entry-title {
@@ -127,6 +127,7 @@ body {
 }
 
 [role=main] .entry-title .feed {
+	color: rgb(100, 100, 100);
 	width: 15%;
 	white-space: nowrap;
 	display: inline-block;
