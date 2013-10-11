@@ -343,7 +343,6 @@ def feed_entries(category_id, feed_id):
 def category_entries(category_id):
     REPOSITORY = app.config['REPOSITORY']
     lst, cursor, target = check_path_valid(category_id)
-
     if not cursor:
         r = jsonify(
             error='category-path-invalid',
@@ -351,7 +350,6 @@ def category_entries(category_id):
         )
         r.status_code = 404
         return r
-
     entries = []
     for child in cursor.get_all_feeds():
         feed_id = get_hash(child.xml_url)
@@ -371,7 +369,7 @@ def category_entries(category_id):
                     'updated': entry.updated_at.__str__()
                 })
     return jsonify(
-        title=category_id,
+        title=category_id.split('/')[-1],
         entries=entries
     )
 

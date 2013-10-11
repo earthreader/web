@@ -627,4 +627,5 @@ def test_category_all_entries(xmls):
         r = client.get('/categoryone/categorytwo/entries/')
         assert r.status_code == 200
         result = json.loads(r.data)
+        assert result['title'] == 'categorytwo'
         assert len(result['entries']) == 1
