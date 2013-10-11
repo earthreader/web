@@ -350,6 +350,7 @@ def category_entries(category_id):
         )
         r.status_code = 404
         return r
+    sorting_pool = []
     entries = []
     for child in cursor.get_all_feeds():
         feed_id = get_hash(child.xml_url)
@@ -358,16 +359,28 @@ def category_entries(category_id):
         )) as f:
             feed = read(Feed, f)
             for entry in feed.entries:
-                entries.append({
-                    'title': entry.title,
-                    'entry_url': url_for(
-                        'feed_entry',
-                        feed_id=feed_id,
-                        entry_id=get_hash(entry.id),
-                        _external=True
-                    ),
-                    'updated': entry.updated_at.__str__()
-                })
+                sorting_pool.append((feed, entry))
+    sorting_pool.sort(key=lambda entry: entry[1].updated_at, reverse=True)
+    for feed_title, entry in sorting_pool:
+        entries.append({
+            'title': entry.title,
+            'entry_url': url_for(
+                'feed_entry',
+                feed_id=feed_id,
+                entry_id=get_hash(entry.id),
+                _external=True
+            ),
+            'permerlink': entry.id,
+            'updated': entry.updated_at.__str__(),
+            'feed': {
+                'title': feed.title,
+                'feed_url': url_for(
+                    'feed_entries',
+                    feed_id=get_hash(feed.id)
+                ),
+                'permerlink': feed.id
+            }
+        })
     return jsonify(
         title=category_id.split('/')[-1],
         entries=entries
