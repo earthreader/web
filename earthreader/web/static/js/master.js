@@ -235,14 +235,19 @@ function getEntries(feed_url) {
 		for (var i=0; i<entries.length; i++) {
 			var entry = entries[i];
 			var article = document.createElement('article');
-			var title = document.createElement('div');
+			var header = document.createElement('div');
+			var time = document.createElement('time');
+			var title = document.createElement('span');
 
 			article.addClass('entry');
 			article.setAttribute('data-url', entry.entry_url);
-			title.addClass('entry-title');
+			header.addClass('entry-title');
+			time.textContent = entry.updated;
 			title.textContent = entry.title;
+			header.appendChild(time);
+			header.appendChild(title);
 
-			article.appendChild(title);
+			article.appendChild(header);
 			main.appendChild(article);
 		}
 	});
