@@ -131,13 +131,13 @@ body .wrapper {
 
 [role=main] .entry-title time {
 	font-size: .7em;
+	display: block;
 }
 
 [role=main] .entry-title .feed {
 	color: rgb(100, 100, 100);
-	width: 15%;
 	white-space: nowrap;
-	display: inline-block;
+	display: block;
 	overflow: hidden;
 	text-overflow: ellipsis;
 }
@@ -302,5 +302,14 @@ input:not([type=button]):not([type=submit]):focus, textarea:focus {
 
 	.side-open [role=complementary] {
 		width: 20%;
+	}
+
+	[role=main] .entry-title .feed {
+		width: 15%;
+		display: inline-block;
+	}
+
+	[role=main] .entry-title time {
+		display: inline-block;
 	}
 }
