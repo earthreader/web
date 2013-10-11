@@ -269,7 +269,7 @@ input:not([type=button]):not([type=submit]):focus, textarea:focus {
 	text-align: center;
 }
 
-@media all and (min-width: 700px) {
+@media all and (min-width: 800px) {
 	body {
 		animation-name: big;
 	}
