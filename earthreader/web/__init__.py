@@ -432,7 +432,7 @@ def feed_entry(category_id, feed_id, entry_id):
                 if entry_id == get_hash(entry.id):
                     return jsonify(
                         title=entry.title,
-                        content=entry.content,
+                        content=entry.content.sanitized_html,
                         updated=entry.updated_at.__str__(),
                         permalink=entry.id,
                         feed={
