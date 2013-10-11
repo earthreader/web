@@ -397,6 +397,10 @@ function keyboardShortcut(event) {
 			break;
 		case 75: //k
 			var entry = main.querySelector('.current');
+			if (entry == null) {
+				main.querySelector('.entry').querySelector('.entry-title').click();
+				return;
+			}
 			var prev = entry.previousElementSibling;
 			if (prev == null) {
 				return;
