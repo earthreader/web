@@ -21,15 +21,19 @@
 					<li role="button" data-action="all">All</li>
 					<li role="button" data-action="starred">Starred</li>
 					<li role="button" data-action="unread">Unread</li>
-					<li role="button" class="header closed">Add Feed</li>
+					<li role="button" class="header closed">Add Feed/Category</li>
 					<li class="fold">
 						<div class="form">
-							<form action="/feeds/" data-after="makeFeedList">
+							<h2>Add Feed</h2>
+							<form action="/feeds/" data-action="addFeed" data-after="makeFeedList">
 								<input type="url" name="url" placeholder="URL"/>
-								<select name="type">
-									<option value="feed">Feed</option>
-									<option value="category">Category</option>
-								</select>
+								<input type="submit" value="Add"/>
+							</form>
+						</div>
+						<div class="form">
+							<h2>Add Category</h2>
+							<form action="/" data-action="addCategory" data-after="makeFeedList">
+								<input type="text" name="title" placeholder="title"/>
 								<input type="submit" value="Add"/>
 							</form>
 						</div>

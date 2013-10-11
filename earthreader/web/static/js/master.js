@@ -183,13 +183,15 @@ function processForm(event) {
 	var data = serializeForm(target);
 	var after = target.getAttribute('data-after');
 	if (after === "makeFeedList") {
-		var action;
+		var action = target.action;
 		try {
 			var current = document.querySelector('[role=navigation] .feedlist .current');
-			var url = current.getAttribute('data-adder');
-			action = url;
+			if (target.getAttribute('data-action') === 'addFeed') {
+				action = current.getAttribute('data-add-feed-url');
+			} else if (target.getAttribute('data-action') === 'addCategory') {
+				action = current.getAttribute('data-add-category-url');
+			}
 		} catch (err) {
-			action = target.action;
 		}
 		post(action, data, function(res) {
 			if (current == null) {
@@ -218,8 +220,11 @@ var makeCategory = function(parentObj, obj) {
 	header.addClass('feed');
 	header.setAttribute('role', 'link');
 	header.setAttribute('data-entries', obj.entries_url);
-	header.setAttribute('data-adder', obj.adder_url);
-	header.setAttribute('data-remover', obj.remover_url);
+	header.setAttribute('data-add-category-url', obj.add_category_url);
+	header.setAttribute('data-add-feed-url', obj.add_feed_url);
+	header.setAttribute('data-remove-feed-url', obj.remove_feed_url);
+	header.setAttribute('data-remove-category-url', obj.remove_category_url);
+	console.log(obj);
 	header.textContent = obj.title;
 
 	list.addClass('fold');
@@ -244,7 +249,7 @@ var makeFeed = function(parentObj, obj) {
 	var elem = document.createElement('li');
 	elem.addClass('feed');
 	elem.setAttribute('data-entries', obj.entries_url);
-	elem.setAttribute('data-remover', obj.remover_url);
+	elem.setAttribute('data-remove-feed-url', obj.remove_feed_url);
 	elem.setAttribute('role', 'link');
 	elem.textContent = obj.title;
 
