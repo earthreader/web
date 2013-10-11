@@ -22,7 +22,8 @@ app = Flask(__name__)
 
 app.config.update(dict(
     REPOSITORY='repo/',
-    OPML='earthreader.opml'
+    OPML='earthreader.opml',
+    ALLFEED='All Feeds',
 ))
 
 
@@ -50,13 +51,13 @@ def get_hash(name):
     return hashlib.sha1(binary(name)).hexdigest()
 
 
-def get_all_feeds(category, parent_categories=[]):
+def get_all_feeds(category, path=None):
     feeds = []
     categories = []
-    if parent_categories:
-        feed_path = '/'.join(parent_categories)
-    else:
+    if not path:
         feed_path = '/'
+    else:
+        feed_path = path
     for child in category:
         if isinstance(child, FeedOutline):
             feed_id = get_hash(child.xml_url)
@@ -68,7 +69,7 @@ def get_all_feeds(category, parent_categories=[]):
                     feed_id=feed_id,
                     _external=True
                 ),
-                'remover_url': url_for(
+                'remove_feed_url': url_for(
                     'delete_feed',
                     category_id=feed_path,
                     feed_id=feed_id,
@@ -80,26 +81,32 @@ def get_all_feeds(category, parent_categories=[]):
                 'title': child.title,
                 'feeds_url': url_for(
                     'feeds',
-                    category_id=feed_path + '/' + child.title
-                    if parent_categories else child.title,
+                    category_id=feed_path + '/-' + child.title
+                    if path else '-' + child.title,
                     _external=True
                 ),
                 'entries_url': url_for(
                     'category_entries',
-                    category_id=feed_path + '/' + child.title
-                    if parent_categories else child.title,
+                    category_id=feed_path + '/-' + child.title
+                    if path else '-' + child.title,
                     _external=True
                 ),
-                'adder_url': url_for(
-                    'post_feed_or_category',
-                    category_id=feed_path + '/' + child.title
-                    if parent_categories else child.title,
+                'add_feed_url': url_for(
+                    'add_feed',
+                    category_id=feed_path + '/-' + child.title
+                    if path else '-' + child.title,
                     _external=True
                 ),
-                'remover_url': url_for(
+                'add_category_url': url_for(
+                    'add_category',
+                    category_id=feed_path + '/-' + child.title
+                    if path else '-' + child.title,
+                    _external=True
+                ),
+                'remove_category_url': url_for(
                     'delete_category',
-                    category_id=feed_path + '/' + child.title
-                    if parent_categories else child.title,
+                    category_id=feed_path + '/-' + child.title
+                    if path else '-' + child.title,
                     _external=True
                 ),
             })
@@ -112,11 +119,12 @@ def check_path_valid(category_id, return_category_parent=False):
         return feed_list, feed_list, None
     if return_category_parent:
         category_list = category_id.split('/')
-        target = category_list.pop()
-        categories = deque(category_list)
+        target = category_list.pop()[1:]
+        categories = deque([category[1:] for category in category_list])
     else:
         target = None
-        categories = deque(category_id.split('/'))
+        categories = deque([category[1:] for category in
+                           category_id.split('/')])
     feed_list = get_feedlist()
     cursor = feed_list
     while categories:
@@ -172,17 +180,13 @@ def feeds(category_id):
         )
         r.status_code = 404
         return r
-    feeds, categories = get_all_feeds(cursor, [category_id])
+    feeds, categories = get_all_feeds(cursor, category_id)
     return jsonify(feeds=feeds, categories=categories)
-
-
-POST_FEED = 'feed'
-POST_CATEGORY = 'category'
 
 
 @app.route('/feeds/', methods=['POST'], defaults={'category_id': '/'})
 @app.route('/<path:category_id>/feeds/', methods=['POST'])
-def post_feed_or_category(category_id):
+def add_feed(category_id):
     REPOSITORY = app.config['REPOSITORY']
     feed_list, cursor, _ = check_path_valid(category_id)
     if (not isinstance(cursor, CategoryOutline) and
@@ -193,54 +197,67 @@ def post_feed_or_category(category_id):
         )
         r.status_code = 404
         return r
-    if request.form['type'] == POST_FEED:
-        try:
-            url = request.form['url']
-            f = urllib2.urlopen(url)
-            document = f.read()
-        except ValueError:
-            r = jsonify(
-                error='unreachable-url',
-                message='Cannot connect to given url'
-            )
-            r.status_code = 400
-            return r
-        try:
-            feed_url = autodiscovery(document, url)
-        except FeedUrlNotFoundError:
-            r = jsonify(
-                error='unreachable-feed-url',
-                message='Cannot find feed url'
-            )
-            r.status_code = 400
-            return r
-        if not feed_url == url:
-            f.close()
-            f = urllib2.urlopen(feed_url)
-            xml = f.read()
-        else:
-            xml = document
-        format = get_format(xml)
-        result = format(xml, feed_url)
-        feed = result[0]
-        outline = FeedOutline('atom', feed.title.value, feed_url)
-        for link in feed.links:
-                if link.relation == 'alternate' and \
-                        link.mimetype == 'text/html':
-                    outline.blog_url = link.uri
-        cursor.append(outline)
-        feed_list.save_file()
-        file_name = get_hash(feed.id) + '.xml'
-        with open(os.path.join(REPOSITORY, file_name), 'w') as f:
-            for chunk in write(feed, indent='    ', canonical_order=True):
-                f.write(chunk)
-        return feeds(category_id)
-    elif request.form['type'] == POST_CATEGORY:
-        title = request.form['title']
-        outline = CategoryOutline(title)
-        cursor.append(outline)
-        feed_list.save_file()
-        return feeds(category_id)
+    try:
+        url = request.form['url']
+        f = urllib2.urlopen(url)
+        document = f.read()
+    except ValueError:
+        r = jsonify(
+            error='unreachable-url',
+            message='Cannot connect to given url'
+        )
+        r.status_code = 400
+        return r
+    try:
+        feed_url = autodiscovery(document, url)
+    except FeedUrlNotFoundError:
+        r = jsonify(
+            error='unreachable-feed-url',
+            message='Cannot find feed url'
+        )
+        r.status_code = 400
+        return r
+    if not feed_url == url:
+        f.close()
+        f = urllib2.urlopen(feed_url)
+        xml = f.read()
+    else:
+        xml = document
+    format = get_format(xml)
+    result = format(xml, feed_url)
+    feed = result[0]
+    outline = FeedOutline('atom', feed.title.value, feed_url)
+    for link in feed.links:
+            if link.relation == 'alternate' and \
+                    link.mimetype == 'text/html':
+                outline.blog_url = link.uri
+    cursor.append(outline)
+    feed_list.save_file()
+    file_name = get_hash(feed.id) + '.xml'
+    with open(os.path.join(REPOSITORY, file_name), 'w') as f:
+        for chunk in write(feed, indent='    ', canonical_order=True):
+            f.write(chunk)
+    return feeds(category_id)
+
+
+@app.route('/', methods=['POST'], defaults={'category_id': '/'})
+@app.route('/<path:category_id>/', methods=['POST'])
+def add_category(category_id):
+    feed_list, cursor, _ = check_path_valid(category_id)
+    if (not isinstance(cursor, CategoryOutline) and
+            not isinstance(cursor, FeedList)):
+        r = jsonify(
+            error='category-path-invalid',
+            message='Given category path is not valid'
+        )
+        r.status_code = 404
+        return r
+
+    title = request.form['title']
+    outline = CategoryOutline(title)
+    cursor.append(outline)
+    feed_list.save_file()
+    return feeds(category_id)
 
 
 @app.route('/<path:category_id>/', methods=['DELETE'])
@@ -327,7 +344,7 @@ def feed_entries(category_id, feed_id):
                     'updated': entry.updated_at.__str__(),
                     'feed': {
                         'title': feed.title,
-                        'feed_url': url_for(
+                        'entries_url': url_for(
                             'feed_entries',
                             feed_id=get_hash(feed.id)
                         ),
@@ -383,7 +400,7 @@ def category_entries(category_id):
             'updated': entry.updated_at.__str__(),
             'feed': {
                 'title': feed.title,
-                'feed_url': url_for(
+                'entries_url': url_for(
                     'feed_entries',
                     feed_id=get_hash(feed.id)
                 ),
@@ -391,7 +408,7 @@ def category_entries(category_id):
             }
         })
     return jsonify(
-        title=category_id.split('/')[-1],
+        title=category_id.split('/')[-1][1:] or app.config['ALLFEED'],
         entries=entries
     )
 
@@ -416,7 +433,17 @@ def feed_entry(category_id, feed_id, entry_id):
                     return jsonify(
                         title=entry.title,
                         content=entry.content,
-                        updated=entry.updated_at.__str__()
+                        updated=entry.updated_at.__str__(),
+                        permalink=entry.id,
+                        feed={
+                            'title': feed.title,
+                            'entries_url': url_for(
+                                'feed_entries',
+                                feed_id=get_hash(feed.id),
+                                _external=True
+                            ),
+                            'permalink': feed.id
+                        }
                     )
             r = jsonify(
                 error='entry-not-found',
