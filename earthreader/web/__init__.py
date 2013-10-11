@@ -375,7 +375,7 @@ def category_entries(category_id):
             'title': entry.title,
             'entry_url': url_for(
                 'feed_entry',
-                feed_id=feed_id,
+                feed_id=get_hash(feed.id),
                 entry_id=get_hash(entry.id),
                 _external=True
             ),
