@@ -22,7 +22,8 @@ app = Flask(__name__)
 
 app.config.update(dict(
     REPOSITORY='repo/',
-    OPML='earthreader.opml'
+    OPML='earthreader.opml',
+    ALLFEED='All Feeds',
 ))
 
 
@@ -407,7 +408,7 @@ def category_entries(category_id):
             }
         })
     return jsonify(
-        title=category_id.split('/')[-1][1:],
+        title=category_id.split('/')[-1][1:] or app.config['ALLFEED'],
         entries=entries
     )
 
