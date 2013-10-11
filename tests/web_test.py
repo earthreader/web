@@ -58,6 +58,7 @@ def server_error_handler_for_testing(exception):
 
 tmp_dir = tempfile.mkdtemp() + '/'
 
+
 def rm_tmp_dir():
     os.rmdir(tmp_dir)
 
