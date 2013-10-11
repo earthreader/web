@@ -16,8 +16,9 @@ body {
 }
 
 body .wrapper {
+	margin-top: -3em;
+	padding-top:3em;
 	height: 100%;
-	padding-bottom: 3em;
 	box-sizing: border-box;
 }
 
@@ -262,6 +263,10 @@ input:not([type=button]):not([type=submit]):focus, textarea:focus {
 	background: rgb(235, 235, 235);
 	line-height: 1.4;
 	box-shadow: 0 1px 2px rgb(100, 100, 100) inset;
+}
+
+[role=main] .entry-content > h1 {
+	text-align: center;
 }
 
 @media all and (min-width: 700px) {
