@@ -50,13 +50,13 @@ def get_hash(name):
     return hashlib.sha1(binary(name)).hexdigest()
 
 
-def get_all_feeds(category, parent_categories=[]):
+def get_all_feeds(category, path=None):
     feeds = []
     categories = []
-    if parent_categories:
-        feed_path = '/'.join(parent_categories)
-    else:
+    if not path:
         feed_path = '/'
+    else:
+        feed_path = path
     for child in category:
         if isinstance(child, FeedOutline):
             feed_id = get_hash(child.xml_url)
@@ -81,19 +81,19 @@ def get_all_feeds(category, parent_categories=[]):
                 'feeds_url': url_for(
                     'feeds',
                     category_id=feed_path + '/' + child.title
-                    if parent_categories else child.title,
+                    if path else child.title,
                     _external=True
                 ),
                 'entries_url': url_for(
                     'category_entries',
                     category_id=feed_path + '/' + child.title
-                    if parent_categories else child.title,
+                    if path else child.title,
                     _external=True
                 ),
                 'add_feed_url': url_for(
                     'add_feed',
                     category_id=feed_path + '/' + child.title
-                    if parent_categories else child.title,
+                    if path else child.title,
                     _external=True
                 ),
                 'add_category_url': url_for(
@@ -103,7 +103,7 @@ def get_all_feeds(category, parent_categories=[]):
                 'remove_category_url': url_for(
                     'delete_category',
                     category_id=feed_path + '/' + child.title
-                    if parent_categories else child.title,
+                    if path else child.title,
                     _external=True
                 ),
             })
@@ -176,7 +176,7 @@ def feeds(category_id):
         )
         r.status_code = 404
         return r
-    feeds, categories = get_all_feeds(cursor, [category_id])
+    feeds, categories = get_all_feeds(cursor, category_id)
     return jsonify(feeds=feeds, categories=categories)
 
 
