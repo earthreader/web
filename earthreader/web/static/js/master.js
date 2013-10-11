@@ -390,11 +390,17 @@ function clickEntry(event) {
 			contents[i].parentElement.removeChild(contents[i]);
 		}
 
-		var content = obj.content;
-		var elem = document.createElement('div');
-		elem.addClass('entry-content');
-		elem.innerHTML = content;
-		entry.appendChild(elem);
+		var wrapper = document.createElement('div');
+		var title = document.createElement('h1');
+		var content = document.createElement('div');
+
+		title.innerHTML = obj.title.link(obj.permalink);
+		content.innerHTML = obj.content;
+
+		wrapper.addClass('entry-content');
+		wrapper.appendChild(title);
+		wrapper.appendChild(content);
+		entry.appendChild(wrapper);
 
 		scrollToElement(main, entry);
 	});
