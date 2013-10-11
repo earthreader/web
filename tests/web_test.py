@@ -659,3 +659,11 @@ def test_category_all_entries(xmls):
         result = json.loads(r.data)
         assert result['title'] == 'categorytwo'
         assert result['entries'][0]['title'] == 'Feed Two: Entry One'
+
+
+def test_empty_category_all_entries(xmls):
+    with app.test_client() as client:
+        r = client.post('/', data=dict(title='test'))
+        assert r.status_code == 200
+        r = client.get('/-test/entries/')
+        assert r.status_code == 200
