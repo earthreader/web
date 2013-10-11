@@ -145,18 +145,6 @@ function closeSide() {
 	document.body.removeClass('side-open');
 }
 
-function toggleFolding(event) {
-	var target = event.target;
-	while (target.classList.contains('header') == false) {
-		target = target.parentElement;
-		if (target === null) {
-			return;
-		}
-	}
-
-	target.toggleClass('closed');
-}
-
 function processForm(event) {
 	var target = event.target;
 	event.preventDefault();
@@ -178,7 +166,6 @@ function processForm(event) {
 
 function makeFeedList(obj) {
 	var feedList = document.querySelector('.feedlist');
-	var feeds = obj.feeds;
 	feedList.innerHTML = "";
 
 	var makeCategory = function(parentObj, obj) {
@@ -186,19 +173,21 @@ function makeFeedList(obj) {
 		var list = document.createElement('li');
 
 		header.addClass('header');
+		header.addClass('feed');
+		header.setAttribute('data-url', obj.entries_url);
 		header.textContent = obj.title;
 
 		list.addClass('fold');
 
 		var ul = document.createElement('ul');
-		for (var i=0; i<obj.feeds.length; i++) {
-			var feed = obj.feeds[i];
-			if (feed.feeds) {
-				makeCategory(ul, feed);
-			} else {
-				makeFeed(ul, feed);
+		getJSON(obj.feeds_url, function(obj) {
+			for (var i=0; i<obj.categories.length; i++) {
+				makeCategory(ul, obj.categories[i]);
 			}
-		}
+			for (var i=0; i<obj.feeds.length; i++) {
+				makeFeed(ul, obj.feeds[i]);
+			}
+		});
 
 		list.appendChild(ul);
 
@@ -209,19 +198,17 @@ function makeFeedList(obj) {
 	var makeFeed = function(parentObj, obj) {
 		var elem = document.createElement('li');
 		elem.addClass('feed');
-		elem.setAttribute('data-url', obj.feed_url);
+		elem.setAttribute('data-url', obj.entries_url);
 		elem.textContent = obj.title;
 
 		parentObj.appendChild(elem);
 	};
 
-	for (var i=0; i<feeds.length; i++) {
-		var feed = feeds[i];
-		if (feed.feeds) {
-			makeCategory(feedList, feed);
-		} else {
-			makeFeed(feedList, feed);
-		}
+	for (var i=0; i<obj.categories.length; i++) {
+		makeCategory(feedList, obj.categories[i]);
+	}
+	for (var i=0; i<obj.feeds.length; i++) {
+		makeFeed(feedList, obj.feeds[i]);
 	}
 }
 
@@ -364,7 +351,6 @@ function keyboardShortcut(event) {
 
 function init() {
 	var navi = document.querySelector('[role=navigation]');
-	navi.addEventListener('click', toggleFolding, false);
 	navi.addEventListener('click', clickFeed, false);
 
 	var main = document.querySelector('[role=main]');
