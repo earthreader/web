@@ -117,9 +117,21 @@ body {
 	font-weight: bold;
 }
 
+[role=main] .entry-title time,
+[role=main] .entry-title span {
+	margin: 0 1em;
+}
+
 [role=main] .entry-title time {
 	font-size: .7em;
-	margin: 0 1em;
+}
+
+[role=main] .entry-title .feed {
+	width: 15%;
+	white-space: nowrap;
+	display: inline-block;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 
 a, a:hover, a:active, a:link, a:visited {

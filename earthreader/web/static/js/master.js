@@ -300,12 +300,22 @@ function getEntries(feed_url) {
 
 			article.addClass('entry');
 			article.setAttribute('data-entries', entry.entry_url);
+
 			header.addClass('entry-title');
 			header.setAttribute('role', 'button');
-			time.textContent = entry.updated;
+
+			if (entry.feed) {
+				var category = document.createElement('span');
+				category.addClass('feed');
+				category.textContent = entry.feed.title;
+				header.appendChild(category);
+			}
+
 			title.textContent = entry.title;
-			header.appendChild(time);
 			header.appendChild(title);
+
+			time.textContent = entry.updated;
+			header.appendChild(time);
 
 			article.appendChild(header);
 			main.appendChild(article);
