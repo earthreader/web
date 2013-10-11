@@ -62,7 +62,7 @@ def get_all_feeds(category, parent_categories=[]):
             feed_id = get_hash(child.xml_url)
             feeds.append({
                 'title': child.title,
-                'feed_url': url_for(
+                'entries_url': url_for(
                     'feed_entries',
                     category_id=feed_path,
                     feed_id=feed_id,
