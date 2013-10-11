@@ -154,6 +154,18 @@ function toggleSide(event) {
 	document.body.toggleClass('side-open');
 }
 
+function toggleFolding(event) {
+	var target = event.target;
+	while (target.classList.contains('header') == false) {
+		target = target.parentElement;
+		if (target === null) {
+			return;
+		}
+	}
+
+	target.toggleClass('closed');
+} 
+
 function closeMenu() {
 	document.body.removeClass('menu-open');
 }
@@ -386,6 +398,7 @@ function init() {
 	var persistent = navi.querySelector('.persistent');
 	navi.addEventListener('click', clickFeed, false);
 	persistent.addEventListener('click', clickPersistentMenu, false);
+	persistent.addEventListener('click', toggleFolding, false);
 
 	var main = document.querySelector('[role=main]');
 	main.addEventListener('click', clickEntry, false);
