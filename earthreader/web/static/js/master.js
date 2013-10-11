@@ -210,6 +210,7 @@ function makeFeedList(obj) {
 
 		header.addClass('header');
 		header.addClass('feed');
+		header.setAttribute('role', 'link');
 		header.setAttribute('data-entries', obj.entries_url);
 		header.setAttribute('data-adder', obj.adder_url);
 		header.setAttribute('data-remover', obj.remover_url);
@@ -238,6 +239,7 @@ function makeFeedList(obj) {
 		elem.addClass('feed');
 		elem.setAttribute('data-entries', obj.entries_url);
 		elem.setAttribute('data-remover', obj.remover_url);
+		elem.setAttribute('role', 'link');
 		elem.textContent = obj.title;
 
 		parentObj.appendChild(elem);
@@ -291,6 +293,7 @@ function getEntries(feed_url) {
 			article.addClass('entry');
 			article.setAttribute('data-entries', entry.entry_url);
 			header.addClass('entry-title');
+			header.setAttribute('role', 'button');
 			time.textContent = entry.updated;
 			title.textContent = entry.title;
 			header.appendChild(time);
