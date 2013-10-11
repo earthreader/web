@@ -411,7 +411,7 @@ def category_all_entries(category_id):
                         entry_id=get_hash(entry.id),
                         _external=True
                     ),
-                    'updated': entry.published_at
+                    'updated': entry.updated_at.__str__()
                 })
     return jsonify(
         title=category_id,
