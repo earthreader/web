@@ -52,11 +52,6 @@ def get_hash(name):
     return hashlib.sha1(binary(name)).hexdigest()
 
 
-@app.route('/', methods=['GET'])
-def index():
-    return render_template('index.html')
-
-
 def get_all_feeds(category, parent_categories=[]):
     feeds = []
     categories = []
@@ -80,7 +75,7 @@ def get_all_feeds(category, parent_categories=[]):
             categories.append({
                 'title': child.title,
                 'category_url': url_for(
-                    'category_feeds',
+                    'feeds',
                     category_id=feed_path + '/' + child.title
                     if parent_categories else child.title,
                     _external=True
@@ -139,113 +134,16 @@ def find_feed_in_opml(feed_id, category, parent_categories=[], result=[]):
     return result
 
 
-def add_feed(url, feed_list=None, cursor=None):
-    REPOSITORY = app.config['REPOSITORY']
-    if not feed_list:
-        feed_list = get_feedlist()
-        cursor = feed_list
-    try:
-        url = request.form['url']
-        f = urllib2.urlopen(url)
-        document = f.read()
-    except ValueError:
-        r = jsonify(
-            error='unreachable-url',
-            message='Cannot connect to given url'
-        )
-        r.status_code = 400
-        return r
-    try:
-        feed_url = autodiscovery(document, url)
-    except FeedUrlNotFoundError:
-        r = jsonify(
-            error='unreachable-feed-url',
-            message='Cannot find feed url'
-        )
-        r.status_code = 400
-        return r
-    if not feed_url == url:
-        f.close()
-        f = urllib2.urlopen(feed_url)
-        xml = f.read()
-    else:
-        xml = document
-    format = get_format(xml)
-    result = format(xml, feed_url)
-    feed = result[0]
-    outline = FeedOutline('atom', feed.title.value, feed_url)
-    for link in feed.links:
-            if link.relation == 'alternate' and \
-                    link.mimetype == 'text/html':
-                outline.blog_url = link.uri
-    cursor.append(outline)
-    feed_list.save_file()
-    file_name = hashlib.sha1(binary(feed_url)).hexdigest() + '.xml'
-    with open(os.path.join(REPOSITORY, file_name), 'w') as f:
-        for chunk in write(feed, indent='    ', canonical_order=True):
-            f.write(chunk)
+@app.route('/', methods=['GET'])
+def index():
+    return render_template('index.html')
 
 
-def add_category(title, feed_list=None, cursor=None):
-    if not feed_list:
-        feed_list = get_feedlist()
-        cursor = feed_list
-    title = request.form['title']
-    outline = CategoryOutline(title)
-    cursor.append(outline)
-    feed_list.save_file()
-
-
-def delete_feed(feed_id, feed_list=None, cursor=None):
-    REPOSITORY = app.config['REPOSITORY']
-    if not feed_list:
-        if not is_exist_feedlist():
-            r = jsonify(
-                error='opml-not-found',
-                message='Cannot open OPML'
-            )
-            r.status_code = 400
-            return r
-        else:
-            feed_list = get_feedlist()
-        cursor = feed_list
-    target = None
-    for feed in cursor:
-        if isinstance(feed, FeedOutline):
-            if feed_id == hashlib.sha1(binary(feed.xml_url)).hexdigest():
-                target = feed
-    if target:
-        cursor.remove(target)
-    else:
-        r = jsonify(
-            error='feed-not-found-in-path',
-            message='Given feed does not exists in the path'
-        )
-        r.status_code = 400
-        return r
-    feed_list.save_file()
-    if not find_feed_in_opml(feed_id, feed_list):
-        os.remove(REPOSITORY + feed_id + '.xml')
-
-
-@app.route('/feeds/', methods=['GET'])
-def feeds():
-    if not is_exist_feedlist():
-        r = jsonify(
-            error='opml-not-found',
-            message='Cannot open OPML'
-        )
-        r.status_code = 400
-        return r
-    feed_list = get_feedlist()
-    feeds, categories = get_all_feeds(feed_list)
-    return jsonify(feeds=feeds, categories=categories)
-
-
+@app.route('/feeds/', defaults={'category_id': '/'})
 @app.route('/<path:category_id>/feeds/')
-def category_feeds(category_id):
+def feeds(category_id):
     feed_list, cursor, _ = check_path_valid(category_id)
-    if not isinstance(cursor, CategoryOutline):
+    if not feed_list:
         r = jsonify(
             error='category-path-invalid',
             message='Given category path is not valid'
@@ -260,22 +158,13 @@ POST_FEED = 'feed'
 POST_CATEGORY = 'category'
 
 
-@app.route('/feeds/', methods=['POST'])
-def post_feed():
-    if request.form['type'] == POST_FEED:
-        url = request.form['url']
-        add_feed(url)
-        return feeds()
-    elif request.form['type'] == POST_CATEGORY:
-        title = request.form['title']
-        add_category(title)
-        return feeds()
-
-
+@app.route('/feeds/', methods=['POST'], defaults={'category_id': '/'})
 @app.route('/<path:category_id>/feeds/', methods=['POST'])
-def post_feed_in_category(category_id):
+def post_feed_or_category(category_id):
+    REPOSITORY = app.config['REPOSITORY']
     feed_list, cursor, _ = check_path_valid(category_id)
-    if not cursor:
+    if (not isinstance(cursor, CategoryOutline) and 
+        not isinstance(cursor, FeedList)):
         r = jsonify(
             error='category-path-invalid',
             message='Given category path is not valid'
@@ -283,21 +172,53 @@ def post_feed_in_category(category_id):
         r.status_code = 404
         return r
     if request.form['type'] == POST_FEED:
-        url = request.form['url']
-        add_feed(url, feed_list, cursor)
-        return category_feeds(category_id)
+        try:
+            url = request.form['url']
+            f = urllib2.urlopen(url)
+            document = f.read()
+        except ValueError:
+            r = jsonify(
+                error='unreachable-url',
+                message='Cannot connect to given url'
+            )
+            r.status_code = 400
+            return r
+        try:
+            feed_url = autodiscovery(document, url)
+        except FeedUrlNotFoundError:
+            r = jsonify(
+                error='unreachable-feed-url',
+                message='Cannot find feed url'
+            )
+            r.status_code = 400
+            return r
+        if not feed_url == url:
+            f.close()
+            f = urllib2.urlopen(feed_url)
+            xml = f.read()
+        else:
+            xml = document
+        format = get_format(xml)
+        result = format(xml, feed_url)
+        feed = result[0]
+        outline = FeedOutline('atom', feed.title.value, feed_url)
+        for link in feed.links:
+                if link.relation == 'alternate' and \
+                        link.mimetype == 'text/html':
+                    outline.blog_url = link.uri
+        cursor.append(outline)
+        feed_list.save_file()
+        file_name = hashlib.sha1(binary(feed_url)).hexdigest() + '.xml'
+        with open(os.path.join(REPOSITORY, file_name), 'w') as f:
+            for chunk in write(feed, indent='    ', canonical_order=True):
+                f.write(chunk)
+        return feeds(category_id)
     elif request.form['type'] == POST_CATEGORY:
         title = request.form['title']
-        add_category(title, feed_list, cursor)
-        return category_feeds(category_id)
-
-
-@app.route('/feeds/<feed_id>/', methods=['DELETE'])
-def delete_feed_in_root(feed_id):
-    r = delete_feed(feed_id)
-    if r:
-        return r
-    return feeds()
+        outline = CategoryOutline(title)
+        cursor.append(outline)
+        feed_list.save_file()
+        return feeds(category_id)
 
 
 @app.route('/<path:category_id>/', methods=['DELETE'])
@@ -317,13 +238,16 @@ def delete_category(category_id):
     feed_list.save_file()
     index = category_id.rfind('/')
     if index == -1:
-        return feeds()
+        return feeds('/')
     else:
-        return category_feeds(category_id[:index])
+        return feeds(category_id[:index])
 
 
+@app.route('/feeds/<feed_id>/', methods=['DELETE'],
+           defaults={'category_id': '/'})
 @app.route('/<path:category_id>/feeds/<feed_id>/', methods=['DELETE'])
-def delete_feed_in_category(category_id, feed_id):
+def delete_feed(category_id, feed_id):
+    REPOSITORY = app.config['REPOSITORY']
     feed_list, cursor, _ = check_path_valid(category_id)
     if not cursor:
         r = jsonify(
@@ -332,10 +256,24 @@ def delete_feed_in_category(category_id, feed_id):
         )
         r.status_code = 404
         return r
-    r = delete_feed(feed_id, feed_list, cursor)
-    if r:
+    target = None
+    for feed in cursor:
+        if isinstance(feed, FeedOutline):
+            if feed_id == hashlib.sha1(binary(feed.xml_url)).hexdigest():
+                target = feed
+    if target:
+        cursor.remove(target)
+    else:
+        r = jsonify(
+            error='feed-not-found-in-path',
+            message='Given feed does not exists in the path'
+        )
+        r.status_code = 400
         return r
-    return category_feeds(category_id)
+    feed_list.save_file()
+    if not find_feed_in_opml(feed_id, feed_list):
+        os.remove(REPOSITORY + feed_id + '.xml')
+    return feeds(category_id)
 
 
 @app.route('/feeds/<feed_id>/entries/', defaults={'category_id': '/'})
