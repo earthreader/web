@@ -181,7 +181,13 @@ function processForm(event) {
 	var data = serializeForm(target);
 	var after = target.getAttribute('data-after');
 	if (after === "makeFeedList") {
-		post(target.action, data, function(res) {
+		var action = target.action;
+		//XXX: data-post or etc
+		var current = document.querySelector('[role=navigation] .current');
+		if (current.classList.contains('header')) {
+			action = current.getAttribute('data-post');
+		}
+		post(action, data, function(res) {
 			makeFeedList(res);
 			target.reset();
 		});
@@ -203,7 +209,9 @@ function makeFeedList(obj) {
 
 		header.addClass('header');
 		header.addClass('feed');
-		header.setAttribute('data-url', obj.entries_url);
+		header.setAttribute('data-entries', obj.entries_url);
+		header.setAttribute('data-adder', obj.adder_url);
+		header.setAttribute('data-remover', obj.remover_url);
 		header.textContent = obj.title;
 
 		list.addClass('fold');
@@ -227,7 +235,8 @@ function makeFeedList(obj) {
 	var makeFeed = function(parentObj, obj) {
 		var elem = document.createElement('li');
 		elem.addClass('feed');
-		elem.setAttribute('data-url', obj.entries_url);
+		elem.setAttribute('data-entries', obj.entries_url);
+		elem.setAttribute('data-remover', obj.remover_url);
 		elem.textContent = obj.title;
 
 		parentObj.appendChild(elem);
@@ -279,7 +288,7 @@ function getEntries(feed_url) {
 			var title = document.createElement('span');
 
 			article.addClass('entry');
-			article.setAttribute('data-url', entry.entry_url);
+			article.setAttribute('data-entries', entry.entry_url);
 			header.addClass('entry-title');
 			time.textContent = entry.updated;
 			title.textContent = entry.title;
@@ -310,7 +319,7 @@ function clickFeed(event) {
 	}
 	target.addClass('current');
 
-	var url = target.getAttribute('data-url');
+	var url = target.getAttribute('data-entries');
 
 	closeMenu();
 
@@ -329,7 +338,7 @@ function clickEntry(event) {
 	}
 
 	var entry = target.parentElement;
-	var entry_url = entry.getAttribute('data-url');
+	var entry_url = entry.getAttribute('data-entries');
 
 	getJSON(entry_url, function(obj) {
 		//set current marker
