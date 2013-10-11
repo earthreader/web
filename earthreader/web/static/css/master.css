@@ -16,8 +16,9 @@ body {
 }
 
 body .wrapper {
+	margin-top: -3em;
+	padding-top:3em;
 	height: 100%;
-	padding-bottom: 3em;
 	box-sizing: border-box;
 }
 
