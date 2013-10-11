@@ -111,6 +111,23 @@ function resizer(event) {
 	}
 }
 
+function clickPersistentMenu(event) {
+	var target = event.target;
+	while (target.getAttribute('data-action') == null) {
+		target = target.parentElement;
+		if (target === null) {
+			return;
+		}
+	}
+
+	var action = target.getAttribute('data-action');
+	closeMenu();
+
+	if (action === 'all') {
+		getAllEntries();
+	}
+}
+
 function toggleMenu(event) {
 	var target = event.target;
 	while (target.classList.contains('off-canvas-menu') == false) {
@@ -214,6 +231,10 @@ function makeFeedList(obj) {
 
 function refreshFeedList() {
 	getJSON('/feeds/', makeFeedList);
+}
+
+function getAllEntries() {
+	getEntries('/entries/');
 }
 
 function getEntries(feed_url) {
@@ -356,7 +377,9 @@ function keyboardShortcut(event) {
 
 function init() {
 	var navi = document.querySelector('[role=navigation]');
+	var persistent = navi.querySelector('.persistent');
 	navi.addEventListener('click', clickFeed, false);
+	persistent.addEventListener('click', clickPersistentMenu, false);
 
 	var main = document.querySelector('[role=main]');
 	main.addEventListener('click', clickEntry, false);
@@ -382,6 +405,7 @@ function init() {
     document.body.addEventListener(animationEnd, resizer, false);
 
 	refreshFeedList();
+	getAllEntries();
 }
 
 window.addEventListener('DOMContentLoaded', init, false);
