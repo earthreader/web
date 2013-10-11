@@ -191,7 +191,6 @@ def add_feed(url, feed_list=None, cursor=None):
 
 
 def add_category(title, feed_list=None, cursor=None):
-    REPOSITORY = app.config['REPOSITORY']
     if not feed_list:
         feed_list = get_feedlist()
         cursor = feed_list
