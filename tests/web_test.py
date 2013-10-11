@@ -2,11 +2,13 @@ try:
     from StringIO import StringIO
 except ImportError:
     from io import StringIO
+import atexit
 import glob
 import hashlib
 import os
 import os.path
 import re
+import tempfile
 import traceback
 try:
     import urllib2
@@ -54,8 +56,16 @@ def server_error_handler_for_testing(exception):
     )
 
 
+tmp_dir = tempfile.mkdtemp() + '/'
+
+def rm_tmp_dir():
+    os.rmdir(tmp_dir)
+
+atexit.register(rm_tmp_dir)
+
+
 app.config.update(dict(
-    REPOSITORY='tests/repo/',
+    REPOSITORY=tmp_dir,
     OPML='test.opml'
 ))
 
@@ -245,7 +255,6 @@ def xmls(request):
         files = glob.glob(REPOSITORY + '*')
         for file in files:
             os.remove(file)
-        os.rmdir(REPOSITORY)
 
     request.addfinalizer(remove_test_repo)
 
