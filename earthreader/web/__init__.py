@@ -161,8 +161,8 @@ POST_CATEGORY = 'category'
 def post_feed_or_category(category_id):
     REPOSITORY = app.config['REPOSITORY']
     feed_list, cursor, _ = check_path_valid(category_id)
-    if (not isinstance(cursor, CategoryOutline) and 
-        not isinstance(cursor, FeedList)):
+    if (not isinstance(cursor, CategoryOutline) and
+            not isinstance(cursor, FeedList)):
         r = jsonify(
             error='category-path-invalid',
             message='Given category path is not valid'
