@@ -320,6 +320,7 @@ def feed_entries(category_id, feed_id):
         return r
 
 
+@app.route('/entries/', defaults={'category_id': '/'})
 @app.route('/<path:category_id>/entries/')
 def category_entries(category_id):
     REPOSITORY = app.config['REPOSITORY']
