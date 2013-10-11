@@ -303,7 +303,6 @@ def test_all_feeds(xmls):
         assert result['updated'] == '2013-08-21 07:49:20+07:00'
         # /categoryone
         category_url = root_categories[0]['feeds_url']
-        print category_url
         assert category_url == \
             url_for(
                 'feeds',
