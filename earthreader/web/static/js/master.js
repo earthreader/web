@@ -181,15 +181,22 @@ function processForm(event) {
 	var data = serializeForm(target);
 	var after = target.getAttribute('data-after');
 	if (after === "makeFeedList") {
-		var action = target.action;
-		//XXX: data-post or etc
-		var current = document.querySelector('[role=navigation] .current');
-		var url = current.getAttribute('data-adder');
-		if (url) {
+		var action;
+		try {
+			var current = document.querySelector('[role=navigation] .feedlist .current');
+			var url = current.getAttribute('data-adder');
 			action = url;
+		} catch (err) {
+			action = target.action;
 		}
 		post(action, data, function(res) {
-			makeFeedList(res);
+			if (current == null) {
+				makeFeedList(res);
+			} else {
+				var fold = current.nextElementSibling;
+				fold.innerHTML = "";
+				makeCategory(fold, res);
+			}
 			target.reset();
 		});
 	} else {
@@ -200,50 +207,51 @@ function processForm(event) {
 	}
 }
 
+
+var makeCategory = function(parentObj, obj) {
+	var header = document.createElement('li');
+	var list = document.createElement('li');
+
+	header.addClass('header');
+	header.addClass('feed');
+	header.setAttribute('role', 'link');
+	header.setAttribute('data-entries', obj.entries_url);
+	header.setAttribute('data-adder', obj.adder_url);
+	header.setAttribute('data-remover', obj.remover_url);
+	header.textContent = obj.title;
+
+	list.addClass('fold');
+
+	var ul = document.createElement('ul');
+	getJSON(obj.feeds_url, function(obj) {
+		for (var i=0; i<obj.categories.length; i++) {
+			makeCategory(ul, obj.categories[i]);
+		}
+		for (var i=0; i<obj.feeds.length; i++) {
+			makeFeed(ul, obj.feeds[i]);
+		}
+	});
+
+	list.appendChild(ul);
+
+	parentObj.appendChild(header);
+	parentObj.appendChild(list);
+};
+
+var makeFeed = function(parentObj, obj) {
+	var elem = document.createElement('li');
+	elem.addClass('feed');
+	elem.setAttribute('data-entries', obj.entries_url);
+	elem.setAttribute('data-remover', obj.remover_url);
+	elem.setAttribute('role', 'link');
+	elem.textContent = obj.title;
+
+	parentObj.appendChild(elem);
+};
+
 function makeFeedList(obj) {
 	var feedList = document.querySelector('.feedlist');
 	feedList.innerHTML = "";
-
-	var makeCategory = function(parentObj, obj) {
-		var header = document.createElement('li');
-		var list = document.createElement('li');
-
-		header.addClass('header');
-		header.addClass('feed');
-		header.setAttribute('role', 'link');
-		header.setAttribute('data-entries', obj.entries_url);
-		header.setAttribute('data-adder', obj.adder_url);
-		header.setAttribute('data-remover', obj.remover_url);
-		header.textContent = obj.title;
-
-		list.addClass('fold');
-
-		var ul = document.createElement('ul');
-		getJSON(obj.feeds_url, function(obj) {
-			for (var i=0; i<obj.categories.length; i++) {
-				makeCategory(ul, obj.categories[i]);
-			}
-			for (var i=0; i<obj.feeds.length; i++) {
-				makeFeed(ul, obj.feeds[i]);
-			}
-		});
-
-		list.appendChild(ul);
-
-		parentObj.appendChild(header);
-		parentObj.appendChild(list);
-	};
-
-	var makeFeed = function(parentObj, obj) {
-		var elem = document.createElement('li');
-		elem.addClass('feed');
-		elem.setAttribute('data-entries', obj.entries_url);
-		elem.setAttribute('data-remover', obj.remover_url);
-		elem.setAttribute('role', 'link');
-		elem.textContent = obj.title;
-
-		parentObj.appendChild(elem);
-	};
 
 	for (var i=0; i<obj.categories.length; i++) {
 		makeCategory(feedList, obj.categories[i]);
