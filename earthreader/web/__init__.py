@@ -369,7 +369,7 @@ def feed_entries(category_id, feed_id):
 def category_entries(category_id):
     REPOSITORY = app.config['REPOSITORY']
     lst, cursor, target = check_path_valid(category_id)
-    if not isinstance(cursor, CategoryOutline):
+    if not isinstance(lst, FeedList):
         r = jsonify(
             error='category-path-invalid',
             message='Given category was not found'
