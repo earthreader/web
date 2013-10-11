@@ -370,7 +370,7 @@ def category_entries(category_id):
             for entry in feed.entries:
                 sorting_pool.append((feed, entry))
     sorting_pool.sort(key=lambda entry: entry[1].updated_at, reverse=True)
-    for feed_title, entry in sorting_pool:
+    for feed, entry in sorting_pool:
         entries.append({
             'title': entry.title,
             'entry_url': url_for(

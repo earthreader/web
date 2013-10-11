@@ -625,7 +625,19 @@ def test_category_all_entries(xmls):
         result = json.loads(r.data)
         assert result['title'] == 'categoryone'
         assert result['entries'][0]['title'] == 'Feed Two: Entry One'
+        entry_url = result['entries'][0]['entry_url']
+        r = client.get(entry_url)
+        assert r.status_code == 200
+        two_result = json.loads(r.data)
+        assert two_result['content'] == \
+            'This is content of Entry One in Feed Two'
         assert result['entries'][1]['title'] == 'Feed One: Entry One'
+        entry_url = result['entries'][1]['entry_url']
+        r = client.get(entry_url)
+        assert r.status_code == 200
+        one_result = json.loads(r.data)
+        assert one_result['content'] == \
+            'This is content of Entry One in Feed One'
         r = client.get('/categoryone/categorytwo/entries/')
         assert r.status_code == 200
         result = json.loads(r.data)
