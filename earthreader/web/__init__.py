@@ -94,6 +94,9 @@ def get_all_feeds(category, parent_categories=[]):
 
 
 def check_path_valid(category_id, return_category_parent=False):
+    if category_id == '/':
+        feed_list = get_feedlist()
+        return feed_list, feed_list, None
     if return_category_parent:
         category_list = category_id.split('/')
         target = category_list.pop()
