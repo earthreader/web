@@ -173,7 +173,7 @@ def index():
 @app.route('/<path:category_id>/feeds/')
 def feeds(category_id):
     feed_list, cursor, _ = check_path_valid(category_id)
-    if not feed_list:
+    if not isinstance(feed_list, FeedList):
         r = jsonify(
             error='category-path-invalid',
             message='Given category path is not valid'
