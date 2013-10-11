@@ -184,8 +184,9 @@ function processForm(event) {
 		var action = target.action;
 		//XXX: data-post or etc
 		var current = document.querySelector('[role=navigation] .current');
-		if (current.classList.contains('header')) {
-			action = current.getAttribute('data-post');
+		var url = current.getAttribute('data-adder');
+		if (url) {
+			action = url;
 		}
 		post(action, data, function(res) {
 			makeFeedList(res);
