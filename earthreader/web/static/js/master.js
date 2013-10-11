@@ -234,6 +234,12 @@ function refreshFeedList() {
 }
 
 function getAllEntries() {
+	var all_feed = document.querySelector('[role=navigation] [data-action=all]');
+	var list = document.querySelectorAll('[role=navigation] .current');
+	for (var i=0; i<list.length; i++) {
+		list[i].removeClass('current');
+	}
+	all_feed.addClass('current');
 	getEntries('/entries/');
 }
 
