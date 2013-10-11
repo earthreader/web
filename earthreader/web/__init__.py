@@ -77,6 +77,12 @@ def get_all_feeds(category, parent_categories=[]):
                     category_id=feed_path + '/' + child.title
                     if parent_categories else child.title,
                     _external=True
+                ),
+                'entries_url': url_for(
+                    'category_entries',
+                    category_id=feed_path + '/' + child.title
+                    if parent_categories else child.title,
+                    _external=True
                 )
             })
     return feeds, categories
