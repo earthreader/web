@@ -230,7 +230,7 @@ def post_feed_or_category(category_id):
                     outline.blog_url = link.uri
         cursor.append(outline)
         feed_list.save_file()
-        file_name = hashlib.sha1(binary(feed_url)).hexdigest() + '.xml'
+        file_name = get_hash(feed.id) + '.xml'
         with open(os.path.join(REPOSITORY, file_name), 'w') as f:
             for chunk in write(feed, indent='    ', canonical_order=True):
                 f.write(chunk)
@@ -323,7 +323,16 @@ def feed_entries(category_id, feed_id):
                         entry_id=get_hash(entry.id),
                         _external=True
                     ),
-                    'updated': entry.updated_at.__str__()
+                    'permalink': entry.id,
+                    'updated': entry.updated_at.__str__(),
+                    'feed': {
+                        'title': feed.title,
+                        'feed_url': url_for(
+                            'feed_entries',
+                            feed_id=get_hash(feed.id)
+                        ),
+                        'permalink': feed.id
+                    }
                 })
         return jsonify(
             title=feed.title,
@@ -343,7 +352,6 @@ def feed_entries(category_id, feed_id):
 def category_entries(category_id):
     REPOSITORY = app.config['REPOSITORY']
     lst, cursor, target = check_path_valid(category_id)
-
     if not cursor:
         r = jsonify(
             error='category-path-invalid',
@@ -351,7 +359,7 @@ def category_entries(category_id):
         )
         r.status_code = 404
         return r
-
+    sorting_pool = []
     entries = []
     for child in cursor.get_all_feeds():
         feed_id = get_hash(child.xml_url)
@@ -360,18 +368,30 @@ def category_entries(category_id):
         )) as f:
             feed = read(Feed, f)
             for entry in feed.entries:
-                entries.append({
-                    'title': entry.title,
-                    'entry_url': url_for(
-                        'feed_entry',
-                        feed_id=feed_id,
-                        entry_id=get_hash(entry.id),
-                        _external=True
-                    ),
-                    'updated': entry.updated_at.__str__()
-                })
+                sorting_pool.append((feed, entry))
+    sorting_pool.sort(key=lambda entry: entry[1].updated_at, reverse=True)
+    for feed, entry in sorting_pool:
+        entries.append({
+            'title': entry.title,
+            'entry_url': url_for(
+                'feed_entry',
+                feed_id=get_hash(feed.id),
+                entry_id=get_hash(entry.id),
+                _external=True
+            ),
+            'permalink': entry.id,
+            'updated': entry.updated_at.__str__(),
+            'feed': {
+                'title': feed.title,
+                'feed_url': url_for(
+                    'feed_entries',
+                    feed_id=get_hash(feed.id)
+                ),
+                'permalink': feed.id
+            }
+        })
     return jsonify(
-        title=category_id,
+        title=category_id.split('/')[-1],
         entries=entries
     )
 
