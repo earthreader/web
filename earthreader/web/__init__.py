@@ -57,29 +57,40 @@ def index():
     return render_template('index.html')
 
 
-def get_all_feeds(category, parents=[]):
-    feeds = []
-    feed_path = '/'.join(parents)
-    for obj in category:
-        if isinstance(obj, FeedOutline):
-            feeds.append({
-                'title': obj.title,
+def get_all_feeds(category, parent_categories=[]):
+    result = []
+    if parent_categories:
+        feed_path = '/'.join(parent_categories)
+    else:
+        feed_path = '/'
+    for child in category:
+        if isinstance(child, FeedOutline):
+            feed_id = get_hash(child.xml_url)
+            result.append({
+                'title': child.title,
                 'feed_url': url_for(
                     'category_feed_entries',
                     category_id=feed_path,
-                    feed_id=get_hash(obj.xml_url),
-                    _external=True)
+                    feed_id=feed_id,
+                    _external=True
+                )
             })
-        else:
-            feeds.append({
-                'title': obj.title,
+        elif isinstance(child, CategoryOutline):
+            result.append({
+                'title': child.title,
                 'feed_url': url_for(
                     'category_all_entries',
-                    category_id=feed_path + '/' + obj.title,
-                    _external=True),
-                'feeds': get_all_feeds(obj)
+                    category_id=feed_path + '/' + child.title
+                    if parent_categories else child.title,
+                    _external=True
+                ),
+                'feeds': get_all_feeds(
+                    child,
+                    parent_categories.append(child.title)
+                    if parent_categories else [child.title]
+                )
             })
-    return feeds
+    return result
 
 
 def check_path_valid(category_id, return_category_parent=False):

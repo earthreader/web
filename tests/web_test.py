@@ -13,7 +13,7 @@ try:
 except ImportError:
     import urllib.request as urllib2
 
-from flask import json
+from flask import json, url_for
 
 from libearth.compat import binary
 from libearth.crawler import crawl
@@ -354,6 +354,31 @@ def test_feed_entries(xmls):
             '2013-08-22 07:49:20+07:00'
 
 
+def test_category_path(xmls):
+    with app.test_client() as client:
+        r = client.get('/feeds/')
+        assert r.status_code == 200
+        result = json.loads(r.data)
+        categoryone = result['feeds'][0]
+        assert categoryone['title'] == 'categoryone'
+        assert categoryone['feed_url'] == \
+            url_for(
+                'category_all_entries',
+                category_id='categoryone',
+                _external=True)
+        r_categoryone = client.get(categoryone['feed_url'])
+        assert r_categoryone.status_code == 200
+        categorytwo = result['feeds'][0]['feeds'][1]
+        assert categorytwo['title'] == 'categorytwo'
+        assert categorytwo['feed_url'] == \
+            url_for(
+                'category_all_entries',
+                category_id='categoryone/categorytwo',
+                _external=True)
+        r_categorytwo = client.get(categorytwo['feed_url'])
+        assert r_categorytwo.status_code == 200
+
+
 def test_category_feeds(xmls):
     with app.test_client() as client:
         # categoryone
@@ -541,5 +566,8 @@ def test_category_all_entries(xmls):
         r = client.get('/categoryone/entries/')
         assert r.status_code == 200
         result = json.loads(r.data)
-        print(result)
         assert len(result['entries']) == 2
+        r = client.get('/categoryone/categorytwo/entries/')
+        assert r.status_code == 200
+        result = json.loads(r.data)
+        assert len(result['entries']) == 1
