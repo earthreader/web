@@ -264,7 +264,7 @@ def test_all_feeds(xmls):
         assert root_categories[0]['title'] == 'categoryone'
         assert root_categories[1]['title'] == 'categorythree'
         # /feedthree
-        feed_url = root_feeds[0]['feed_url']
+        feed_url = root_feeds[0]['entries_url']
         feed_id = FEED_ID_PATTERN.match(feed_url).group(1)
         assert feed_url == \
             url_for(
@@ -293,14 +293,14 @@ def test_all_feeds(xmls):
             'This is content of Entry One in Feed Three'
         assert result['updated'] == '2013-08-21 07:49:20+07:00'
         # /categoryone
-        category_url = root_categories[0]['category_url']
+        category_url = root_categories[0]['feeds_url']
         assert category_url == \
             url_for(
                 'feeds',
                 category_id='categoryone',
                 _external=True
             )
-        one_r = client.get(root_categories[0]['category_url'])
+        one_r = client.get(root_categories[0]['feeds_url'])
         assert one_r.status_code == 200
         one_result = json.loads(one_r.data)
         one_feeds = one_result['feeds']
@@ -308,7 +308,7 @@ def test_all_feeds(xmls):
         assert one_feeds[0]['title'] == 'Feed One'
         assert one_categories[0]['title'] == 'categorytwo'
         # /categoryone/feedone
-        feed_url = one_feeds[0]['feed_url']
+        feed_url = one_feeds[0]['entries_url']
         feed_id = FEED_ID_PATTERN.match(feed_url).group(1)
         assert feed_url == \
             url_for(
@@ -339,7 +339,7 @@ def test_all_feeds(xmls):
             'This is content of Entry One in Feed One'
         assert result['updated'] == '2013-08-19 07:49:20+07:00'
         # /categoryone/categorytwo
-        two_r = client.get(one_categories[0]['category_url'])
+        two_r = client.get(one_categories[0]['feeds_url'])
         assert two_r.status_code == 200
         two_result = json.loads(two_r.data)
         two_feeds = two_result['feeds']
@@ -347,7 +347,7 @@ def test_all_feeds(xmls):
         assert two_feeds[0]['title'] == 'Feed Two'
         assert len(two_categories) == 0
         # /categoryone/categorytwo/feedtwo
-        category_url = one_categories[0]['category_url']
+        category_url = one_categories[0]['feeds_url']
         assert category_url == \
             url_for(
                 'feeds',
@@ -355,7 +355,7 @@ def test_all_feeds(xmls):
                 _external=True
             )
 
-        feed_url = two_feeds[0]['feed_url']
+        feed_url = two_feeds[0]['entries_url']
         feed_id = FEED_ID_PATTERN.match(feed_url).group(1)
         assert feed_url == \
             url_for(
@@ -386,14 +386,14 @@ def test_all_feeds(xmls):
             'This is content of Entry One in Feed Two'
         assert result['updated'] == '2013-08-20 07:49:20+07:00'
         # categorythree
-        category_url = root_categories[1]['category_url']
+        category_url = root_categories[1]['feeds_url']
         assert category_url == \
             url_for(
                 'feeds',
                 category_id='categorythree',
                 _external=True
             )
-        three_r = client.get(root_categories[1]['category_url'])
+        three_r = client.get(root_categories[1]['feeds_url'])
         assert three_r.status_code == 200
         three_result = json.loads(three_r.data)
         three_feeds = three_result['feeds']
@@ -401,7 +401,7 @@ def test_all_feeds(xmls):
         assert three_feeds[0]['title'] == 'Feed Four'
         assert len(three_categories) == 0
         # /categorythree/feedone
-        feed_url = three_feeds[0]['feed_url']
+        feed_url = three_feeds[0]['entries_url']
         feed_id = FEED_ID_PATTERN.match(feed_url).group(1)
         assert feed_url == \
             url_for(

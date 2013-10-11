@@ -62,7 +62,7 @@ def get_all_feeds(category, parent_categories=[]):
             feed_id = get_hash(child.xml_url)
             feeds.append({
                 'title': child.title,
-                'feed_url': url_for(
+                'entries_url': url_for(
                     'feed_entries',
                     category_id=feed_path,
                     feed_id=feed_id,
@@ -72,7 +72,7 @@ def get_all_feeds(category, parent_categories=[]):
         elif isinstance(child, CategoryOutline):
             categories.append({
                 'title': child.title,
-                'category_url': url_for(
+                'feeds_url': url_for(
                     'feeds',
                     category_id=feed_path + '/' + child.title
                     if parent_categories else child.title,
