@@ -416,7 +416,17 @@ def feed_entry(category_id, feed_id, entry_id):
                     return jsonify(
                         title=entry.title,
                         content=entry.content,
-                        updated=entry.updated_at.__str__()
+                        updated=entry.updated_at.__str__(),
+                        permalink=entry.id,
+                        feed={
+                            'title': feed.title,
+                            'entries_url': url_for(
+                                'feed_entries',
+                                feed_id=get_hash(feed.id),
+                                _external=True
+                            ),
+                            'permalink': feed.id
+                        }
                     )
             r = jsonify(
                 error='entry-not-found',

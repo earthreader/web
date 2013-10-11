@@ -629,8 +629,21 @@ def test_category_all_entries(xmls):
         r = client.get(entry_url)
         assert r.status_code == 200
         two_result = json.loads(r.data)
+        assert two_result['title'] == 'Feed Two: Entry One'
         assert two_result['content'] == \
             'This is content of Entry One in Feed Two'
+        assert two_result['updated'] == '2013-08-20 07:49:20+07:00'
+        assert two_result['permalink'] == 'http://feedtwo.com/feed/atom/1/'
+        assert two_result['feed']['title'] == 'Feed Two'
+        assert two_result['feed']['permalink'] == \
+            'http://feedtwo.com/feed/atom/'
+        feed_id = get_hash('http://feedtwo.com/feed/atom/')
+        assert two_result['feed']['entries_url'] == \
+            url_for(
+                'feed_entries',
+                feed_id=feed_id,
+                _external=True
+            )
         assert result['entries'][1]['title'] == 'Feed One: Entry One'
         entry_url = result['entries'][1]['entry_url']
         r = client.get(entry_url)
