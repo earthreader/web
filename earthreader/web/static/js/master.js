@@ -47,7 +47,14 @@ function getJSON(url, onSuccess, onFail) {
 			if(onFail instanceof Function) {
 				(onFail)(xhr);
 			} else {
-				alert(xhr.statusText);
+				try {
+					var json = JSON.parse(xhr.responseText);
+					var error = json.error;
+					var message = json.message;
+					alert(error + '\n' + message);
+				}catch(err) {
+					alert(xhr.statusText);
+				}
 			}
 		}
 	}
