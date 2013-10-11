@@ -437,6 +437,7 @@ def feed_entry(category_id, feed_id, entry_id):
             for entry in feed.entries:
                 if entry_id == get_hash(entry.id):
                     return jsonify(
+                        title=entry.title,
                         content=entry.content,
                         updated=entry.updated_at.__str__()
                     )
