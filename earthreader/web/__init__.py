@@ -58,7 +58,8 @@ def index():
 
 
 def get_all_feeds(category, parent_categories=[]):
-    result = []
+    feeds = []
+    categories = []
     if parent_categories:
         feed_path = '/'.join(parent_categories)
     else:
@@ -66,31 +67,26 @@ def get_all_feeds(category, parent_categories=[]):
     for child in category:
         if isinstance(child, FeedOutline):
             feed_id = get_hash(child.xml_url)
-            result.append({
+            feeds.append({
                 'title': child.title,
                 'feed_url': url_for(
-                    'category_feed_entries',
+                    'feed_entries',
                     category_id=feed_path,
                     feed_id=feed_id,
                     _external=True
                 )
             })
         elif isinstance(child, CategoryOutline):
-            result.append({
+            categories.append({
                 'title': child.title,
-                'feed_url': url_for(
-                    'category_all_entries',
+                'category_url': url_for(
+                    'category_feeds',
                     category_id=feed_path + '/' + child.title
                     if parent_categories else child.title,
                     _external=True
-                ),
-                'feeds': get_all_feeds(
-                    child,
-                    parent_categories.append(child.title)
-                    if parent_categories else [child.title]
                 )
             })
-    return result
+    return feeds, categories
 
 
 def check_path_valid(category_id, return_category_parent=False):
@@ -242,8 +238,8 @@ def feeds():
         r.status_code = 400
         return r
     feed_list = get_feedlist()
-    feeds = get_all_feeds(feed_list)
-    return jsonify(feeds=feeds)
+    feeds, categories = get_all_feeds(feed_list)
+    return jsonify(feeds=feeds, categories=categories)
 
 
 @app.route('/<path:category_id>/feeds/')
@@ -256,8 +252,8 @@ def category_feeds(category_id):
         )
         r.status_code = 404
         return r
-    feeds = get_all_feeds(cursor, [category_id])
-    return jsonify(feeds=feeds)
+    feeds, categories = get_all_feeds(cursor, [category_id])
+    return jsonify(feeds=feeds, categories=categories)
 
 
 POST_FEED = 'feed'
