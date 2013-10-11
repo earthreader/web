@@ -67,6 +67,12 @@ def get_all_feeds(category, parent_categories=[]):
                     category_id=feed_path,
                     feed_id=feed_id,
                     _external=True
+                ),
+                'remover_url': url_for(
+                    'delete_feed',
+                    category_id=feed_path,
+                    feed_id=feed_id,
+                    _external=True
                 )
             })
         elif isinstance(child, CategoryOutline):
@@ -83,7 +89,19 @@ def get_all_feeds(category, parent_categories=[]):
                     category_id=feed_path + '/' + child.title
                     if parent_categories else child.title,
                     _external=True
-                )
+                ),
+                'adder_url': url_for(
+                    'post_feed_or_category',
+                    category_id=feed_path + '/' + child.title
+                    if parent_categories else child.title,
+                    _external=True
+                ),
+                'remover_url': url_for(
+                    'delete_category',
+                    category_id=feed_path + '/' + child.title
+                    if parent_categories else child.title,
+                    _external=True
+                ),
             })
     return feeds, categories
 

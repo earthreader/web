@@ -457,7 +457,11 @@ def test_add_feed(xmls):
 
 def test_add_feed_in_category(xmls):
     with app.test_client() as client:
-        r = client.post('/categoryone/categorytwo/feeds/',
+        r = client.get('/categoryone/feeds/')
+        assert r.status_code == 200
+        result = json.loads(r.data)
+        adder_url = result['categories'][0]['adder_url']
+        r = client.post(adder_url,
                         data=dict(type=POST_FEED,
                                   url='http://feedfive.com/feed/atom/'))
         assert r.status_code == 200
@@ -482,6 +486,10 @@ def test_add_category(xmls):
 
 def test_add_category_in_category(xmls):
     with app.test_client() as client:
+        r = client.get('/feeds/')
+        assert r.status_code == 200
+        result = json.loads(r.data)
+        adder_url = result['categories'][0]['adder_url']
         r = client.post('/categoryone/feeds/',
                         data=dict(type=POST_CATEGORY,
                                   title='addedcategory'))
@@ -542,9 +550,13 @@ def test_delete_feed(xmls):
 def test_delete_feed_in_category(xmls):
     REPOSITORY = app.config['REPOSITORY']
     with app.test_client() as client:
-        feed_id = hashlib.sha1(
-            binary('http://feedtwo.com/feed/atom/')).hexdigest()
-        r = client.delete('/categoryone/categorytwo/feeds/' + feed_id + '/')
+        feed_id = get_hash('http://feedone.com/feed/atom/')
+        assert REPOSITORY + feed_id + '.xml' in glob.glob(REPOSITORY + '*')
+        r = client.get('/categoryone/feeds/')
+        assert r.status_code == 200
+        result = json.loads(r.data)
+        remover_url = result['feeds'][0]['remover_url']
+        r = client.delete(remover_url)
         assert r.status_code == 200
         result = json.loads(r.data)
         assert len(result['feeds']) == 0
@@ -554,6 +566,8 @@ def test_delete_feed_in_category(xmls):
 def test_delete_feed_in_two_category(xmls):
     REPOSITORY = app.config['REPOSITORY']
     with app.test_client() as client:
+        feed_id = get_hash('http://feedone.com/feed/atom/')
+        assert REPOSITORY + feed_id + '.xml' in glob.glob(REPOSITORY + '*')
         r = client.post('/feeds/',
                         data=dict(type=POST_FEED,
                                   url='http://feedone.com/feed/atom/'))
@@ -592,11 +606,15 @@ def test_delete_category_in_root(xmls):
 
 def test_delete_category_in_category(xmls):
     with app.test_client() as client:
-        r = client.delete('/categoryone/categorytwo/')
+        r = client.get('/categoryone/feeds/')
+        assert r.status_code == 200
+        result = json.loads(r.data)
+        remover_url = result['categories'][0]['remover_url']
+        r = client.delete(remover_url)
         assert r.status_code == 200
         result = json.loads(r.data)
         assert result == json.loads(client.get('/categoryone/feeds/').data)
-        for child in result['feeds']:
+        for child in result['categories']:
             assert not child['title'] == 'categorytwo'
 
 
