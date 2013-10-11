@@ -21,7 +21,7 @@ from libearth.feedlist import (Feed as FeedOutline,
                                FeedCategory as CategoryOutline, FeedList)
 from libearth.schema import write
 
-from earthreader.web import app, get_hash, POST_FEED, POST_CATEGORY
+from earthreader.web import app, get_hash
 
 from pytest import fixture
 
@@ -446,8 +446,7 @@ def test_invalid_path(xmls):
 def test_add_feed(xmls):
     with app.test_client() as client:
         r = client.post('/feeds/',
-                        data=dict(type=POST_FEED,
-                                  url='http://feedfive.com/feed/atom/'))
+                        data=dict(url='http://feedfive.com/feed/atom/'))
         assert r.status_code == 200
         result = json.loads(r.data)
         assert result['feeds'][1]['title'] == 'Feed Five'
@@ -460,10 +459,9 @@ def test_add_feed_in_category(xmls):
         r = client.get('/categoryone/feeds/')
         assert r.status_code == 200
         result = json.loads(r.data)
-        adder_url = result['categories'][0]['adder_url']
-        r = client.post(adder_url,
-                        data=dict(type=POST_FEED,
-                                  url='http://feedfive.com/feed/atom/'))
+        add_feed_url = result['categories'][0]['add_feed_url']
+        r = client.post(add_feed_url,
+                        data=dict(url='http://feedfive.com/feed/atom/'))
         assert r.status_code == 200
         result = json.loads(r.data)
         assert result['feeds'][0]['title'] == 'Feed Two'
@@ -474,9 +472,8 @@ def test_add_feed_in_category(xmls):
 
 def test_add_category(xmls):
     with app.test_client() as client:
-        r = client.post('/feeds/',
-                        data=dict(type=POST_CATEGORY,
-                                  title='addedcategory'))
+        r = client.post('/',
+                        data=dict(title='addedcategory'))
         assert r.status_code == 200
         result = json.loads(r.data)
         assert result['categories'][2]['title'] == 'addedcategory'
@@ -489,10 +486,9 @@ def test_add_category_in_category(xmls):
         r = client.get('/feeds/')
         assert r.status_code == 200
         result = json.loads(r.data)
-        adder_url = result['categories'][0]['adder_url']
-        r = client.post('/categoryone/feeds/',
-                        data=dict(type=POST_CATEGORY,
-                                  title='addedcategory'))
+        add_category_url = result['categories'][0]['add_category_url']
+        r = client.post(add_category_url,
+                        data=dict(title='addedcategory'))
         assert r.status_code == 200
         result = json.loads(r.data)
         assert result['categories'][1]['title'] == 'addedcategory'
@@ -502,9 +498,8 @@ def test_add_category_in_category(xmls):
 
 def test_add_category_without_opml():
     with app.test_client() as client:
-        r = client.post('/feeds/',
-                        data=dict(type=POST_CATEGORY,
-                                  title='testcategory'))
+        r = client.post('/',
+                        data=dict(title='testcategory'))
         assert r.status_code == 200
         result = json.loads(r.data)
         assert result['categories'][0]['title'] == 'testcategory'
@@ -519,8 +514,7 @@ def test_add_category_without_opml():
 def test_add_feed_without_opml():
     with app.test_client() as client:
         r = client.post('/feeds/',
-                        data=dict(type=POST_FEED,
-                                  url='http://feedone.com/feed/atom/'))
+                        data=dict(url='http://feedone.com/feed/atom/'))
         assert r.status_code == 200
         result = json.loads(r.data)
         assert result['feeds'][0]['title'] == 'Feed One'
@@ -555,8 +549,8 @@ def test_delete_feed_in_category(xmls):
         r = client.get('/categoryone/feeds/')
         assert r.status_code == 200
         result = json.loads(r.data)
-        remover_url = result['feeds'][0]['remover_url']
-        r = client.delete(remover_url)
+        remove_feed_url = result['feeds'][0]['remove_feed_url']
+        r = client.delete(remove_feed_url)
         assert r.status_code == 200
         result = json.loads(r.data)
         assert len(result['feeds']) == 0
@@ -569,8 +563,7 @@ def test_delete_feed_in_two_category(xmls):
         feed_id = get_hash('http://feedone.com/feed/atom/')
         assert REPOSITORY + feed_id + '.xml' in glob.glob(REPOSITORY + '*')
         r = client.post('/feeds/',
-                        data=dict(type=POST_FEED,
-                                  url='http://feedone.com/feed/atom/'))
+                        data=dict(url='http://feedone.com/feed/atom/'))
         assert r.status_code == 200
         feed_list = FeedList(REPOSITORY + OPML)
         assert feed_list[0][0].title == 'Feed One'
@@ -609,8 +602,8 @@ def test_delete_category_in_category(xmls):
         r = client.get('/categoryone/feeds/')
         assert r.status_code == 200
         result = json.loads(r.data)
-        remover_url = result['categories'][0]['remover_url']
-        r = client.delete(remover_url)
+        remove_category_url = result['categories'][0]['remove_category_url']
+        r = client.delete(remove_category_url)
         assert r.status_code == 200
         result = json.loads(r.data)
         assert result == json.loads(client.get('/categoryone/feeds/').data)
