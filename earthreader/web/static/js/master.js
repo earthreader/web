@@ -18,16 +18,18 @@ Element.prototype.addClass = function(name) {
 	}
 }
 
-function scrollToElement(element) {
+function scrollToElement(parentElement, childElement) {
 	var x = 0;
     var y = 0;
-    while( element && !isNaN( element.offsetLeft ) && !isNaN( element.offsetTop ) ) {
+	var element = childElement;
+    while( element && element !== parentElement && !isNaN( element.offsetLeft ) && !isNaN( element.offsetTop ) ) {
         x += element.offsetLeft - element.scrollLeft;
         y += element.offsetTop - element.scrollTop;
         element = element.offsetParent;
     }
 
-	window.scrollTo(x, y);
+	parentElement.scrollTop = y;
+	parentElement.scrollLeft = x;
 }
 
 function getJSON(url, onSuccess, onFail) {
@@ -389,7 +391,7 @@ function clickEntry(event) {
 		elem.innerHTML = content;
 		entry.appendChild(elem);
 
-		scrollToElement(entry);
+		scrollToElement(main, entry);
 	});
 }
 
