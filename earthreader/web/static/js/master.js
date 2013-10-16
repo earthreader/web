@@ -115,7 +115,7 @@ function resizer(event) {
 
 function clickPersistentMenu(event) {
 	var target = event.target;
-	if (["input", "textarea"].contains(target.localName)) {
+	if (["input", "textarea"].indexOf(target.localName) >= 0) {
 		return;
 	}
 	while (target.getAttribute('data-action') == null) {
