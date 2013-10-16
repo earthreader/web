@@ -49,8 +49,6 @@ def get_feedlist():
 
 
 def get_hash(name):
-    print("Original: %s, hashed: %s"%(name,
-                                      hashlib.sha1(binary(name)).hexdigest()))
     return hashlib.sha1(binary(name)).hexdigest()
 
 
