@@ -133,6 +133,27 @@ function clickPersistentMenu(event) {
 	}
 }
 
+function clickComplementaryMenu(event) {
+	var target = event.target;
+	if (["input", "textarea"].indexOf(target.localName) >= 0) {
+		return;
+	}
+
+	while (target.getAttribute('data-action') == null) {
+		target = target.parentElement;
+		if (target === null) {
+			return;
+		}
+	}
+
+	var action = target.gtAttribute('data-action');
+	closeSide();
+
+	if (action === 'remove-this') {
+		//TODO
+	}
+}
+
 function toggleMenu(event) {
 	var target = event.target;
 	while (target.classList.contains('off-canvas-menu') == false) {
@@ -224,10 +245,18 @@ var makeCategory = function(parentObj, obj) {
 	header.addClass('feed');
 	header.setAttribute('role', 'link');
 	header.setAttribute('data-entries', obj.entries_url);
-	header.setAttribute('data-add-category-url', obj.add_category_url);
-	header.setAttribute('data-add-feed-url', obj.add_feed_url);
-	header.setAttribute('data-remove-feed-url', obj.remove_feed_url);
-	header.setAttribute('data-remove-category-url', obj.remove_category_url);
+	if (obj.add_category_url) {
+		header.setAttribute('data-add-category-url', obj.add_category_url);
+	}
+	if (obj.add_feed_url) {
+		header.setAttribute('data-add-feed-url', obj.add_feed_url);
+	}
+	if (obj.remove_feed_url) {
+		header.setAttribute('data-remove-feed-url', obj.remove_feed_url);
+	}
+	if (obj.remove_category_url) {
+		header.setAttribute('data-remove-category-url', obj.remove_category_url);
+	}
 	console.log(obj);
 	header.textContent = obj.title;
 
@@ -459,6 +488,9 @@ function init() {
 
 	var main = document.querySelector('[role=main]');
 	main.addEventListener('click', clickEntry, false);
+
+	var side = document.querySelector('[role=complementary]');
+	side.addEventListener('click', clickComplementaryMenu, false);
 
 	document.addEventListener('click', toggleMenu, false);
 	document.addEventListener('click', toggleSide, false);
