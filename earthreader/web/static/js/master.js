@@ -199,7 +199,8 @@ function processForm(event) {
 			} else {
 				var fold = current.nextElementSibling;
 				fold.innerHTML = "";
-				makeCategory(fold, res);
+				//makeCategory(fold, res);
+				makeFeedList(res, fold);
 			}
 			target.reset();
 		});
@@ -256,8 +257,13 @@ var makeFeed = function(parentObj, obj) {
 	parentObj.appendChild(elem);
 };
 
-function makeFeedList(obj) {
-	var feedList = document.querySelector('.feedlist');
+function makeFeedList(obj, target) {
+	var feedList;
+	if (target !== undefined) {
+		feedList = target;
+	} else {
+		feedList = document.querySelector('.feedlist');
+	}
 	feedList.innerHTML = "";
 
 	for (var i=0; i<obj.categories.length; i++) {
