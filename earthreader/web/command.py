@@ -76,7 +76,8 @@ def earthreader():
         try:
             for feed_url, (feed_data, crawler_hints) in generator:
                 file_name = hashlib.sha1(feed_url).hexdigest()
-                with open(os.path.join('repo', file_name + '.xml'), 'w') as f:
+                with open(os.path.join(
+                        repository, file_name + '.xml'), 'w') as f:
                     for chunk in write(feed_data,
                                        indent='    ',
                                        canonical_order=True):
