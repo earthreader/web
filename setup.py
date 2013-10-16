@@ -1,4 +1,5 @@
 import os.path
+import sys
 
 try:
     from setuptools import find_packages, setup
@@ -30,6 +31,11 @@ class pytest(test):
         raise SystemExit(errno)
 
 
+install_requires = ['Flask >= 0.10', 'libearth >= 0.1.0']
+if sys.version_info >= (2, 6):
+    install_requires.append('argparse >= 1.2.1')
+
+
 setup(
     name='EarthReader-Web',
     description='Earth Reader for Web',
@@ -37,9 +43,14 @@ setup(
     url='http://earthreader.org/',
     author='Earth Reader Project',
     author_email='earthreader' '@' 'librelist.com',
+    entry_points={
+        'console_scripts': [
+            'earthreader = earthreader.web.command:earthreader'
+        ]
+    },
     license='AGPLv3 or later',
     packages=find_packages(exclude=['tests']),
-    install_requires=['Flask >= 0.10', 'libearth==dev'],
+    install_requires=install_requires,
     dependency_links=[
         'https://github.com/earthreader/libearth/archive/master.zip'
         '#egg=libearth-dev'

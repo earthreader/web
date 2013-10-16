@@ -21,7 +21,6 @@ app = Flask(__name__)
 
 
 app.config.update(dict(
-    REPOSITORY='repo/',
     OPML='earthreader.opml',
     ALLFEED='All Feeds',
 ))
