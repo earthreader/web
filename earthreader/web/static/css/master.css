@@ -15,6 +15,11 @@ body {
 	animation-duration: .001s;
 }
 
+[role=button],
+[role=link] {
+	cursor: pointer;
+}
+
 body .wrapper {
 	margin-top: -3em;
 	padding-top:3em;
@@ -41,7 +46,6 @@ body .wrapper {
 .off-canvas-side {
 	padding: 0 .5em;
 	font-size: 1.3em;
-	cursor: pointer;
 	user-select: none;
 }
 
@@ -193,7 +197,6 @@ input:not([type=button]):not([type=submit]):focus, textarea:focus {
 	height: 100%;
 	padding: 0 .3em;
 	display: inline-block;
-	cursor: pointer;
 }
 
 [role=navigation] .header,
@@ -201,14 +204,12 @@ input:not([type=button]):not([type=submit]):focus, textarea:focus {
 	padding: 0.4em 0 .5em .7em;
 	border-bottom: 1px solid rgb(237, 237, 237);
 	background: rgb(245, 245, 255);
-	cursor: pointer;
 }
 
 [role=navigation] li:not(.fold),
 [role=complementary] li:not(.fold) {
 	padding: 0.4em 0 .5em .7em;
 	border-bottom: 1px solid rgba(0, 0, 0, .1);
-	cursor: pointer;
 }
 
 [role=navigation] li:not(.fold):hover,
@@ -238,7 +239,6 @@ input:not([type=button]):not([type=submit]):focus, textarea:focus {
 	padding: .5em 2em;
 	border-bottom: 1px solid rgb(238, 238, 238);
 	background: rgb(253, 253, 253);
-	cursor: pointer;
 }
 
 [role=main] article.current .entry-title {
