@@ -232,7 +232,7 @@ def add_feed(category_id):
                 outline.blog_url = link.uri
     cursor.append(outline)
     feed_list.save_file()
-    file_name = get_hash(feed.id) + '.xml'
+    file_name = get_hash(feed_url) + '.xml'
     with open(os.path.join(REPOSITORY, file_name), 'w') as f:
         for chunk in write(feed, indent='    ', canonical_order=True):
             f.write(chunk)
@@ -345,7 +345,7 @@ def feed_entries(category_id, feed_id):
                         'title': feed.title,
                         'entries_url': url_for(
                             'feed_entries',
-                            feed_id=get_hash(feed.id)
+                            feed_id=feed_id
                         ),
                         'permalink': feed.id
                     }
@@ -384,14 +384,14 @@ def category_entries(category_id):
         )) as f:
             feed = read(Feed, f)
             for entry in feed.entries:
-                sorting_pool.append((feed, entry))
+                sorting_pool.append((feed_id, feed, entry))
     sorting_pool.sort(key=lambda entry: entry[1].updated_at, reverse=True)
-    for feed, entry in sorting_pool:
+    for feed_id, feed, entry in sorting_pool:
         entries.append({
             'title': entry.title,
             'entry_url': url_for(
                 'feed_entry',
-                feed_id=get_hash(feed.id),
+                feed_id=feed_id,
                 entry_id=get_hash(entry.id),
                 _external=True
             ),
@@ -401,7 +401,7 @@ def category_entries(category_id):
                 'title': feed.title,
                 'entries_url': url_for(
                     'feed_entries',
-                    feed_id=get_hash(feed.id)
+                    feed_id=feed_id
                 ),
                 'permalink': feed.id
             }
@@ -438,7 +438,7 @@ def feed_entry(category_id, feed_id, entry_id):
                             'title': feed.title,
                             'entries_url': url_for(
                                 'feed_entries',
-                                feed_id=get_hash(feed.id),
+                                feed_id=feed_id,
                                 _external=True
                             ),
                             'permalink': feed.id
