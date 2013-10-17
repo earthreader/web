@@ -66,23 +66,21 @@ body .wrapper {
 	overflow: scroll;
 }
 
-[role=navigation] {
+[role=navigation],
+[role=complementary] {
 	position: relative;
 	float: left;
-	box-shadow: -1px 0 2px #aaa inset;
 	background: rgb(238, 238, 238);
 	user-select: none;
+}
 
+[role=navigation] {
+	box-shadow: -1px 0 2px #aaa inset;
 	margin-left: -100%;
 }
 
 [role=complementary] {
-	position: relative;
-	float: left;
 	box-shadow: 1px 0 2px #aaa inset;
-	background: rgb(238, 238, 238);
-	user-select: none;
-
 	margin-right: -100%;
 }
 
@@ -125,14 +123,10 @@ body .wrapper {
 }
 
 [role=main] .entry-title time,
-[role=main] .entry-title span {
-	margin: 0 1em;
-}
-
-[role=main] .entry-title time,
 [role=main] .entry-title .feed,
 [role=main] .entry-title .title {
 	display: block;
+	margin: 0 1em;
 }
 
 
