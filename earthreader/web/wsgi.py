@@ -30,7 +30,7 @@ class MethodRewriteMiddleware(object):
     :type input_name: :class:`basestring`
 
     .. seealso::
-    
+
        `Overriding HTTP Methods for old browsers`__ --- Flask Snippets
           A snippet written by Armin Ronacher.
 
