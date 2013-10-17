@@ -6,6 +6,7 @@ try:
 except ImportError:
     import urllib.request as urllib2
 
+from flask import Flask, jsonify, render_template, request, url_for
 from libearth.compat import binary
 from libearth.feed import Feed
 from libearth.feedlist import (Feed as FeedOutline,
@@ -14,10 +15,11 @@ from libearth.parser.autodiscovery import autodiscovery, FeedUrlNotFoundError
 from libearth.parser.heuristic import get_format
 from libearth.schema import read, write
 
-from flask import Flask, jsonify, render_template, request, url_for
+from .wsgi import MethodRewriteMiddleware
 
 
 app = Flask(__name__)
+app.wsgi_app = MethodRewriteMiddleware(app.wsgi_app)
 
 
 app.config.update(dict(

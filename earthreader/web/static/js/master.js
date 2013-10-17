@@ -63,6 +63,37 @@ function getJSON(url, onSuccess, onFail) {
 	xhr.send();
 }
 
+function deleteJSON(url, onSuccess, onFail) {
+	var xhr = new XMLHttpRequest();
+	xhr.open('post', url + '?_method=DELETE');
+	xhr.onreadystatechange = function() {
+		if (xhr.readyState !== 4) {
+			return;
+		}
+
+		if (xhr.status === 200) {
+			if (onSuccess instanceof Function) {
+				var obj = JSON.parse(xhr.responseText);
+				(onSuccess)(obj);
+			}
+		} else {
+			if(onFail instanceof Function) {
+				(onFail)(xhr);
+			} else {
+				try {
+					var json = JSON.parse(xhr.responseText);
+					var error = json.error;
+					var message = json.message;
+					alert(error + '\n' + message);
+				}catch(err) {
+					alert(xhr.statusText);
+				}
+			}
+		}
+	}
+	xhr.send();
+}
+
 function post(url, parameter, onSuccess, onFail) {
 	var xhr = new XMLHttpRequest();
 	xhr.open('post', url);
@@ -115,6 +146,9 @@ function resizer(event) {
 
 function clickPersistentMenu(event) {
 	var target = event.target;
+	if (["input", "textarea"].indexOf(target.localName) >= 0) {
+		return;
+	}
 	while (target.getAttribute('data-action') == null) {
 		target = target.parentElement;
 		if (target === null) {
@@ -127,6 +161,43 @@ function clickPersistentMenu(event) {
 
 	if (action === 'all') {
 		getAllEntries();
+	}
+}
+
+function clickComplementaryMenu(event) {
+	var target = event.target;
+	if (["input", "textarea"].indexOf(target.localName) >= 0) {
+		return;
+	}
+
+	while (target.getAttribute('data-action') == null) {
+		target = target.parentElement;
+		if (target === null) {
+			return;
+		}
+	}
+
+	var action = target.getAttribute('data-action');
+	closeSide();
+
+	if (action === 'remove-this') {
+		removeCurrentSelected();
+	}
+}
+
+function removeCurrentSelected() {
+	var current = document.querySelector('[role=navigation] .current');
+
+	var url = current.getAttribute('data-remove-feed-url') || current.getAttribute('data-remove-category-url');
+	if (url) {
+		var parentMenu = current;
+		while (parentMenu.classList.contains('fold') == false) {
+			parentMenu = parentMenu.parentElement;
+		}
+
+		deleteJSON(url, function(obj) {
+			makeFeedList(obj, parentMenu);
+		});
 	}
 }
 
@@ -199,7 +270,8 @@ function processForm(event) {
 			} else {
 				var fold = current.nextElementSibling;
 				fold.innerHTML = "";
-				makeCategory(fold, res);
+				//makeCategory(fold, res);
+				makeFeedList(res, fold);
 			}
 			target.reset();
 		});
@@ -220,10 +292,18 @@ var makeCategory = function(parentObj, obj) {
 	header.addClass('feed');
 	header.setAttribute('role', 'link');
 	header.setAttribute('data-entries', obj.entries_url);
-	header.setAttribute('data-add-category-url', obj.add_category_url);
-	header.setAttribute('data-add-feed-url', obj.add_feed_url);
-	header.setAttribute('data-remove-feed-url', obj.remove_feed_url);
-	header.setAttribute('data-remove-category-url', obj.remove_category_url);
+	if (obj.add_category_url) {
+		header.setAttribute('data-add-category-url', obj.add_category_url);
+	}
+	if (obj.add_feed_url) {
+		header.setAttribute('data-add-feed-url', obj.add_feed_url);
+	}
+	if (obj.remove_feed_url) {
+		header.setAttribute('data-remove-feed-url', obj.remove_feed_url);
+	}
+	if (obj.remove_category_url) {
+		header.setAttribute('data-remove-category-url', obj.remove_category_url);
+	}
 	console.log(obj);
 	header.textContent = obj.title;
 
@@ -256,8 +336,13 @@ var makeFeed = function(parentObj, obj) {
 	parentObj.appendChild(elem);
 };
 
-function makeFeedList(obj) {
-	var feedList = document.querySelector('.feedlist');
+function makeFeedList(obj, target) {
+	var feedList;
+	if (target !== undefined) {
+		feedList = target;
+	} else {
+		feedList = document.querySelector('.feedlist');
+	}
 	feedList.innerHTML = "";
 
 	for (var i=0; i<obj.categories.length; i++) {
@@ -450,6 +535,9 @@ function init() {
 
 	var main = document.querySelector('[role=main]');
 	main.addEventListener('click', clickEntry, false);
+
+	var side = document.querySelector('[role=complementary]');
+	side.addEventListener('click', clickComplementaryMenu, false);
 
 	document.addEventListener('click', toggleMenu, false);
 	document.addEventListener('click', toggleSide, false);
