@@ -387,7 +387,7 @@ def category_entries(category_id):
             feed = read(Feed, f)
             for entry in feed.entries:
                 sorting_pool.append((feed_id, feed, entry))
-    sorting_pool.sort(key=lambda entry: entry[1].updated_at, reverse=True)
+    sorting_pool.sort(key=lambda entry: entry[2].updated_at, reverse=True)
     for feed_id, feed, entry in sorting_pool:
         entries.append({
             'title': entry.title,
