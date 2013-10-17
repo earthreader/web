@@ -433,11 +433,12 @@ function getEntries(feed_url) {
 				header.appendChild(category);
 			}
 
-			title.textContent = entry.title;
-			header.appendChild(title);
-
 			time.textContent = entry.updated;
 			header.appendChild(time);
+
+			title.textContent = entry.title;
+			title.addClass('title');
+			header.appendChild(title);
 
 			article.appendChild(header);
 			main.appendChild(article);
