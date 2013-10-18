@@ -346,26 +346,26 @@ def feed_entries(category_id, feed_id):
                             entry_permalink = link.uri
                     if not entry_permalink:
                         entry_permalink = entry.id
-                entries.append({
-                    'title': entry.title,
-                    'entry_url': url_for(
-                        'feed_entry',
-                        category_id=category_id,
-                        feed_id=feed_id,
-                        entry_id=get_hash(entry.id),
-                        _external=True
-                    ),
-                    'permalink': entry_permalink,
-                    'updated': entry.updated_at.__str__(),
-                    'feed': {
-                        'title': feed.title,
-                        'entries_url': url_for(
-                            'feed_entries',
-                            feed_id=feed_id
+                    entries.append({
+                        'title': entry.title,
+                        'entry_url': url_for(
+                            'feed_entry',
+                            category_id=category_id,
+                            feed_id=feed_id,
+                            entry_id=get_hash(entry.id),
+                            _external=True
                         ),
-                        'permalink': feed_permalink
-                    }
-                })
+                        'permalink': entry_permalink,
+                        'updated': entry.updated_at.__str__(),
+                        'feed': {
+                            'title': feed.title,
+                            'entries_url': url_for(
+                                'feed_entries',
+                                feed_id=feed_id
+                            ),
+                            'permalink': feed_permalink
+                        }
+                    })
         return jsonify(
             title=feed.title,
             entries=entries
