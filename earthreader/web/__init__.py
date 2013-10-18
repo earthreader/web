@@ -342,7 +342,7 @@ def feed_entries(category_id, feed_id):
                         entry_id=get_hash(entry.id),
                         _external=True
                     ),
-                    'permalink': entry.id,
+                    'permalink': entry.links[0],
                     'updated': entry.updated_at.__str__(),
                     'feed': {
                         'title': feed.title,
@@ -350,7 +350,7 @@ def feed_entries(category_id, feed_id):
                             'feed_entries',
                             feed_id=feed_id
                         ),
-                        'permalink': feed.id
+                        'permalink': feed.links[0]
                     }
                 })
         return jsonify(
@@ -398,7 +398,7 @@ def category_entries(category_id):
                 entry_id=get_hash(entry.id),
                 _external=True
             ),
-            'permalink': entry.id,
+            'permalink': entry.links[0],
             'updated': entry.updated_at.__str__(),
             'feed': {
                 'title': feed.title,
@@ -406,7 +406,7 @@ def category_entries(category_id):
                     'feed_entries',
                     feed_id=feed_id
                 ),
-                'permalink': feed.id
+                'permalink': feed.links[0]
             }
         })
     return jsonify(
@@ -437,7 +437,7 @@ def feed_entry(category_id, feed_id, entry_id):
                         content=entry.content.sanitized_html
                         if entry.content else entry.summary.sanitized_html,
                         updated=entry.updated_at.__str__(),
-                        permalink=entry.id,
+                        permalink=entry.links[0].uri,
                         feed={
                             'title': feed.title,
                             'entries_url': url_for(
@@ -445,7 +445,7 @@ def feed_entry(category_id, feed_id, entry_id):
                                 feed_id=feed_id,
                                 _external=True
                             ),
-                            'permalink': feed.id
+                            'permalink': feed.links[0]
                         }
                     )
             r = jsonify(
