@@ -333,19 +333,24 @@ def feed_entries(category_id, feed_id):
             feed = read(Feed, f)
             feed_permalink = None
             for link in feed.links:
-                if link.relation == 'alternate' and link.mimetype == 'text/html':
+                if link.relation == 'alternate' and \
+                        link.mimetype == 'text/html':
                     feed_permalink = link.uri
                 if not feed_permalink:
                     feed_permalink = feed.id
-                entries = []
-                for entry in feed.entries:
-                    entry_permalink = None
-                    for link in entry.links:
-                        if link.relation == 'alternate' and \
-                                link.mimetype == 'text/html':
-                            entry_permalink = link.uri
-                    if not entry_permalink:
-                        entry_permalink = entry.id
+            sorting_pool = []
+            for entry in feed.entries:
+                sorting_pool.append(entry)
+            sorting_pool.sort(key=lambda entry: entry.updated_at, reverse=True)
+            entries = []
+            for entry in sorting_pool:
+                entry_permalink = None
+                for link in entry.links:
+                    if link.relation == 'alternate' and \
+                            link.mimetype == 'text/html':
+                        entry_permalink = link.uri
+                if not entry_permalink:
+                    entry_permalink = entry.id
                 entries.append({
                     'title': entry.title,
                     'entry_url': url_for(
