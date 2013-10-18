@@ -20,6 +20,11 @@ body {
 	cursor: pointer;
 }
 
+img {
+	max-width: 100% !important;
+	height: auto !important;
+}
+
 body .wrapper {
 	margin-top: -3em;
 	padding-top:3em;
