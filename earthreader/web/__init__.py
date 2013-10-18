@@ -210,7 +210,7 @@ def add_feed(category_id):
         r.status_code = 400
         return r
     try:
-        feed_url = autodiscovery(document, url)
+        feed_links = autodiscovery(document, url)
     except FeedUrlNotFoundError:
         r = jsonify(
             error='unreachable-feed-url',
@@ -218,6 +218,7 @@ def add_feed(category_id):
         )
         r.status_code = 400
         return r
+    feed_url = feed_links[0].url
     if not feed_url == url:
         f.close()
         f = urllib2.urlopen(feed_url)
