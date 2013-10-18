@@ -11,3 +11,8 @@
 @keyframes fade-in {
 	from { opacity: 0; }
 }
+
+@keyframes slide-down {
+	from { transform: translateY(-50%); }
+	to { transform: translateY(0); }
+}

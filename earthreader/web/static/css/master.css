@@ -221,6 +221,10 @@ input:not([type=button]):not([type=submit]):focus, textarea:focus {
 	background: rgb(245, 245, 255);
 }
 
+.header.closed + .fold {
+	display: none;
+}
+
 [role=navigation] li:not(.fold),
 [role=complementary] li:not(.fold) {
 	padding: 0.4em 0 .5em .7em;
@@ -239,10 +243,6 @@ input:not([type=button]):not([type=submit]):focus, textarea:focus {
 
 [role=navigation] ul.feedlist li.fold {
 	margin-left: 1em;
-}
-
-[role=navigation] li.header.closed + li.fold {
-	display: none;
 }
 
 [role=main] header {
