@@ -488,6 +488,14 @@ function clickEntry(event) {
 	var entry = target.parentElement;
 	var entry_url = entry.getAttribute('data-entries');
 
+
+	//close content
+	var content = entry.querySelector('.entry-content');
+	if (content) {
+		entry.removeChild(content);
+		return;
+	}
+
 	getJSON(entry_url, function(obj) {
 		//set current marker
 		var list = main.querySelectorAll('.current');
@@ -495,13 +503,6 @@ function clickEntry(event) {
 			list[i].removeClass('current');
 		}
 		target.parentElement.addClass('current');
-
-		//close content
-		var content = entry.querySelector('.entry-content');
-		if (content) {
-			entry.removeChild(content);
-			return;
-		}
 
 		//remove content
 		contents = main.querySelectorAll('.entry-content');
