@@ -639,7 +639,7 @@ def test_category_all_entries(xmls):
         assert two_result['permalink'] == 'http://feedtwo.com/feed/atom/1/'
         assert two_result['feed']['title'] == 'Feed Two'
         assert two_result['feed']['permalink'] == \
-            'http://feedtwo.com/feed/atom/'
+            'http://feedtwo.com'
         feed_id = get_hash('http://feedtwo.com/feed/atom/')
         assert two_result['feed']['entries_url'] == \
             url_for(

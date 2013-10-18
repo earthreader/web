@@ -331,8 +331,21 @@ def feed_entries(category_id, feed_id):
     try:
         with open(os.path.join(REPOSITORY, feed_id + '.xml')) as f:
             feed = read(Feed, f)
-            entries = []
-            for entry in feed.entries:
+            feed_permalink = None
+            for link in feed.links:
+                if link.relation == 'alternate' and link.mimetype == 'text/html':
+                    feed_permalink = link.uri
+                if not feed_permalink:
+                    feed_permalink = feed.id
+                entries = []
+                for entry in feed.entries:
+                    entry_permalink = None
+                    for link in entry.links:
+                        if link.relation == 'alternate' and \
+                                link.mimetype == 'text/html':
+                            entry_permalink = link.uri
+                    if not entry_permalink:
+                        entry_permalink = entry.id
                 entries.append({
                     'title': entry.title,
                     'entry_url': url_for(
@@ -342,7 +355,7 @@ def feed_entries(category_id, feed_id):
                         entry_id=get_hash(entry.id),
                         _external=True
                     ),
-                    'permalink': entry.links[0],
+                    'permalink': entry_permalink,
                     'updated': entry.updated_at.__str__(),
                     'feed': {
                         'title': feed.title,
@@ -350,7 +363,7 @@ def feed_entries(category_id, feed_id):
                             'feed_entries',
                             feed_id=feed_id
                         ),
-                        'permalink': feed.links[0]
+                        'permalink': feed_permalink
                     }
                 })
         return jsonify(
@@ -390,6 +403,18 @@ def category_entries(category_id):
                 sorting_pool.append((feed_id, feed, entry))
     sorting_pool.sort(key=lambda entry: entry[2].updated_at, reverse=True)
     for feed_id, feed, entry in sorting_pool:
+        feed_permalink = None
+        for link in feed.links:
+            if link.relation == 'alternate' and link.mimetype == 'text/html':
+                feed_permalink = link.uri
+            if not feed_permalink:
+                feed_permalink = feed.id
+        entry_permalink = None
+        for link in entry.links:
+            if link.relation == 'alternate' and link.mimetype == 'text/html':
+                entry_permalink = link.uri
+        if not entry_permalink:
+            entry_permalink = entry.id
         entries.append({
             'title': entry.title,
             'entry_url': url_for(
@@ -398,7 +423,7 @@ def category_entries(category_id):
                 entry_id=get_hash(entry.id),
                 _external=True
             ),
-            'permalink': entry.links[0],
+            'permalink': entry_permalink or None,
             'updated': entry.updated_at.__str__(),
             'feed': {
                 'title': feed.title,
@@ -406,7 +431,7 @@ def category_entries(category_id):
                     'feed_entries',
                     feed_id=feed_id
                 ),
-                'permalink': feed.links[0]
+                'permalink': feed_permalink or None
             }
         })
     return jsonify(
@@ -430,14 +455,27 @@ def feed_entry(category_id, feed_id, entry_id):
     try:
         with open(os.path.join(REPOSITORY, feed_id + '.xml')) as f:
             feed = read(Feed, f)
+            feed_permalink = None
+            for link in feed.links:
+                if link.relation == 'alternate' and link.mimetype == 'text/html':
+                    feed_permalink = link.uri
+                if not feed_permalink:
+                    feed_permalink = feed.id
             for entry in feed.entries:
+                entry_permalink = None
+                for link in entry.links:
+                    if link.relation == 'alternate' and \
+                        link.mimetype == 'text/html':
+                        entry_permalink = link.uri
+                if not entry_permalink:
+                    entry_permalink = entry.id
                 if entry_id == get_hash(entry.id):
                     return jsonify(
                         title=entry.title,
                         content=entry.content.sanitized_html
                         if entry.content else entry.summary.sanitized_html,
                         updated=entry.updated_at.__str__(),
-                        permalink=entry.links[0].uri,
+                        permalink=entry_permalink or None,
                         feed={
                             'title': feed.title,
                             'entries_url': url_for(
@@ -445,7 +483,7 @@ def feed_entry(category_id, feed_id, entry_id):
                                 feed_id=feed_id,
                                 _external=True
                             ),
-                            'permalink': feed.links[0]
+                            'permalink': feed_permalink or None 
                         }
                     )
             r = jsonify(
