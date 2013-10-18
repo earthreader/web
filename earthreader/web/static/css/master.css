@@ -152,14 +152,18 @@ h2 {
 	font-size: 1.2em;
 }
 
-ul, ol {
+[role=navigation] ul,
+[role=navigation] ul,
+[role=complementary] ol,
+[role=complementary] ol {
 	list-style: none;
 	padding: 0;
 	margin: 0;
 
 }
 
-ul > li {
+[role=navigation] ul > li,
+[role=complementary] ul > li {
 	list-style: none;
 	padding: 0;
 	margin: 0;
