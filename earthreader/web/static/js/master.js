@@ -223,6 +223,9 @@ function removeCurrentSelected() {
 		var parentMenu = current;
 		while (parentMenu.classList.contains('fold') == false) {
 			parentMenu = parentMenu.parentElement;
+			if (parentMenu == null) {
+				break;
+			}
 		}
 
 		deleteJSON(url, function(obj) {
@@ -368,7 +371,7 @@ var makeFeed = function(parentObj, obj) {
 
 function makeFeedList(obj, target) {
 	var feedList;
-	if (target !== undefined) {
+	if (target) {
 		feedList = target;
 	} else {
 		feedList = document.querySelector('.feedlist');
