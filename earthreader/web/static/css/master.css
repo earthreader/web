@@ -25,6 +25,10 @@ img {
 	height: auto !important;
 }
 
+iframe {
+	max-width: 100% !important;
+}
+
 body .wrapper {
 	margin-top: -3em;
 	padding-top:3em;
