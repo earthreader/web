@@ -462,15 +462,16 @@ def feed_entry(category_id, feed_id, entry_id):
             feed = read(Feed, f)
             feed_permalink = None
             for link in feed.links:
-                if link.relation == 'alternate' and link.mimetype == 'text/html':
+                if link.relation == 'alternate'\
+                   and link.mimetype == 'text/html':
                     feed_permalink = link.uri
                 if not feed_permalink:
                     feed_permalink = feed.id
             for entry in feed.entries:
                 entry_permalink = None
                 for link in entry.links:
-                    if link.relation == 'alternate' and \
-                        link.mimetype == 'text/html':
+                    if link.relation == 'alternate'\
+                       and link.mimetype == 'text/html':
                         entry_permalink = link.uri
                 if not entry_permalink:
                     entry_permalink = entry.id
@@ -488,7 +489,7 @@ def feed_entry(category_id, feed_id, entry_id):
                                 feed_id=feed_id,
                                 _external=True
                             ),
-                            'permalink': feed_permalink or None 
+                            'permalink': feed_permalink or None
                         }
                     )
             r = jsonify(
