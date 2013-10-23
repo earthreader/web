@@ -387,7 +387,7 @@ function makeFeedList(obj, target) {
 }
 
 function refreshFeedList() {
-	getJSON('./feeds/', makeFeedList);
+	getJSON(URLS.feeds, makeFeedList);
 }
 
 function getAllEntries() {
@@ -397,7 +397,7 @@ function getAllEntries() {
 		list[i].removeClass('current');
 	}
 	all_feed.addClass('current');
-	getEntries('./entries/');
+	getEntries(URLS.entries);
 }
 
 function getEntries(feed_url) {
