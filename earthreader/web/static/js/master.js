@@ -402,10 +402,10 @@ function getAllEntries() {
 
 function getEntries(feed_url) {
 	var main = document.querySelector('[role=main]');
-	main.innerHTML = "";
-
 
 	getJSON(feed_url, function(obj) {
+		main.innerHTML = "";
+
 		var feed_title = obj.title;
 		var entries = obj.entries;
 
