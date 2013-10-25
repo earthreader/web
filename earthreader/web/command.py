@@ -3,7 +3,6 @@ import glob
 import hashlib
 import os.path
 import socket
-import sys
 
 from earthreader.web import app
 
