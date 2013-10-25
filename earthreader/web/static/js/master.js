@@ -270,7 +270,7 @@ function toggleFolding(event) {
 	}
 
 	target.toggleClass('closed');
-} 
+}
 
 function closeMenu() {
 	document.body.removeClass('menu-open');
@@ -337,8 +337,12 @@ var makeCategory = function(parentObj, obj) {
 	if (obj.remove_category_url) {
 		header.setAttribute('data-remove-category-url', obj.remove_category_url);
 	}
-	console.log(obj);
+
 	header.textContent = obj.title;
+
+	var toggle = document.createElement('span');
+	toggle.addClass('toggle');
+	header.insertBefore(toggle, header.firstChild);
 
 	list.addClass('fold');
 
@@ -454,6 +458,12 @@ function clickFeed(event) {
 	var navi = document.querySelector('[role=navigation]');
 
 	while (target.classList.contains('feed') === false) {
+		//toggle fonding
+		if (target.classList.contains('toggle')) {
+			target.parentElement.toggleClass('closed');
+			return;
+		}
+
 		target = target.parentElement;
 		if (target === null) {
 			return;
