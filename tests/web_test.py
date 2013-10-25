@@ -56,7 +56,7 @@ def server_error_handler_for_testing(exception):
     )
 
 
-tmp_dir = tempfile.mkdtemp() + '/'
+tmp_dir = tempfile.mkdtemp()
 
 
 def rm_tmp_dir():
@@ -253,14 +253,14 @@ def xmls(request):
         feed_data = result[1][0]
         feed_url = result[0]
         file_name = hashlib.sha1(binary(feed_url)).hexdigest() + '.xml'
-        with open(REPOSITORY + file_name, 'w+') as f:
+        with open(os.path.join(REPOSITORY, file_name), 'w+') as f:
             for chunk in write(feed_data, indent='    ',
                                canonical_order=True):
                 f.write(chunk)
-    feed_list.save_file(REPOSITORY + OPML)
+    feed_list.save_file(os.path.join(REPOSITORY, OPML))
 
     def remove_test_repo():
-        files = glob.glob(REPOSITORY + '*')
+        files = glob.glob(os.path.join(REPOSITORY, '*'))
         for file in files:
             os.remove(file)
 
@@ -476,7 +476,7 @@ def test_add_feed(xmls):
         assert r.status_code == 200
         result = json.loads(r.data)
         assert result['feeds'][1]['title'] == 'Feed Five'
-        opml = FeedList(REPOSITORY + OPML)
+        opml = FeedList(os.path.join(REPOSITORY, OPML))
         assert opml[3].title == 'Feed Five'
 
 
@@ -492,7 +492,7 @@ def test_add_feed_in_category(xmls):
         result = json.loads(r.data)
         assert result['feeds'][0]['title'] == 'Feed Two'
         assert result['feeds'][1]['title'] == 'Feed Five'
-        opml = FeedList(REPOSITORY + OPML)
+        opml = FeedList(os.path.join(REPOSITORY, OPML))
         assert opml[0][1][1].title == 'Feed Five'
 
 
@@ -503,7 +503,7 @@ def test_add_category(xmls):
         assert r.status_code == 200
         result = json.loads(r.data)
         assert result['categories'][2]['title'] == 'addedcategory'
-        opml = FeedList(REPOSITORY + OPML)
+        opml = FeedList(os.path.join(REPOSITORY, OPML))
         assert opml[3].text == 'addedcategory'
 
 
@@ -518,7 +518,7 @@ def test_add_category_in_category(xmls):
         assert r.status_code == 200
         result = json.loads(r.data)
         assert result['categories'][1]['title'] == 'addedcategory'
-        opml = FeedList(REPOSITORY + OPML)
+        opml = FeedList(os.path.join(REPOSITORY, OPML))
         assert opml[0][2].text == 'addedcategory'
 
 
@@ -531,9 +531,9 @@ def test_add_category_without_opml():
         assert result['categories'][0]['title'] == 'testcategory'
         REPOSITORY = app.config['REPOSITORY']
         OPML = app.config['OPML']
-        feed_list = FeedList(REPOSITORY + OPML)
+        feed_list = FeedList(os.path.join(REPOSITORY, OPML))
         assert feed_list[0].text == 'testcategory'
-        os.remove(REPOSITORY + OPML)
+        os.remove(os.path.join(REPOSITORY, OPML))
         os.rmdir(REPOSITORY)
 
 
@@ -546,9 +546,9 @@ def test_add_feed_without_opml():
         assert result['feeds'][0]['title'] == 'Feed One'
         REPOSITORY = app.config['REPOSITORY']
         OPML = app.config['OPML']
-        feed_list = FeedList(REPOSITORY + OPML)
+        feed_list = FeedList(os.path.join(REPOSITORY, OPML))
         assert feed_list[0].title == 'Feed One'
-    files = glob.glob(REPOSITORY + '*')
+    files = glob.glob(os.path.join(REPOSITORY, '*'))
     for file in files:
         os.remove(file)
     os.rmdir(REPOSITORY)
@@ -564,14 +564,17 @@ def test_delete_feed(xmls):
         result = json.loads(r.data)
         for child in result['feeds']:
             assert child['title'] != 'Feed Three'
-        assert not REPOSITORY + feed_id + '.xml' in glob.glob(REPOSITORY + '*')
+        assert not os.path.join(REPOSITORY, feed_id + '.xml') in glob.glob(
+            os.path.join(REPOSITORY, '*')
+        )
 
 
 def test_delete_feed_in_category(xmls):
     REPOSITORY = app.config['REPOSITORY']
     with app.test_client() as client:
         feed_id = get_hash('http://feedone.com/feed/atom/')
-        assert REPOSITORY + feed_id + '.xml' in glob.glob(REPOSITORY + '*')
+        assert os.path.join(REPOSITORY, feed_id + '.xml') in glob.glob(
+            os.path.join(REPOSITORY, '*'))
         r = client.get('/-categoryone/feeds/')
         assert r.status_code == 200
         result = json.loads(r.data)
@@ -580,29 +583,33 @@ def test_delete_feed_in_category(xmls):
         assert r.status_code == 200
         result = json.loads(r.data)
         assert len(result['feeds']) == 0
-        assert not REPOSITORY + feed_id + '.xml' in glob.glob(REPOSITORY + '*')
+        assert not os.path.join(REPOSITORY, feed_id + '.xml') in glob.glob(
+            os.path.join(REPOSITORY, '*')
+        )
 
 
 def test_delete_feed_in_two_category(xmls):
     REPOSITORY = app.config['REPOSITORY']
     with app.test_client() as client:
         feed_id = get_hash('http://feedone.com/feed/atom/')
-        assert REPOSITORY + feed_id + '.xml' in glob.glob(REPOSITORY + '*')
+        assert os.path.join(REPOSITORY, feed_id + '.xml') in glob.glob(
+            os.path.join(REPOSITORY, '*'))
         r = client.post('/feeds/',
                         data=dict(url='http://feedone.com/feed/atom/'))
         assert r.status_code == 200
-        feed_list = FeedList(REPOSITORY + OPML)
+        feed_list = FeedList(os.path.join(REPOSITORY, OPML))
         assert feed_list[0][0].title == 'Feed One'
         assert feed_list[3].title == 'Feed One'
         feed_id = hashlib.sha1(
             binary('http://feedone.com/feed/atom/')).hexdigest()
         r = client.delete('/-categoryone/feeds/' + feed_id + '/')
         assert r.status_code == 200
-        feed_list = FeedList(REPOSITORY + OPML)
+        feed_list = FeedList(os.path.join(REPOSITORY, OPML))
         for child in feed_list[0]:
             assert not child.title == 'Feed One'
         assert feed_list[3].title == 'Feed One'
-        assert REPOSITORY + feed_id + '.xml' in glob.glob(REPOSITORY + '*')
+        assert os.path.join(REPOSITORY, feed_id + '.xml') in glob.glob(
+            os.path.join(REPOSITORY, '*'))
 
 
 def test_delete_non_exists_feed(xmls):
@@ -634,7 +641,7 @@ def test_delete_category_in_category(xmls):
         result = json.loads(client.get('/-categoryone/feeds/').data)
         for child in result['categories']:
             assert not child['title'] == 'categorytwo'
-        feed_list = FeedList(REPOSITORY + OPML)
+        feed_list = FeedList(os.path.join(REPOSITORY, OPML))
         assert len(feed_list[0]) == 1
 
 
