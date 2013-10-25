@@ -31,7 +31,7 @@ app.config.update(dict(
 def feedlist_exists():
     REPOSITORY = app.config['REPOSITORY']
     OPML = app.config['OPML']
-    if not os.path.isfile(REPOSITORY + OPML):
+    if not os.path.isfile(os.path.join(REPOSITORY, OPML)):
         return False
     return True
 
@@ -39,12 +39,12 @@ def feedlist_exists():
 def get_feedlist():
     REPOSITORY = app.config['REPOSITORY']
     OPML = app.config['OPML']
-    if not os.path.isfile(REPOSITORY + OPML):
+    if not os.path.isfile(os.path.join(REPOSITORY, OPML)):
         if not os.path.isdir(REPOSITORY):
             os.mkdir(REPOSITORY)
         feed_list = FeedList()
-        feed_list.save_file(REPOSITORY + OPML)
-    feed_list = FeedList(REPOSITORY + OPML)
+        feed_list.save_file(os.path.join(REPOSITORY, OPML))
+    feed_list = FeedList(os.path.join(REPOSITORY, OPML))
     return feed_list
 
 
@@ -313,7 +313,7 @@ def delete_feed(category_id, feed_id):
         return r
     feed_list.save_file()
     if not find_feed_in_opml(feed_id, feed_list):
-        os.remove(REPOSITORY + feed_id + '.xml')
+        os.remove(os.path.join(REPOSITORY, feed_id + '.xml'))
     return feeds(category_id)
 
 
