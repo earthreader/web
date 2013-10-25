@@ -48,3 +48,25 @@ Server
    $ earthreader server -d <repository dir>
 
 And open **http://localhost:<port>/** with your browser.
+
+Links
+=====
+
+earthreader
+   http://earthreader.org/
+
+libearth
+   http://github.com/earthreader/libearth/
+
+Git repository (GitHub)
+   http://github.com/earthreader/web/
+
+Issue tracker (GitHub)
+   http://github.com/earthreader/web/issues
+
+Continuous integration (Travis)
+   http://travis-ci.org/earthreader/web
+
+   .. image:: https://travis-ci.org/earthreader/web.png?branch=master
+      :alt: Build Status
+      :target: https://travis-ci.org/earthreader/web
