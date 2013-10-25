@@ -11,13 +11,13 @@ __ http://www.gnu.org/licenses/agpl-3.0.html
 Install
 -------
 
-You can install earthreader by pip
+You can install earthreader by pip.
 
 .. code-block:: console
 
    $ pip install earthreader
 
-Then you can use command 'earthreader'
+Then you can use command 'earthreader'.
 
 .. code-block:: console
 
@@ -37,6 +37,8 @@ Crawl
 Server
 ~~~~~~
 
+**<repository dir>** is a directory where feeds saved.
+
 .. code-block:: console
 
    $ earthreader server <repository dir>
@@ -45,4 +47,4 @@ Server
    $ #with debug mode
    $ earthreader server -d <repository dir>
 
-**<repository dir>** is a directory where feeds saved.
+And open **http://localhost:<port>/** with your browser.
