@@ -13,11 +13,15 @@ Install
 
 You can install earthreader by pip
 
-    $ pip install earthreader
+.. code-block:: console
+
+   $ pip install earthreader
 
 Then you can use command 'earthreader'
 
-    $ earthreader -h
+.. code-block:: console
+
+   $ earthreader -h
 
 
 Usage
