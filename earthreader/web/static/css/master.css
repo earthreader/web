@@ -225,14 +225,6 @@ input:not([type=button]):not([type=submit]):focus, textarea:focus {
 	background: rgb(245, 245, 255);
 }
 
-.header:not(.closed) .toggle:before {
-	content: '+';
-}
-
-.header.closed .toggle:before {
-	content: '-';
-}
-
 .header.closed + .fold {
 	display: none;
 }
@@ -333,5 +325,13 @@ input:not([type=button]):not([type=submit]):focus, textarea:focus {
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
+	}
+
+	.header:not(.closed) .toggle:before {
+		content: '+';
+	}
+
+	.header.closed .toggle:before {
+		content: '-';
 	}
 }
