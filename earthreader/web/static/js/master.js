@@ -467,6 +467,7 @@ function getEntries(feed_url) {
 			nextLoader.setAttribute('data-next-url', obj.next_url);
 			main.appendChild(nextLoader);
 		}
+		main.scrollTop = 0;
 	});
 }
 
