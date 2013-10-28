@@ -7,6 +7,7 @@ except ImportError:
     import urllib.request as urllib2
 
 from flask import Flask, jsonify, render_template, request, url_for
+from libearth.codecs import Rfc3339
 from libearth.compat import binary
 from libearth.feed import Feed
 from libearth.feedlist import (Feed as FeedOutline,
@@ -48,35 +49,63 @@ def get_feedlist():
     return feed_list
 
 
-def get_entries(feed_list, category_id):
-    print category_id
+iterators = {}
+
+
+def get_entries(feed_list, category_key, feed_key=None):
     REPOSITORY = app.config['REPOSITORY']
-    feed_permalinks = {}
-    sorting_pool = []
-    for feed_id in feed_list:
-        with open(os.path.join(
-                REPOSITORY, feed_id + '.xml'
-        )) as f:
-            feed = read(Feed, f)
-            feed_permalink = feed_permalinks.get(feed_id)
-            if not feed_permalink:
-                for link in feed.links:
-                    if link.relation == 'alternate' and \
-                            link.mimetype == 'text/html':
-                        feed_permalinks[feed_id] = link.uri
-                        feed_permalink = link.uri
+    token = request.args.get('continuation')
+    it = None
+    if token:
+        if not feed_key:
+            it = iterators.get(category_key)
+        else:
+            it = iterators.get(feed_key)
+    if not it:
+        feed_permalinks = {}
+        sorting_pool = []
+        for feed_id in feed_list:
+            with open(os.path.join(REPOSITORY, feed_id + '.xml')) as f:
+                feed = read(Feed, f)
+                feed_permalink = feed_permalinks.get(feed_id)
                 if not feed_permalink:
-                    feed_permalinks[feed_id] = feed.id
-                    feed_permalink = feed.id
-            for entry in feed.entries:
-                sorting_pool.append((feed.title, feed_id, feed_permalink,
-                                     entry))
-    sorting_pool.sort(key=lambda entry: entry[3].updated_at, reverse=True)
+                    for link in feed.links:
+                        if link.relation == 'alternate' and \
+                                link.mimetype == 'text/html':
+                            feed_permalinks[feed_id] = link.uri
+                            feed_permalink = link.uri
+                    if not feed_permalink:
+                        feed_permalinks[feed_id] = feed.id
+                        feed_permalink = feed.id
+                for entry in feed.entries:
+                    sorting_pool.append((feed.title, feed_id,
+                                        feed_permalink, entry))
+        sorting_pool.sort(key=lambda entry: entry[3].updated_at,
+                          reverse=True)
+        it = iter(sorting_pool)
+        if not feed_key:
+            iterators[category_key] = it
+        else:
+            iterators[feed_key] = it
+    next_key = None
+    if token:
+        next_key = Rfc3339().decode(token.replace(' ', 'T'))
     entries = []
-    for feed_title, feed_id, feed_permalink, entry in sorting_pool:
+    while len(entries) < 20:
+        try:
+            feed_title, feed_id, feed_permalink, entry = next(it)
+        except StopIteration:
+            if not feed_key:
+                iterators.pop(category_key)
+            else:
+                iterators.pop(feed_key)
+            break
+        if next_key and entry.updated_at > next_key:
+            continue
         entry_permalink = None
         for link in entry.links:
-            if link.relation == 'alternate' and link.mimetype == 'text/html':
+            if link.relation == 'alternate' and \
+                    link.mimetype == 'text/html':
                 entry_permalink = link.uri
         if not entry_permalink:
             entry_permalink = entry.id
@@ -84,7 +113,7 @@ def get_entries(feed_list, category_id):
             'title': entry.title,
             'entry_url': url_for(
                 'feed_entry',
-                category_id=category_id,
+                category_id=category_key,
                 feed_id=feed_id,
                 entry_id=get_hash(entry.id),
                 _external=True
@@ -100,7 +129,7 @@ def get_entries(feed_list, category_id):
                 'permalink': feed_permalink or None
             }
         })
-    return feed_title if len(feed_list)==1 else None, entries
+    return feed_title if len(feed_list) == 1 else None, entries
 
 
 def get_hash(name):
@@ -382,10 +411,20 @@ def feed_entries(category_id, feed_id):
         )
         r.status_code = 404
         return r
-    feed_title, entries = get_entries([feed_id], category_id) 
+    feed_title, entries = get_entries([feed_id], category_id, feed_id)
+    if len(entries) < 20:
+        next_url = None
+    else:
+        next_url = url_for(
+            'feed_entries',
+            category_id=category_id,
+            feed_id=feed_id,
+            continuation=entries[-1]['updated']
+        )
     return jsonify(
         title=feed_title,
-        entries=entries
+        entries=entries,
+        next_url=next_url
     )
 
 
@@ -404,9 +443,18 @@ def category_entries(category_id):
     for child in cursor.get_all_feeds():
         feed_list.append(get_hash(child.xml_url))
     _, entries = get_entries(feed_list, category_id)
+    if len(entries) < 20:
+        next_url = None
+    else:
+        next_url = url_for(
+            'category_entries',
+            category_id=category_id,
+            continuation=entries[-1]['updated']
+        )
     return jsonify(
         title=category_id.split('/')[-1][1:] or app.config['ALLFEED'],
-        entries=entries
+        entries=entries,
+        next_url=next_url
     )
 
 

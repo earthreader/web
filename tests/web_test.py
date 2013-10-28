@@ -3,6 +3,7 @@ try:
 except ImportError:
     from io import StringIO
 import atexit
+import datetime
 import glob
 import hashlib
 import os
@@ -19,9 +20,11 @@ from flask import json, url_for
 
 from libearth.compat import binary
 from libearth.crawler import crawl
+from libearth.feed import Entry, Feed, Person, Text
 from libearth.feedlist import (Feed as FeedOutline,
                                FeedCategory as CategoryOutline, FeedList)
 from libearth.schema import write
+from libearth.tz import utc
 
 from earthreader.web import app, get_hash
 
@@ -684,3 +687,101 @@ def test_empty_category_all_entries(xmls):
         assert r.status_code == 200
         r = client.get('/-test/entries/')
         assert r.status_code == 200
+
+
+@fixture
+def xmls_for_next(request):
+    opml = '''
+    <opml version="1.0">
+      <head>
+        <title>test opml</title>
+      </head>
+      <body>
+        <outline text="categoryone" title="categoryone">
+            <outline type="atom" text="Feed One" title="Feed One"
+            xmlUrl="http://feedone.com/" />
+            <outline type="atom" text="Feed Two" title="Feed Two"
+            xmlUrl="http://feedtwo.com/" />
+        </outline>
+      </body>
+    </opml>
+    '''
+    authors = [Person(name='vio')]
+    feed_one = Feed(id='http://feedone.com/', authors=authors,
+                    title=Text(value='Feed One'),
+                    updated_at=datetime.datetime(2013, 10, 30, 20, 55, 30,
+                                                 tzinfo=utc))
+    feed_two = Feed(id='http://feedtwo.com/', authors=authors,
+                    title=Text(value='Feed Two'),
+                    updated_at=datetime.datetime(2013, 10, 30, 21, 55, 30,
+                                                 tzinfo=utc))
+    for i in range(25):
+        feed_one.entries.append(
+            Entry(id='http://feedone.com/' + str(i),
+                  authors=authors,
+                  title=Text(value='Feed One: Entry ' + str(i)),
+                  updated_at=datetime.datetime(2013, 10, 6, 20, 55, 30,
+                                               tzinfo=utc) +
+                  datetime.timedelta(days=1)*i)
+        )
+        feed_two.entries.append(
+            Entry(id='http://feedtwo.com/' + str(i),
+                  authors=authors,
+                  title=Text(value='Feed Two: Entry ' + str(i)),
+                  updated_at=datetime.datetime(2013, 10, 6, 19, 55, 30,
+                                               tzinfo=utc) +
+                  datetime.timedelta(days=1)*i)
+        )
+    feed_list = FeedList(opml, is_xml_string=True)
+    feed_list.save_file(os.path.join(REPOSITORY, OPML))
+    with open(os.path.join(
+            REPOSITORY, get_hash('http://feedone.com/') + '.xml'), 'w+') as f:
+        for chunk in write(feed_one, indent='    ',
+                           canonical_order=True):
+            f.write(chunk)
+    with open(os.path.join(
+            REPOSITORY, get_hash('http://feedtwo.com/') + '.xml'), 'w+') as f:
+        for chunk in write(feed_two, indent='    ',
+                           canonical_order=True):
+            f.write(chunk)
+
+    def remove_test_repo():
+        files = glob.glob(os.path.join(REPOSITORY, '*'))
+        for file in files:
+            os.remove(file)
+
+    request.addfinalizer(remove_test_repo)
+
+
+def test_feed_entries_next(xmls_for_next):
+    with app.test_client() as client:
+        r = client.get('/-categoryone/feeds/' +
+                       get_hash('http://feedone.com/') +
+                       '/entries/')
+        assert r.status_code == 200
+        result = json.loads(r.data)
+        assert len(result['entries']) == 20
+        assert result['entries'][-1]['title'] == 'Feed One: Entry 5'
+        r = client.get(result['next_url'])
+        assert r.status_code == 200
+        result = json.loads(r.data)
+        assert len(result['entries']) == 5
+        assert result['entries'][-1]['title'] == 'Feed One: Entry 0'
+        assert not result['next_url']
+
+
+def test_category_entries_next(xmls_for_next):
+    with app.test_client() as client:
+        r = client.get('/-categoryone/entries/')
+        assert r.status_code == 200
+        result = json.loads(r.data)
+        assert len(result['entries']) == 20
+        assert result['entries'][-1]['title'] == 'Feed Two: Entry 15'
+        r = client.get(result['next_url'])
+        result = json.loads(r.data)
+        assert len(result['entries']) == 20
+        assert result['entries'][-1]['title'] == 'Feed Two: Entry 5'
+        r = client.get(result['next_url'])
+        result = json.loads(r.data)
+        assert len(result['entries']) == 10
+        assert result['entries'][-1]['title'] == 'Feed Two: Entry 0'
