@@ -112,7 +112,7 @@ def get_entries(feed_list, category_id):
         except StopIteration:
             iterators.pop(url_token)
             break
-        if next_key and entry.updated_at > next_key:
+        if next_key and entry.updated_at >= next_key:
             continue
         entry_permalink = None
         for link in entry.links:
