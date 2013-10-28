@@ -1,4 +1,5 @@
-from collections import deque
+import collections
+import datetime
 import hashlib
 import os.path
 try:
@@ -15,6 +16,7 @@ from libearth.feedlist import (Feed as FeedOutline,
 from libearth.parser.autodiscovery import autodiscovery, FeedUrlNotFoundError
 from libearth.parser.heuristic import get_format
 from libearth.schema import read, write
+from libearth.tz import now
 
 from .wsgi import MethodRewriteMiddleware
 
@@ -52,15 +54,28 @@ def get_feedlist():
 iterators = {}
 
 
+def tidy_iterators_up():
+    lists = []
+    for key, pair in iterators.items():
+        lists.append(pair)
+    lists.sort(key=lambda pair: pair[1], reverse=True)
+    for it, time_saved in lists:
+        if time_saved < now() - datetime.timedelta(minutes=30):
+            lists = lists[:lists.index((it, time_saved))]
+    if len(lists) > 10:
+        lists = lists[:10]
+
+
 def get_entries(feed_list, category_key, feed_key=None):
+    tidy_iterators_up()
     REPOSITORY = app.config['REPOSITORY']
     token = request.args.get('continuation')
     it = None
     if token:
         if not feed_key:
-            it = iterators.get(category_key)
+            it, time_saved = iterators.get(category_key)
         else:
-            it = iterators.get(feed_key)
+            it, time_saved = iterators.get(feed_key)
     if not it:
         feed_permalinks = {}
         sorting_pool = []
@@ -84,9 +99,9 @@ def get_entries(feed_list, category_key, feed_key=None):
                           reverse=True)
         it = iter(sorting_pool)
         if not feed_key:
-            iterators[category_key] = it
+            iterators[category_key] = it, now()
         else:
-            iterators[feed_key] = it
+            iterators[feed_key] = it, now()
     next_key = None
     if token:
         next_key = Rfc3339().decode(token.replace(' ', 'T'))
@@ -205,11 +220,12 @@ def check_path_valid(category_id, return_category_parent=False):
     if return_category_parent:
         category_list = category_id.split('/')
         target = category_list.pop()[1:]
-        categories = deque([category[1:] for category in category_list])
+        categories = collections.deque([category[1:] for category
+                                       in category_list])
     else:
         target = None
-        categories = deque([category[1:] for category in
-                           category_id.split('/')])
+        categories = collections.deque([category[1:] for category in
+                                       category_id.split('/')])
     feed_list = get_feedlist()
     cursor = feed_list
     while categories:
