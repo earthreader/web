@@ -633,6 +633,15 @@ function keyboardShortcut(event) {
 	}
 }
 
+function changeTheme(name) {
+	if (name in THEMES == false) {
+		return;
+	}
+
+	var theme = document.head.querySelector('style.theme');
+	theme.innerHTML = "@import url('" + THEMES[name] + "');";
+}
+
 function init() {
 	var navi = document.querySelector('[role=navigation]');
 	var persistent = navi.querySelector('.persistent');
