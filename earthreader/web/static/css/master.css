@@ -8,7 +8,6 @@ html, body {
 }
 
 body {
-	background: white;
 	line-height: 1.2;
 
 	animation-name: small;
@@ -41,7 +40,6 @@ body .wrapper {
 	z-index: 3;
 	margin: 0;
 	padding: .5em 0;
-	background: white;
 	box-shadow: 0 1px 2px #aaa;
 	user-select: none;
 }
@@ -83,7 +81,6 @@ body .wrapper {
 [role=complementary] {
 	position: relative;
 	float: left;
-	background: rgb(252, 252, 255);
 	z-index: 2;
 	user-select: none;
 }
@@ -101,7 +98,6 @@ body .wrapper {
 [role=main] {
 	float: left;
 	z-index: 1;
-	background: white;
 	position: relative;
 }
 
@@ -193,14 +189,7 @@ input:not([type=button]):not([type=submit]):focus, textarea:focus {
 
 .form {
 	padding: .5em .5em;
-	background: rgba(0, 120, 245, .1);
 	box-shadow: 0 1px 2px rgb(136, 136, 136) inset;
-}
-
-[role=navigation] input[type=submit],
-[role=navigation] input[type=button],
-[role=navigation] button {
-	background: rgb(143, 182, 220);
 }
 
 .site-header h1 {
@@ -222,7 +211,6 @@ input:not([type=button]):not([type=submit]):focus, textarea:focus {
 [role=complementary] .header {
 	padding: 0.4em 0 .5em .7em;
 	border-bottom: 1px solid rgb(237, 237, 237);
-	background: rgb(245, 245, 255);
 }
 
 .header.closed + .fold {
@@ -233,11 +221,6 @@ input:not([type=button]):not([type=submit]):focus, textarea:focus {
 [role=complementary] li:not(.fold) {
 	padding: 0.4em 0 .5em .7em;
 	border-bottom: 1px solid rgba(0, 0, 0, .1);
-}
-
-[role=navigation] li:not(.fold):hover,
-[role=complementary] li:not(.fold):hover {
-	background: rgb(230, 230, 253);
 }
 
 [role=navigation] > ul,
@@ -257,20 +240,10 @@ input:not([type=button]):not([type=submit]):focus, textarea:focus {
 [role=main] article .entry-title {
 	padding: .5em 2em;
 	border-bottom: 1px solid rgb(238, 238, 238);
-	background: rgb(253, 253, 253);
-}
-
-[role=main] article.current .entry-title {
-	background: rgb(243, 243, 253);
-}
-
-[role=main] article .entry-title:hover {
-	background: rgb(245, 245, 255);
 }
 
 [role=main] article .entry-content {
 	padding: 1em 3em;
-	background: rgb(255, 255, 255);
 	line-height: 1.4;
 	box-shadow: 0 1px 2px rgb(100, 100, 100) inset;
 }
