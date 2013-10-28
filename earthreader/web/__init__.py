@@ -57,14 +57,11 @@ iterators = {}
 def tidy_iterators_up():
     global iterators
     lists = []
-    for key, pair in iterators.items():
-        lists.append((key, pair))
-    lists.sort(key=lambda pair: pair[1][1], reverse=True)
-    for key, (it, time_saved) in lists:
-        if time_saved < now() - datetime.timedelta(minutes=30):
-            lists = lists[:lists.index((it, time_saved))]
-    if len(lists) > 10:
-        lists = lists[:10]
+    for key, (it, time_saved) in iterators.items():
+        if time_saved >= now() - datetime.timedelta(minutes=30):
+            lists.append((key, (it, time_saved)))
+        if len(lists) >= 10:
+            break
     iterators = dict(lists)
 
 
