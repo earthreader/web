@@ -72,6 +72,7 @@ def get_entries(feed_list, category_id):
     tidy_iterators_up()
     REPOSITORY = app.config['REPOSITORY']
     url_token = request.args.get('url_token')
+    feed_title = None
     it = None
     if url_token:
         pair = iterators.get(url_token)

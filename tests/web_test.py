@@ -710,6 +710,8 @@ def xmls_for_next(request):
             <outline type="atom" text="Feed Two" title="Feed Two"
             xmlUrl="http://feedtwo.com/" />
         </outline>
+        <outline type="atom" text="Feed Three" title="Feed Three"
+        xmlUrl="http://feedthree.com/" />
       </body>
     </opml>
     '''
@@ -722,6 +724,10 @@ def xmls_for_next(request):
                     title=Text(value='Feed Two'),
                     updated_at=datetime.datetime(2013, 10, 30, 21, 55, 30,
                                                  tzinfo=utc))
+    feed_three = Feed(id='http://feedthree.com/', authors=authors,
+                      title=Text(value='Feed Three'),
+                      updated_at=datetime.datetime(2013, 10, 30, 21, 55, 30,
+                                                   tzinfo=utc))
     for i in range(25):
         feed_one.entries.append(
             Entry(id='http://feedone.com/' + str(i),
@@ -739,6 +745,15 @@ def xmls_for_next(request):
                                                tzinfo=utc) +
                   datetime.timedelta(days=1)*i)
         )
+    for i in range(20):
+        feed_three.entries.append(
+            Entry(id='http://feedthree.com/' + str(i),
+                  authors=authors,
+                  title=Text(value='Feed Three: Entry ' + str(i)),
+                  updated_at=datetime.datetime(2013, 10, 6, 20, 55, 30,
+                                               tzinfo=utc) +
+                  datetime.timedelta(days=1)*i)
+        )
     feed_list = FeedList(opml, is_xml_string=True)
     feed_list.save_file(os.path.join(REPOSITORY, OPML))
     with open(os.path.join(
@@ -749,6 +764,11 @@ def xmls_for_next(request):
     with open(os.path.join(
             REPOSITORY, get_hash('http://feedtwo.com/') + '.xml'), 'w+') as f:
         for chunk in write(feed_two, indent='    ',
+                           canonical_order=True):
+            f.write(chunk)
+    with open(os.path.join(
+            REPOSITORY, get_hash('http://feedthree.com/') + '.xml'), 'w+') as f:
+        for chunk in write(feed_three, indent='    ',
                            canonical_order=True):
             f.write(chunk)
 
@@ -774,6 +794,19 @@ def test_feed_entries_next(xmls_for_next):
         result = json.loads(r.data)
         assert len(result['entries']) == 5
         assert result['entries'][-1]['title'] == 'Feed One: Entry 0'
+        assert not result['next_url']
+
+
+def test_feed_with_20_entries(xmls_for_next):
+    with app.test_client() as client:
+        r = client.get('/feeds/' + get_hash('http://feedthree.com/') +
+                       '/entries/')
+        assert r.status_code == 200
+        result = json.loads(r.data)
+        r = client.get(result['next_url'])
+        assert r.status_code == 200
+        result = json.loads(r.data)
+        assert not result['entries']
         assert not result['next_url']
 
 
