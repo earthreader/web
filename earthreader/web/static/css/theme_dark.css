@@ -1,0 +1,53 @@
+body {
+	background: black;
+	color: white;
+}
+
+.site-header {
+	background: rgb(50,50,50);
+}
+
+[role=navigation],
+[role=complementary] {
+	background: rgb(87,87,87);
+}
+
+[role=main] {
+	background: rgb(80, 80, 90);
+}
+
+.form {
+	background: rgba(0, 120, 245, .1);
+}
+
+[role=navigation] input[type=submit],
+[role=navigation] input[type=button],
+[role=navigation] button {
+	background: rgb(143, 182, 220);
+}
+
+[role=naigation] .header,
+[role=complementary] .header {
+	background: rgb(245, 245, 255);
+}
+
+[role=navigation] li:not(.fold):hover,
+[role=complementary] li:not(.fold):hover {
+	background: rgb(130, 130, 153);
+}
+
+[role=main] article .entry-title {
+	background: rgb(43, 43, 43);
+}
+
+[role=main] article.current .entry-title {
+	background: rgb(63, 63, 73);
+}
+
+[role=main] article .entry-title:hover {
+	background: rgb(65, 65, 75);
+}
+
+[role=main] article .entry-content {
+	background: rgb(40, 40, 40);
+}
