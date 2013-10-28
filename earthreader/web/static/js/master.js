@@ -404,6 +404,38 @@ function getAllEntries() {
 	getEntries(URLS.entries);
 }
 
+function appendEntry(entry) {
+	var main = document.querySelector('[role=main]');
+	
+	var article = document.createElement('article');
+	var header = document.createElement('div');
+	var time = document.createElement('time');
+	var title = document.createElement('span');
+
+	article.addClass('entry');
+	article.setAttribute('data-entries', entry.entry_url);
+
+	header.addClass('entry-title');
+	header.setAttribute('role', 'button');
+
+	if (entry.feed) {
+		var category = document.createElement('span');
+		category.addClass('feed');
+		category.textContent = entry.feed.title;
+		header.appendChild(category);
+	}
+
+	time.textContent = entry.updated;
+	header.appendChild(time);
+
+	title.textContent = entry.title;
+	title.addClass('title');
+	header.appendChild(title);
+
+	article.appendChild(header);
+	main.appendChild(article);
+}
+
 function getEntries(feed_url) {
 	var main = document.querySelector('[role=main]');
 
@@ -421,34 +453,7 @@ function getEntries(feed_url) {
 		main.appendChild(header);
 
 		for (var i=0; i<entries.length; i++) {
-			var entry = entries[i];
-			var article = document.createElement('article');
-			var header = document.createElement('div');
-			var time = document.createElement('time');
-			var title = document.createElement('span');
-
-			article.addClass('entry');
-			article.setAttribute('data-entries', entry.entry_url);
-
-			header.addClass('entry-title');
-			header.setAttribute('role', 'button');
-
-			if (entry.feed) {
-				var category = document.createElement('span');
-				category.addClass('feed');
-				category.textContent = entry.feed.title;
-				header.appendChild(category);
-			}
-
-			time.textContent = entry.updated;
-			header.appendChild(time);
-
-			title.textContent = entry.title;
-			title.addClass('title');
-			header.appendChild(title);
-
-			article.appendChild(header);
-			main.appendChild(article);
+			appendEntry(entries[i]);
 		}
 
 		if (obj.next_url) {
@@ -474,34 +479,7 @@ function loadNextPage() {
 	getJSON(nextLoader.getAttribute('data-next-url'), function(obj) {
 		var entries = obj.entries;
 		for (var i=0; i<entries.length; i++) {
-			var entry = entries[i];
-			var article = document.createElement('article');
-			var header = document.createElement('div');
-			var time = document.createElement('time');
-			var title = document.createElement('span');
-
-			article.addClass('entry');
-			article.setAttribute('data-entries', entry.entry_url);
-
-			header.addClass('entry-title');
-			header.setAttribute('role', 'button');
-
-			if (entry.feed) {
-				var category = document.createElement('span');
-				category.addClass('feed');
-				category.textContent = entry.feed.title;
-				header.appendChild(category);
-			}
-
-			time.textContent = entry.updated;
-			header.appendChild(time);
-
-			title.textContent = entry.title;
-			title.addClass('title');
-			header.appendChild(title);
-
-			article.appendChild(header);
-			main.appendChild(article);
+			appendEntry(entries[i]);
 		}
 
 		if (obj.next_url) {
