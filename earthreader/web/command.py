@@ -42,6 +42,7 @@ def earthreader():
     args = parser.parse_args()
 
     if sys.argv[1] == 'server':
+        from linesman.middleware import make_linesman_middleware
         repository = args.repository
         if not repository.endswith('/'):
             repository = repository + '/'
@@ -51,6 +52,7 @@ def earthreader():
             REPOSITORY=repository
             ))
         try:
+            app.wsgi_app = make_linesman_middleware(app.wsgi_app)
             app.run(host=args.host, port=args.port, debug=args.debug)
         except socket.error as e:
             parser.error(str(e))
