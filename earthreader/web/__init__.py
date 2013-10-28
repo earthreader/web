@@ -66,7 +66,6 @@ def tidy_iterators_up():
 
 
 def get_entries(feed_list, category_id):
-    tidy_iterators_up()
     REPOSITORY = app.config['REPOSITORY']
     url_token = request.args.get('url_token')
     feed_title = None
@@ -141,6 +140,7 @@ def get_entries(feed_list, category_id):
                 'permalink': feed_permalink or None
             }
         })
+    tidy_iterators_up()
     return feed_title if len(feed_list) == 1 else None, entries, url_token
 
 
