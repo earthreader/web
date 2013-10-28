@@ -58,7 +58,7 @@ setup(
     tests_require=['pytest >= 2.3.0'],
     cmdclass={'test': pytest},
     classifiers=[
-        'Development Status :: 1 - Planning',  # FIXME
+        'Development Status :: 3 - Alpha',
         'Environment :: Web Environment',
         'Framework :: Flask',
         'Intended Audience :: Developers',

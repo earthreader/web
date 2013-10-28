@@ -3,7 +3,6 @@ import glob
 import hashlib
 import os.path
 import socket
-import sys
 
 from earthreader.web import app
 
@@ -14,7 +13,7 @@ from libearth.schema import write
 
 def earthreader():
     parser = argparse.ArgumentParser(prog='earthreader')
-    subparsers = parser.add_subparsers(help='command-help')
+    subparsers = parser.add_subparsers(dest='command', help='command-help')
     server_parser = subparsers.add_parser('server',
                                           help='Run a server for EarthReader')
     server_parser.add_argument('-H', '--host',
@@ -41,23 +40,19 @@ def earthreader():
                               help='Repository which has the OPML')
     args = parser.parse_args()
 
-    if sys.argv[1] == 'server':
-        from linesman.middleware import make_linesman_middleware
+    if args.command == 'server':
         repository = args.repository
-        if not repository.endswith('/'):
-            repository = repository + '/'
         if not os.path.isdir(repository):
             os.mkdir(repository)
         app.config.update(dict(
             REPOSITORY=repository
             ))
         try:
-            app.wsgi_app = make_linesman_middleware(app.wsgi_app)
             app.run(host=args.host, port=args.port, debug=args.debug)
         except socket.error as e:
             parser.error(str(e))
 
-    elif sys.argv[1] == 'crawl':
+    elif args.command == 'crawl':
         repository = args.repository
         if not repository.endswith('/'):
             repository = repository + '/'

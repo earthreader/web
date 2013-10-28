@@ -326,4 +326,12 @@ input:not([type=button]):not([type=submit]):focus, textarea:focus {
 		overflow: hidden;
 		text-overflow: ellipsis;
 	}
+
+	.header:not(.closed) .toggle:before {
+		content: '+';
+	}
+
+	.header.closed .toggle:before {
+		content: '-';
+	}
 }
