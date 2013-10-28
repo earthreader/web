@@ -500,6 +500,19 @@ function loadNextPage() {
 	});
 }
 
+function autoNextPager(event) {
+	var main = document.querySelector('[role=main]');
+	var nextPage = main.querySelector('.nextPage');
+
+	if (nextPage == null) {
+		return;
+	}
+
+	if ((main.scrollTop + main.offsetHeight) >= (nextPage.offsetTop + nextPage.offsetHeight)) {
+		loadNextPage();
+	}
+}
+
 function clickFeed(event) {
 	var target = event.target;
 	var navi = document.querySelector('[role=navigation]');
@@ -627,6 +640,7 @@ function init() {
 
 	var main = document.querySelector('[role=main]');
 	main.addEventListener('click', clickEntry, false);
+	main.addEventListener('scroll', autoNextPager, false);
 
 	var side = document.querySelector('[role=complementary]');
 	side.addEventListener('click', clickComplementaryMenu, false);
