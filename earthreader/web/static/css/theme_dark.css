@@ -4,20 +4,21 @@ body {
 }
 
 .site-header {
-	background: rgb(50,50,50);
+	background: rgb(37, 36, 35);
+	color: rgb(139, 134, 133);
 }
 
 [role=navigation],
 [role=complementary] {
-	background: rgb(87,87,87);
+	background: rgb(42, 41, 40);
 }
 
 [role=main] {
-	background: rgb(80, 80, 90);
+	background: rgb(49, 48, 4j);
 }
 
 .form {
-	background: rgba(0, 120, 245, .1);
+	background: rgba(0, 50, 145, .1);
 }
 
 [role=navigation] input[type=submit],
@@ -31,9 +32,13 @@ body {
 	background: rgb(245, 245, 255);
 }
 
+[role=navigation] .current {
+	background: rgb(43, 73, 63);
+}
+
 [role=navigation] li:not(.fold):hover,
 [role=complementary] li:not(.fold):hover {
-	background: rgb(130, 130, 153);
+	background: rgb(60, 70, 60);
 }
 
 [role=main] article .entry-title {
@@ -41,7 +46,7 @@ body {
 }
 
 [role=main] article.current .entry-title {
-	background: rgb(63, 63, 73);
+	background: rgb(43, 73, 63);
 }
 
 [role=main] article .entry-title:hover {
@@ -49,5 +54,5 @@ body {
 }
 
 [role=main] article .entry-content {
-	background: rgb(40, 40, 40);
+	background: rgb(20, 20, 20);
 }
