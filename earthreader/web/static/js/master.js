@@ -212,6 +212,9 @@ function clickComplementaryMenu(event) {
 
 	if (action === 'remove-this') {
 		removeCurrentSelected();
+	} else if (action === 'change-theme') {
+		var theme_name = target.getAttribute('data-theme-name');
+		changeTheme(theme_name);
 	}
 }
 
