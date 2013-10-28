@@ -55,15 +55,17 @@ iterators = {}
 
 
 def tidy_iterators_up():
+    global iterators
     lists = []
     for key, pair in iterators.items():
-        lists.append(pair)
-    lists.sort(key=lambda pair: pair[1], reverse=True)
-    for it, time_saved in lists:
+        lists.append((key, pair))
+    lists.sort(key=lambda pair: pair[1][1], reverse=True)
+    for key, (it, time_saved) in lists:
         if time_saved < now() - datetime.timedelta(minutes=30):
             lists = lists[:lists.index((it, time_saved))]
     if len(lists) > 10:
         lists = lists[:10]
+    iterators = dict(lists)
 
 
 def get_entries(feed_list, category_key, feed_key=None):
