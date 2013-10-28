@@ -825,3 +825,20 @@ def test_category_entries_next(xmls_for_next):
         result = json.loads(r.data)
         assert len(result['entries']) == 10
         assert result['entries'][-1]['title'] == 'Feed Two: Entry 0'
+
+
+def test_request_same_feed(xmls_for_next):
+    with app.test_client() as client:
+        r1 = client.get('/-categoryone/feeds/' +
+                        get_hash('http://feedone.com/') +
+                        '/entries/')
+        r2 = client.get('/-categoryone/feeds/' +
+                        get_hash('http://feedone.com/') +
+                        '/entries/')
+        r1_result = json.loads(r1.data)
+        r2_result = json.loads(r2.data)
+        r1_next = client.get(r1_result['next_url'])
+        r2_next = client.get(r2_result['next_url'])
+        r1_result = json.loads(r1_next.data)
+        r2_result = json.loads(r2_next.data)
+        assert r1_result['entries'] == r2_result['entries']
