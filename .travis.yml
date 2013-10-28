@@ -11,10 +11,9 @@ install:
   fi
 - pip install -e .
 script:
-- py.test --cov earthreader --durations=10
 - if [ `python -c 'from platform import *; print(python_implementation())'` != 'PyPy' ]; then
     py.test --cov earthreader --durations=10;
-    pep8
+    pep8;
   else
     py.test --durations=10;
   fi
@@ -23,7 +22,7 @@ script:
   fi
 after_success:
 - if [ `python -c 'from platform import *; print(python_implementation())'` != 'PyPy' ]; then
-    coveralls
+    coveralls;
   fi
 notifications:
   irc:
