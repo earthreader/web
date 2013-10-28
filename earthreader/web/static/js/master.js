@@ -450,6 +450,17 @@ function getEntries(feed_url) {
 			article.appendChild(header);
 			main.appendChild(article);
 		}
+
+		if (obj.next_url) {
+			var nextLoader = main.querySelector('.nextPage');
+			if (nextLoader == null) {
+				nextLoader = document.createElement('div');
+				nextLoader.addClass('nextPage');
+				nextLoader.textContent = "Load next page";
+			}
+			nextLoader.setAttribute('data-next-url', obj.next_url);
+			main.appendChild(nextLoader);
+		}
 	});
 }
 
