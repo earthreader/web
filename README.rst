@@ -61,8 +61,14 @@ You can attach earthreader to apache with `mod_wsgi`__ like this:
    <Directory /var/wsgi/>
       WSGIProcessGroup earthreader
       WSGIApplicationGroup %{GLOBAL}
+
       Order deny,allow
       Allow from all
+      <!-- For security, We prefer use auth system. -->
+      AuthType Basic
+      AuthName "Private rss reader"
+      AuthUserFile /var/wsgi/earthreader.htpasswd
+      Require valid-user
    </Directory>
 
 .. code-block:: python
