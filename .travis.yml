@@ -5,14 +5,26 @@ python:
 - 2.7
 - 3.3
 install:
-- pip install pytest pytest-cov pep8 coveralls
+- pip install pytest
+- if [ `python -c 'from platform import *; print(python_implementation())'` != 'PyPy' ]; then
+    pip install pytest pytest-cov pep8 coveralls;
+  fi
 - pip install -e .
 script:
 - py.test --cov earthreader --durations=10
-- if [ `python -c 'import sys; print(sys.version_info[0])'` != '3' ]; then python -c "from earthreader.web import app; print(app.test_client().get('/').data)" | python tests/html5check.py -h; fi
-- if [ `python -c 'from platform import *; print(python_implementation())'` != 'PyPy' ]; then pep8; fi
+- if [ `python -c 'from platform import *; print(python_implementation())'` != 'PyPy' ]; then
+    py.test --cov earthreader --durations=10;
+    pep8
+  else
+    py.test --durations=10;
+  fi
+- if [ `python -c 'import sys; print(sys.version_info[0])'` != '3' ]; then
+    python -c "from earthreader.web import app; print(app.test_client().get('/').data)" | python tests/html5check.py -h;
+  fi
 after_success:
-- coveralls
+- if [ `python -c 'from platform import *; print(python_implementation())'` != 'PyPy' ]; then
+    coveralls
+  fi
 notifications:
   irc:
     channels:
