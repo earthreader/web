@@ -68,16 +68,15 @@ def tidy_iterators_up():
     iterators = dict(lists)
 
 
-def get_entries(feed_list, category_key, feed_key=None):
+def get_entries(feed_list, category_id):
     tidy_iterators_up()
     REPOSITORY = app.config['REPOSITORY']
-    token = request.args.get('continuation')
+    url_token = request.args.get('url_token')
     it = None
-    if token:
-        if not feed_key:
-            it, time_saved = iterators.get(category_key)
-        else:
-            it, time_saved = iterators.get(feed_key)
+    if url_token:
+        pair = iterators.get(url_token)
+        if pair:
+            it = pair[0]
     if not it:
         feed_permalinks = {}
         sorting_pool = []
@@ -100,22 +99,20 @@ def get_entries(feed_list, category_key, feed_key=None):
         sorting_pool.sort(key=lambda entry: entry[3].updated_at,
                           reverse=True)
         it = iter(sorting_pool)
-        if not feed_key:
-            iterators[category_key] = it, now()
-        else:
-            iterators[feed_key] = it, now()
+        if not url_token:
+            url_token = now().__str__()
+        iterators[url_token] = it, now()
+    entry_after = None
+    entry_after = request.args.get('entry_after')
     next_key = None
-    if token:
-        next_key = Rfc3339().decode(token.replace(' ', 'T'))
+    if entry_after:
+        next_key = Rfc3339().decode(entry_after.replace(' ', 'T'))
     entries = []
     while len(entries) < 20:
         try:
             feed_title, feed_id, feed_permalink, entry = next(it)
         except StopIteration:
-            if not feed_key:
-                iterators.pop(category_key)
-            else:
-                iterators.pop(feed_key)
+            iterators.pop(url_token)
             break
         if next_key and entry.updated_at > next_key:
             continue
@@ -130,7 +127,7 @@ def get_entries(feed_list, category_key, feed_key=None):
             'title': entry.title,
             'entry_url': url_for(
                 'feed_entry',
-                category_id=category_key,
+                category_id=category_id,
                 feed_id=feed_id,
                 entry_id=get_hash(entry.id),
                 _external=True
@@ -146,7 +143,7 @@ def get_entries(feed_list, category_key, feed_key=None):
                 'permalink': feed_permalink or None
             }
         })
-    return feed_title if len(feed_list) == 1 else None, entries
+    return feed_title if len(feed_list) == 1 else None, entries, url_token
 
 
 def get_hash(name):
@@ -429,7 +426,7 @@ def feed_entries(category_id, feed_id):
         )
         r.status_code = 404
         return r
-    feed_title, entries = get_entries([feed_id], category_id, feed_id)
+    feed_title, entries, url_token = get_entries([feed_id], category_id)
     if len(entries) < 20:
         next_url = None
     else:
@@ -437,7 +434,8 @@ def feed_entries(category_id, feed_id):
             'feed_entries',
             category_id=category_id,
             feed_id=feed_id,
-            continuation=entries[-1]['updated']
+            url_token=url_token,
+            entry_after=entries[-1]['updated'] if entries else None
         )
     return jsonify(
         title=feed_title,
@@ -460,14 +458,15 @@ def category_entries(category_id):
     feed_list = []
     for child in cursor.get_all_feeds():
         feed_list.append(get_hash(child.xml_url))
-    _, entries = get_entries(feed_list, category_id)
+    _, entries, url_token = get_entries(feed_list, category_id)
     if len(entries) < 20:
         next_url = None
     else:
         next_url = url_for(
             'category_entries',
             category_id=category_id,
-            continuation=entries[-1]['updated']
+            url_token=url_token,
+            entry_after=entries[-1]['updated'] if entries else None
         )
     return jsonify(
         title=category_id.split('/')[-1][1:] or app.config['ALLFEED'],
