@@ -49,6 +49,38 @@ Server
 
 And open **http://localhost:<port>/** with your browser.
 
+WSGI
+++++
+
+You can attach earthreader to apache with `mod_wsgi`__ like this:
+
+.. code-block:: apache
+
+   WSGIDaemonProcess earthreader user=www-data group=www-data threads=1
+   WSGIScriptAlias /earthreader /var/wsgi/earthreader.wsgi
+   <Directory /var/wsgi/>
+      WSGIProcessGroup earthreader
+      WSGIApplicationGroup %{GLOBAL}
+      Order deny,allow
+      Allow from all
+   </Directory>
+
+.. code-block:: python
+
+   #!/usr/bin/env python
+   #/var/wsgi/earthreader.wsgi
+   import sys
+   sys.path.insert(0, '<Directory where earthreader installed>')
+
+   from earthreader.web import app as application
+   application.config.update(dict(
+       REPOSITORY='<repository dir>'
+       ))
+
+And open **http://your.website.domain/earthreader/** with your browser.
+
+__ http://flask.pocoo.org/docs/deploying/mod_wsgi/
+
 Links
 =====
 
