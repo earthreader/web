@@ -462,6 +462,7 @@ function getEntries(feed_url) {
 				nextLoader = document.createElement('div');
 				nextLoader.addClass('nextPage');
 				nextLoader.textContent = "Load next page";
+				nextLoader.onclick = loadNextPage();
 			}
 			nextLoader.setAttribute('data-next-url', obj.next_url);
 			main.appendChild(nextLoader);
