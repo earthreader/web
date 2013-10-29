@@ -610,6 +610,21 @@ function clickEntry(event) {
 	});
 }
 
+function clickLink(event) {
+	var target = event.target;
+	while (target.localName !== 'a') {
+		target = target.parentElement;
+		if (target == null) {
+			return;
+		}
+	}
+
+	if (target.host != location.host) {
+		window.open(target.href);
+		event.preventDefault();
+	}
+}
+
 function keyboardShortcut(event) {
 	if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') {
 		return;
@@ -670,6 +685,7 @@ function init() {
 
 	document.addEventListener('click', toggleMenu, false);
 	document.addEventListener('click', toggleSide, false);
+	document.addEventListener('click', clickLink, false);
 
 	window.addEventListener('submit', processForm, false);
 	window.addEventListener('keydown', keyboardShortcut, false);
