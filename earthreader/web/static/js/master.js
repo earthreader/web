@@ -691,6 +691,9 @@ function init() {
 	document.addEventListener('click', toggleMenu, false);
 	document.addEventListener('click', toggleSide, false);
 	document.addEventListener('click', clickLink, false);
+	document.body.addEventListener('touchstart', touchStart, false);
+	document.body.addEventListener('touchmove', touchMove, false);
+	document.body.addEventListener('touchend', touchEnd, false);
 
 	window.addEventListener('submit', processForm, false);
 	window.addEventListener('keydown', keyboardShortcut, false);
