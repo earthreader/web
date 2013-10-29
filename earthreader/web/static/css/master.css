@@ -252,6 +252,16 @@ input:not([type=button]):not([type=submit]):focus, textarea:focus {
 	text-align: center;
 }
 
+[role=main] .entry-content > .bottom-bar {
+	text-align: center;
+	border-top: 1px solid grey;
+	padding: 1em 0;
+}
+
+[role=main] .entry-content .read-on-web {
+	font-size: 1.6em;
+}
+
 @media all and (min-width: 800px) {
 	body {
 		animation-name: big;
