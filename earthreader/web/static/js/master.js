@@ -588,13 +588,18 @@ function clickEntry(event) {
 		var wrapper = document.createElement('div');
 		var title = document.createElement('h1');
 		var content = document.createElement('div');
+		var read_on_web = document.createElement('a');
 
 		title.innerHTML = obj.title.link(obj.permalink);
 		content.innerHTML = obj.content;
+		read_on_web.href = obj.permalink;
+		read_on_web.addClass('read-on-web');
+		read_on_web.textContent = "Read on web";
 
 		wrapper.addClass('entry-content');
 		wrapper.appendChild(title);
 		wrapper.appendChild(content);
+		wrapper.appendChild(read_on_web);
 		entry.appendChild(wrapper);
 
 		scrollToElement(main, entry);
