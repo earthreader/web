@@ -657,6 +657,11 @@ function keyboardShortcut(event) {
 			}
 			prev.querySelector('.entry-title').click();
 			break;
+		case 79: //o
+			var read_on_web = main.querySelector('.read-on-web');
+			if (read_on_web) {
+				window.open(read_on_web.href);
+			}
 	}
 }
 
