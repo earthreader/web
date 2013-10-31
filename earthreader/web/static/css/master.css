@@ -74,7 +74,8 @@ body .wrapper {
 	width: 100%;
 	height: 100%;
 	transition: all .2s ease 0s;
-	overflow: scroll;
+	overflow-x: hidden;
+	overflow-y: auto;
 }
 
 [role=navigation],
