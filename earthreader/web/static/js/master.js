@@ -23,31 +23,7 @@ function scrollToElement(parentElement, childElement) {
 	parentElement.scrollLeft(parentElement.scrollLeft() + childElement.offset().left - parentElement.offset().left);
 }
 
-function setBlocker(isEnable) {
-	var blocker = $('.blockerUI');
-	if (isEnable == true || isEnable == undefined) {
-		if (blocker.length != 0) {
-			return;
-		}
-		blocker = $('<div>')
-			.addClass('blockerUI')
-			.css({
-				'background': "rgba(0, 0, 0, .4)",
-				'position': "fixed",
-				'top': "0",
-				'left': "0",
-				'width': "100%",
-				'height': "100%",
-				'zIndex': "10",
-				'animation': "fade-in .7s",
-			});
-
-		$(document.body).append(blocker);
-	} else {
-		blocker.remove();
-	}
-}
-
+//FIXME: delete these
 function getJSON(url, onSuccess, onFail) {
 	var xhr = new XMLHttpRequest();
 	xhr.open('get', url);
@@ -75,9 +51,7 @@ function getJSON(url, onSuccess, onFail) {
 				}
 			}
 		}
-		setBlocker(false);
 	}
-	setBlocker(true);
 	xhr.send();
 }
 
@@ -108,9 +82,7 @@ function deleteJSON(url, onSuccess, onFail) {
 				}
 			}
 		}
-		setBlocker(false);
 	}
-	setBlocker(true);
 	xhr.send();
 }
 
@@ -133,9 +105,7 @@ function post(url, parameter, onSuccess, onFail) {
 				(onFail)(xhr);
 			}
 		}
-		setBlocker(false);
 	}
-	setBlocker(true);
 	xhr.send(parameter);
 }
 
@@ -658,6 +628,7 @@ $(function () {
 	$(document).on('submit', 'form', processForm);
 	$(document).on('keydown', keyboardShortcut);
 
+	//FIXME: clean it
     var animationEnd;
     if (document.body.style.animation !== undefined) {
         animationEnd = 'animationend';
