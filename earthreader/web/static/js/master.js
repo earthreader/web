@@ -510,24 +510,14 @@ function clickFeed(event) {
 	var target = $(event.target);
 	var navi = $('[role=navigation]');
 
-	while (target.hasClass('feed') == false) {
-		//toggle folding
-		if (target.hasClass('toggle')) {
-			target.parent().toggleClass('closed');
-			return;
-		}
-
-		target = target.parentElement;
-		if (target === null) {
-			return;
-		}
+	//toggle folding
+	if (target.hasClass('toggle')) {
+		target.parent().toggleClass('closed');
+		return;
 	}
 
 	//set current marker
-	var list = navi.find('.current');
-	for (var i=0; i<list.length; i++) {
-		list[i].removeClass('current');
-	}
+	navi.find('.current').removeClass('current');
 	target.addClass('current');
 
 	var url = target.attr('data-entries');
