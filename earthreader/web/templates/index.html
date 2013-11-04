@@ -7,6 +7,7 @@
 			URLS = {{ {'feeds': url_for('feeds', _external=True), 'entries': url_for('category_entries', _external=True)}|tojson|safe }};
 			THEMES = {{ {'bright': url_for('static', filename='css/theme_bright.css'), 'dark': url_for('static', filename='css/theme_dark.css')}|tojson|safe }};
 		</script>
+		<script src="{{ url_for('static', filename='js/jquery-2.0.3.min.js') }}" type="text/javascript" charset="utf-8"></script>
 		<script src="{{ url_for('static', filename='js/master.js') }}" type="text/javascript" charset="utf-8"></script>
 		<script src="{{ url_for('static', filename='js/prefixfree.min.js') }}" type="text/javascript" charset="utf-8"></script>
 		<link rel="stylesheet" href="{{ url_for('static', filename='css/animation.css') }}" type="text/css" media="all">
