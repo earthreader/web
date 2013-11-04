@@ -711,7 +711,7 @@ function feedDragEnd(event) {
 	event.preventDefault();
 }
 
-function init() {
+$(function () {
 	var navi = document.querySelector('[role=navigation]');
 	var persistent = navi.querySelector('.persistent');
 	navi.addEventListener('click', clickFeed, false);
@@ -750,6 +750,4 @@ function init() {
 
 	refreshFeedList();
 	getAllEntries();
-}
-
-window.addEventListener('DOMContentLoaded', init, false);
+});
