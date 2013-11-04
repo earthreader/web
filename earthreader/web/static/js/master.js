@@ -347,6 +347,12 @@ var makeCategory = function(parentObj, obj) {
 	toggle.addClass('toggle');
 	header.insertBefore(toggle, header.firstChild);
 
+	var handle = document.createElement('span');
+	handle.addClass('handle');
+	header.insertBefore(handle, header.firstChild);
+
+	header.draggable = true;
+
 	list.addClass('fold');
 
 	var ul = document.createElement('ul');
@@ -372,6 +378,12 @@ var makeFeed = function(parentObj, obj) {
 	elem.setAttribute('data-remove-feed-url', obj.remove_feed_url);
 	elem.setAttribute('role', 'link');
 	elem.textContent = obj.title;
+
+	var handle = document.createElement('span');
+	handle.addClass('handle');
+	elem.insertBefore(handle, elem.firstChild);
+
+	elem.draggable = true;
 
 	parentObj.appendChild(elem);
 };
@@ -674,10 +686,37 @@ function changeTheme(name) {
 	theme.innerHTML = "@import url('" + THEMES[name] + "');";
 }
 
+function feedDragStart(event) {
+	var target = event.target;
+	console.log(event);
+	var handled = false;
+	while (target.classList.contains('feed') == false) {
+		if (target.classList.contains('handle')) {
+			console.log('handled');
+			handled = true;
+		}
+		target = target.parentElement;
+		if (target == null) {
+			return;
+		}
+	}
+
+	event.target = target;
+
+	event.dataTransfer.setData('data-entries', target.getAttribute('data-entries'));
+}
+
+function feedDragEnd(event) {
+	var target = event.target;
+	event.preventDefault();
+}
+
 function init() {
 	var navi = document.querySelector('[role=navigation]');
 	var persistent = navi.querySelector('.persistent');
 	navi.addEventListener('click', clickFeed, false);
+	navi.addEventListener('dragstart', feedDragStart, false);
+	navi.addEventListener('dragend', feedDragEnd, false);
 	persistent.addEventListener('click', clickPersistentMenu, false);
 	persistent.addEventListener('click', toggleFolding, false);
 

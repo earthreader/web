@@ -318,4 +318,8 @@ input:not([type=button]):not([type=submit]):focus, textarea:focus {
 	.header.closed .toggle:before {
 		content: '-';
 	}
+
+	.feed .handle:before {
+		content: '::';
+	}
 }
