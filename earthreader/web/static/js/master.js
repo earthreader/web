@@ -457,7 +457,7 @@ function getEntries(feed_url) {
 			nextLoader.attr('data-next-url', obj.next_url);
 			main.append(nextLoader);
 		}
-		main.scrollTop = 0;
+		main.scrollTop(0);
 	});
 }
 
