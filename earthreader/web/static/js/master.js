@@ -19,17 +19,8 @@ Element.prototype.addClass = function(name) {
 }
 
 function scrollToElement(parentElement, childElement) {
-	var x = 0;
-    var y = 0;
-	var element = childElement;
-    while( element && element !== parentElement && !isNaN( element.offsetLeft ) && !isNaN( element.offsetTop ) ) {
-        x += element.offsetLeft - element.scrollLeft;
-        y += element.offsetTop - element.scrollTop;
-        element = element.offsetParent;
-    }
-
-	parentElement.scrollTop = y;
-	parentElement.scrollLeft = x;
+	parentElement.scrollTop(parentElement.scrollTop() + childElement.offset().top - parentElement.offset().top);
+	parentElement.scrollLeft(parentElement.scrollLeft() + childElement.offset().left - parentElement.offset().left);
 }
 
 function setBlocker(isEnable) {
