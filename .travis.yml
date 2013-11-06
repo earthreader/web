@@ -12,13 +12,15 @@ install:
 - pip install -e .
 script:
 - if [ `python -c 'from platform import *; print(python_implementation())'` != 'PyPy' ]; then
-    py.test --cov earthreader --durations=10;
-    pep8;
+    py.test --cov earthreader --durations=10 &&
+    pep8 ||
+    exit $?
   else
     py.test --durations=10;
   fi
 - if [ `python -c 'import sys; print(sys.version_info[0])'` != '3' ]; then
-    python -c "from earthreader.web import app; print(app.test_client().get('/').data)" | python tests/html5check.py -h;
+    python -c "from earthreader.web import app; print(app.test_client().get('/').data)" | python tests/html5check.py -h ||
+    exit $?
   fi
 after_success:
 - if [ `python -c 'from platform import *; print(python_implementation())'` != 'PyPy' ]; then
