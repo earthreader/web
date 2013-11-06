@@ -1,7 +1,6 @@
 import collections
 import datetime
 import hashlib
-import os.path
 try:
     import urllib2
 except ImportError:
@@ -10,11 +9,9 @@ except ImportError:
 from flask import Flask, jsonify, render_template, request, url_for
 from libearth.codecs import Rfc3339
 from libearth.compat import binary
-from libearth.feed import Feed
 from libearth.parser.autodiscovery import autodiscovery, FeedUrlNotFoundError
 from libearth.parser.heuristic import get_format
 from libearth.repository import FileSystemRepository
-from libearth.schema import read, write
 from libearth.session import Session
 from libearth.stage import Stage
 from libearth.subscribe import Category, Subscription, SubscriptionList
