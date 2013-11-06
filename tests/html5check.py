@@ -202,5 +202,7 @@ else:
   if not isinstance(output, str):
     output = output.decode('utf-8')
   sys.stdout.write(output)
+  if 'Error' in output:
+      sys.exit(1)
 
 connection.close()

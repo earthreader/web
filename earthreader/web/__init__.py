@@ -49,14 +49,11 @@ iterators = {}
 def tidy_iterators_up():
     global iterators
     lists = []
-    for key, pair in iterators.items():
-        lists.append((key, pair))
-    lists.sort(key=lambda pair: pair[1][1], reverse=True)
-    for key, (it, time_saved) in lists:
-        if time_saved < now() - datetime.timedelta(minutes=30):
-            lists = lists[:lists.index((it, time_saved))]
-    if len(lists) > 10:
-        lists = lists[:10]
+    for key, (it, time_saved) in iterators.items():
+        if time_saved >= now() - datetime.timedelta(minutes=30):
+            lists.append((key, (it, time_saved)))
+        if len(lists) >= 10:
+            break
     iterators = dict(lists)
 
 
@@ -116,7 +113,7 @@ def get_entries(feed_list, category_id):
         except StopIteration:
             iterators.pop(url_token)
             break
-        if next_key and entry.updated_at > next_key:
+        if next_key and entry.updated_at >= next_key:
             continue
         entry_permalink = None
         for link in entry.links:
@@ -145,6 +142,7 @@ def get_entries(feed_list, category_id):
                 'permalink': feed_permalink or None
             }
         })
+    tidy_iterators_up()
     return feed_title if len(feed_list) == 1 else None, entries, url_token
 
 

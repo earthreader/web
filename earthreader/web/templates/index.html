@@ -3,12 +3,17 @@
 	<head>
 		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1"/>
-		<script> URLS = {{ {'feeds': url_for('feeds', _external=True), 'entries': url_for('category_entries', _external=True)}|tojson|safe }}; </script>
+		<script>
+			URLS = {{ {'feeds': url_for('feeds', _external=True), 'entries': url_for('category_entries', _external=True)}|tojson|safe }};
+			THEMES = {{ {'bright': url_for('static', filename='css/theme_bright.css'), 'dark': url_for('static', filename='css/theme_dark.css')}|tojson|safe }};
+		</script>
 		<script src="{{ url_for('static', filename='js/master.js') }}" type="text/javascript" charset="utf-8"></script>
 		<script src="{{ url_for('static', filename='js/prefixfree.min.js') }}" type="text/javascript" charset="utf-8"></script>
 		<link rel="stylesheet" href="{{ url_for('static', filename='css/animation.css') }}" type="text/css" media="all">
 		<link rel="stylesheet" href="{{ url_for('static', filename='css/master.css') }}" type="text/css" media="all">
-		<link rel="stylesheet" href="{{ url_for('static', filename='css/theme_bright.css') }}" type="text/css" media="all">
+		<style type="text/css" class="theme">
+			@import url('{{ url_for('static', filename='css/theme_bright.css') }}');
+		</style>
 		<title>Earth Reader</title>
 	</head>
 	<body>
@@ -42,7 +47,7 @@
 					</li>
 				</ul>
 				<ul class="feedlist">
-					<h1>Loading...</h1>
+					<li> <h1>Loading...</h1> </li>
 				</ul>
 			</nav>
 			<section role="main">
@@ -54,6 +59,8 @@
 					<li role="button" data-action="remove-this">Remove</li>
 					<li>Star</li>
 					<li>Mark as unread</li>
+					<li role="button" data-action="change-theme" data-theme-name="dark">Dark theme</li>
+					<li role="button" data-action="change-theme" data-theme-name="bright">Bright theme</li>
 				</ul>
 			</section>
 		</div>

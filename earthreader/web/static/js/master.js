@@ -212,6 +212,9 @@ function clickComplementaryMenu(event) {
 
 	if (action === 'remove-this') {
 		removeCurrentSelected();
+	} else if (action === 'change-theme') {
+		var theme_name = target.getAttribute('data-theme-name');
+		changeTheme(theme_name);
 	}
 }
 
@@ -585,17 +588,41 @@ function clickEntry(event) {
 		var wrapper = document.createElement('div');
 		var title = document.createElement('h1');
 		var content = document.createElement('div');
+		var bottom_bar = document.createElement('div');
+		var read_on_web = document.createElement('a');
 
 		title.innerHTML = obj.title.link(obj.permalink);
 		content.innerHTML = obj.content;
 
+		bottom_bar.addClass('bottom-bar');
+		read_on_web.href = obj.permalink;
+		read_on_web.addClass('read-on-web');
+		read_on_web.textContent = "Read on web";
+		bottom_bar.appendChild(read_on_web);
+
 		wrapper.addClass('entry-content');
 		wrapper.appendChild(title);
 		wrapper.appendChild(content);
+		wrapper.appendChild(bottom_bar);
 		entry.appendChild(wrapper);
 
 		scrollToElement(main, entry);
 	});
+}
+
+function clickLink(event) {
+	var target = event.target;
+	while (target.localName !== 'a') {
+		target = target.parentElement;
+		if (target == null) {
+			return;
+		}
+	}
+
+	if (target.host != location.host) {
+		window.open(target.href);
+		event.preventDefault();
+	}
 }
 
 function keyboardShortcut(event) {
@@ -630,7 +657,21 @@ function keyboardShortcut(event) {
 			}
 			prev.querySelector('.entry-title').click();
 			break;
+		case 79: //o
+			var read_on_web = main.querySelector('.read-on-web');
+			if (read_on_web) {
+				window.open(read_on_web.href);
+			}
 	}
+}
+
+function changeTheme(name) {
+	if (name in THEMES == false) {
+		return;
+	}
+
+	var theme = document.head.querySelector('style.theme');
+	theme.innerHTML = "@import url('" + THEMES[name] + "');";
 }
 
 function init() {
@@ -649,6 +690,7 @@ function init() {
 
 	document.addEventListener('click', toggleMenu, false);
 	document.addEventListener('click', toggleSide, false);
+	document.addEventListener('click', clickLink, false);
 
 	window.addEventListener('submit', processForm, false);
 	window.addEventListener('keydown', keyboardShortcut, false);
