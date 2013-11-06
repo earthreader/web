@@ -57,16 +57,6 @@ def tidy_iterators_up():
     iterators = dict(lists)
 
 
-def get_feeds(cursor):
-    feeds = []
-    for child in cursor:
-        if isinstance(child, Subscription):
-            feeds.append(get_hash(child.feed_uri))
-        elif isinstance(child, Category):
-            feeds.extend(get_feeds(child))
-    return feeds
-
-
 def get_entries(feed_list, category_id):
     tidy_iterators_up()
     stage = get_stage()
@@ -427,8 +417,11 @@ def category_entries(category_id):
         )
         r.status_code = 404
         return r
-    feed_list = get_feeds(cursor)
-    _, entries, url_token = get_entries(feed_list, category_id)
+    subscriptions = cursor.recursive_subscriptions
+    uris = []
+    for subscription in subscriptions:
+        uris.append(get_hash(subscription.feed_uri))
+    _, entries, url_token = get_entries(uris, category_id)
     if len(entries) < 20:
         next_url = None
     else:
