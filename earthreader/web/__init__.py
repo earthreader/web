@@ -232,16 +232,11 @@ def check_path_valid(category_id, return_category_parent=False):
     feed_list = stage.subscriptions
     cursor = feed_list
     while categories:
-        is_searched = False
         looking_for = categories.popleft()
-        for category in cursor.categories:
-            if category.label == looking_for:
-                is_searched = True
-                cursor = category
-                break
-        if not is_searched:
+        try:
+            cursor = cursor.categories[looking_for]
+        except KeyError:
             return None, None, None
-
     return feed_list, cursor, target
 
 

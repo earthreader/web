@@ -479,22 +479,26 @@ def test_add_feed_in_category(xmls, fx_test_stage):
         result = json.loads(r.data)
         assert result['feeds'][0]['title'] == 'Feed Two'
         assert result['feeds'][1]['title'] == 'Feed Five'
-        # stage = fx_test_stage
-        # assert Subscriptions()stage.subscriptions.categories.subscriptions
+        stage = fx_test_stage
+        subscriptions = stage.subscriptions
+        categoryone = subscriptions.categories['categoryone']
+        categorytwo = categoryone.categories['categorytwo']
+        assert len(categorytwo.subscriptions) == 2
 
 
-def test_add_category(xmls):
+def test_add_category(xmls, fx_test_stage):
     with app.test_client() as client:
         r = client.post('/',
                         data=dict(title='addedcategory'))
         assert r.status_code == 200
         result = json.loads(r.data)
         assert result['categories'][2]['title'] == 'addedcategory'
-        # opml = FeedList(os.path.join(REPOSITORY, OPML))
-        # assert opml[3].text == 'addedcategory'
+        stage = fx_test_stage
+        subscriptions = stage.subscriptions
+        assert subscriptions.categories['addedcategory'] is not None
 
 
-def test_add_category_in_category(xmls):
+def test_add_category_in_category(xmls, fx_test_stage):
     with app.test_client() as client:
         r = client.get('/feeds/')
         assert r.status_code == 200
@@ -505,8 +509,10 @@ def test_add_category_in_category(xmls):
         assert r.status_code == 200
         result = json.loads(r.data)
         assert result['categories'][1]['title'] == 'addedcategory'
-        # opml = FeedList(os.path.join(REPOSITORY, OPML))
-        # assert opml[0][2].text == 'addedcategory'
+        stage = fx_test_stage
+        subscriptions = stage.subscriptions
+        categoryone = subscriptions.categories['categoryone']
+        assert categoryone.categories['addedcategory'] is not None
 
 
 def test_add_category_without_opml(fx_test_stage):
@@ -516,33 +522,24 @@ def test_add_category_without_opml(fx_test_stage):
         assert r.status_code == 200
         result = json.loads(r.data)
         assert result['categories'][0]['title'] == 'testcategory'
-        # REPOSITORY = app.config['REPOSITORY']
-        # OPML = app.config['OPML']
-        # feed_list = FeedList(os.path.join(REPOSITORY, OPML))
-        # assert feed_list[0].text == 'testcategory'
-        # os.remove(os.path.join(REPOSITORY, OPML))
-        # os.rmdir(REPOSITORY)
+        stage = fx_test_stage
+        subscriptions = stage.subscriptions
+        assert subscriptions.categories['testcategory'] is not None
 
 
-def test_add_feed_without_opml():
+def test_add_feed_without_opml(fx_test_stage):
     with app.test_client() as client:
         r = client.post('/feeds/',
                         data=dict(url='http://feedone.com/feed/atom/'))
         assert r.status_code == 200
         result = json.loads(r.data)
         assert result['feeds'][0]['title'] == 'Feed One'
-        # REPOSITORY = app.config['REPOSITORY']
-        #OPML = app.config['OPML']
-        # feed_list = FeedList(os.path.join(REPOSITORY, OPML))
-        # assert feed_list[0].title == 'Feed One'
-    # files = glob.glob(os.path.join(REPOSITORY, '*'))
-    # for file in files:
-    #     os.remove(file)
-    # os.rmdir(REPOSITORY)
+        stage = fx_test_stage
+        subscriptions = stage.subscriptions
+        assert len(subscriptions.subscriptions) == 1
 
 
-def test_delete_feed(xmls):
-    REPOSITORY = app.config['REPOSITORY']
+def test_delete_feed(xmls, fx_test_stage):
     with app.test_client() as client:
         feed_id = hashlib.sha1(
             binary('http://feedthree.com/feed/atom/')).hexdigest()
@@ -551,9 +548,6 @@ def test_delete_feed(xmls):
         result = json.loads(r.data)
         for child in result['feeds']:
             assert child['title'] != 'Feed Three'
-        assert not os.path.join(REPOSITORY, feed_id + '.xml') in glob.glob(
-            os.path.join(REPOSITORY, '*')
-        )
 
 
 def test_delete_feed_in_category(xmls):
@@ -598,8 +592,6 @@ def test_delete_category_in_category(xmls):
         result = json.loads(client.get('/-categoryone/feeds/').data)
         for child in result['categories']:
             assert not child['title'] == 'categorytwo'
-        # feed_list = FeedList(os.path.join(REPOSITORY, OPML))
-        # assert len(feed_list[0]) == 1
 
 
 def test_category_all_entries(xmls):
