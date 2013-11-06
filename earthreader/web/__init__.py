@@ -11,11 +11,13 @@ from flask import Flask, jsonify, render_template, request, url_for
 from libearth.codecs import Rfc3339
 from libearth.compat import binary
 from libearth.feed import Feed
-from libearth.feedlist import (Feed as FeedOutline,
-                               FeedCategory as CategoryOutline, FeedList)
 from libearth.parser.autodiscovery import autodiscovery, FeedUrlNotFoundError
 from libearth.parser.heuristic import get_format
+from libearth.repository import FileSystemRepository
 from libearth.schema import read, write
+from libearth.session import Session
+from libearth.stage import Stage
+from libearth.subscribe import Category, Subscription, SubscriptionList
 from libearth.tz import now
 
 from .wsgi import MethodRewriteMiddleware
@@ -26,29 +28,22 @@ app.wsgi_app = MethodRewriteMiddleware(app.wsgi_app)
 
 
 app.config.update(dict(
-    OPML='earthreader.opml',
     ALLFEED='All Feeds',
 ))
 
 
+def get_stage():
+    session = Session()
+    repo = FileSystemRepository(app.config['REPOSITORY'])
+    return Stage(session, repo)
+
+
 def feedlist_exists():
-    REPOSITORY = app.config['REPOSITORY']
-    OPML = app.config['OPML']
-    if not os.path.isfile(os.path.join(REPOSITORY, OPML)):
+    stage = get_stage()
+    if stage.subscriptions:
+        return True
+    else:
         return False
-    return True
-
-
-def get_feedlist():
-    REPOSITORY = app.config['REPOSITORY']
-    OPML = app.config['OPML']
-    if not os.path.isfile(os.path.join(REPOSITORY, OPML)):
-        if not os.path.isdir(REPOSITORY):
-            os.mkdir(REPOSITORY)
-        feed_list = FeedList()
-        feed_list.save_file(os.path.join(REPOSITORY, OPML))
-    feed_list = FeedList(os.path.join(REPOSITORY, OPML))
-    return feed_list
 
 
 iterators = {}
@@ -66,6 +61,16 @@ def tidy_iterators_up():
     if len(lists) > 10:
         lists = lists[:10]
     iterators = dict(lists)
+
+
+def get_feeds(cursor):
+    feeds = []
+    for child in cursor:
+        if isinstance(child, Subscription):
+            feeds.append(get_hash(child.feed_uri))
+        elif isinstance(child, Category):
+            feeds.extend(get_feeds(child))
+    return feeds
 
 
 def get_entries(feed_list, category_id):
@@ -159,10 +164,10 @@ def get_all_feeds(category, path=None):
     else:
         feed_path = path
     for child in category:
-        if isinstance(child, FeedOutline):
-            feed_id = get_hash(child.xml_url)
+        if isinstance(child, Subscription):
+            feed_id = get_hash(child.feed_uri)
             feeds.append({
-                'title': child.title,
+                'title': child._title,
                 'entries_url': url_for(
                     'feed_entries',
                     category_id=feed_path,
@@ -176,37 +181,37 @@ def get_all_feeds(category, path=None):
                     _external=True
                 )
             })
-        elif isinstance(child, CategoryOutline):
+        elif isinstance(child, Category):
             categories.append({
-                'title': child.title,
+                'title': child._title,
                 'feeds_url': url_for(
                     'feeds',
-                    category_id=feed_path + '/-' + child.title
-                    if path else '-' + child.title,
+                    category_id=feed_path + '/-' + child._title
+                    if path else '-' + child._title,
                     _external=True
                 ),
                 'entries_url': url_for(
                     'category_entries',
-                    category_id=feed_path + '/-' + child.title
-                    if path else '-' + child.title,
+                    category_id=feed_path + '/-' + child._title
+                    if path else '-' + child._title,
                     _external=True
                 ),
                 'add_feed_url': url_for(
                     'add_feed',
-                    category_id=feed_path + '/-' + child.title
-                    if path else '-' + child.title,
+                    category_id=feed_path + '/-' + child._title
+                    if path else '-' + child._title,
                     _external=True
                 ),
                 'add_category_url': url_for(
                     'add_category',
-                    category_id=feed_path + '/-' + child.title
-                    if path else '-' + child.title,
+                    category_id=feed_path + '/-' + child._title
+                    if path else '-' + child._title,
                     _external=True
                 ),
                 'remove_category_url': url_for(
                     'delete_category',
-                    category_id=feed_path + '/-' + child.title
-                    if path else '-' + child.title,
+                    category_id=feed_path + '/-' + child._title
+                    if path else '-' + child._title,
                     _external=True
                 ),
             })
@@ -214,9 +219,13 @@ def get_all_feeds(category, path=None):
 
 
 def check_path_valid(category_id, return_category_parent=False):
+    stage = get_stage()
+    if not stage.subscriptions:
+        subscriptions = SubscriptionList()
+        stage.subscriptions = subscriptions
     if category_id == '/':
-        feed_list = get_feedlist()
-        return feed_list, feed_list, None
+        subscriptions = stage.subscriptions
+        return subscriptions, subscriptions, None
     if return_category_parent:
         category_list = category_id.split('/')
         target = category_list.pop()[1:]
@@ -226,18 +235,19 @@ def check_path_valid(category_id, return_category_parent=False):
         target = None
         categories = collections.deque([category[1:] for category in
                                        category_id.split('/')])
-    feed_list = get_feedlist()
+    feed_list = stage.subscriptions
     cursor = feed_list
     while categories:
         is_searched = False
         looking_for = categories.popleft()
-        for category in cursor:
-            if category.text == looking_for:
+        for category in cursor.categories:
+            if category.label == looking_for:
                 is_searched = True
                 cursor = category
                 break
         if not is_searched:
             return None, None, None
+
     return feed_list, cursor, target
 
 
@@ -248,18 +258,18 @@ def find_feed_in_opml(feed_id, category, parent_categories=[], result=[]):
     else:
         feed_path = '/'
     for child in category:
-        if isinstance(child, FeedOutline):
-            current_feed_id = hashlib.sha1(binary(child.xml_url)).hexdigest()
+        if isinstance(child, Subscription):
+            current_feed_id = hashlib.sha1(binary(child.feed_uri)).hexdigest()
             if current_feed_id == feed_id:
                 result.append(feed_path)
-        elif isinstance(child, CategoryOutline):
+        elif isinstance(child, Category):
             categories.append(child)
     for category in categories:
         find_feed_in_opml(
             feed_id,
             category,
-            parent_categories.append(category.title)
-            if parent_categories else [category.title],
+            parent_categories.append(category.label)
+            if parent_categories else [category.label],
             result
         )
     return result
@@ -274,7 +284,7 @@ def index():
 @app.route('/<path:category_id>/feeds/')
 def feeds(category_id):
     feed_list, cursor, _ = check_path_valid(category_id)
-    if not isinstance(feed_list, FeedList):
+    if not isinstance(feed_list, SubscriptionList):
         r = jsonify(
             error='category-path-invalid',
             message='Given category path is not valid'
@@ -288,10 +298,11 @@ def feeds(category_id):
 @app.route('/feeds/', methods=['POST'], defaults={'category_id': '/'})
 @app.route('/<path:category_id>/feeds/', methods=['POST'])
 def add_feed(category_id):
+    stage = get_stage()
     REPOSITORY = app.config['REPOSITORY']
-    feed_list, cursor, _ = check_path_valid(category_id)
-    if (not isinstance(cursor, CategoryOutline) and
-            not isinstance(cursor, FeedList)):
+    subscriptions, cursor, _ = check_path_valid(category_id)
+    if (not isinstance(cursor, Category) and
+            not isinstance(cursor, SubscriptionList)):
         r = jsonify(
             error='category-path-invalid',
             message='Given category path is not valid'
@@ -328,13 +339,15 @@ def add_feed(category_id):
     format = get_format(xml)
     result = format(xml, feed_url)
     feed = result[0]
-    outline = FeedOutline('atom', feed.title.value, feed_url)
+    subscription = Subscription(type='atom', label=feed.title.value,
+                                _title=feed.title.value,
+                                feed_uri=feed_url)
     for link in feed.links:
             if link.relation == 'alternate' and \
                     link.mimetype == 'text/html':
-                outline.blog_url = link.uri
-    cursor.append(outline)
-    feed_list.save_file()
+                subscription.alternate_uri = link.uri
+    cursor.add(subscription)
+    stage.subscriptions = subscriptions
     file_name = get_hash(feed_url) + '.xml'
     with open(os.path.join(REPOSITORY, file_name), 'w') as f:
         for chunk in write(feed, indent='    ', canonical_order=True):
@@ -345,9 +358,10 @@ def add_feed(category_id):
 @app.route('/', methods=['POST'], defaults={'category_id': '/'})
 @app.route('/<path:category_id>/', methods=['POST'])
 def add_category(category_id):
-    feed_list, cursor, _ = check_path_valid(category_id)
-    if (not isinstance(cursor, CategoryOutline) and
-            not isinstance(cursor, FeedList)):
+    stage = get_stage()
+    subscriptions, cursor, _ = check_path_valid(category_id)
+    if (not isinstance(cursor, Category) and
+            not isinstance(cursor, SubscriptionList)):
         r = jsonify(
             error='category-path-invalid',
             message='Given category path is not valid'
@@ -356,15 +370,16 @@ def add_category(category_id):
         return r
 
     title = request.form['title']
-    outline = CategoryOutline(title)
-    cursor.append(outline)
-    feed_list.save_file()
+    outline = Category(label=title, _title=title)
+    cursor.add(outline)
+    stage.subscriptions = subscriptions
     return feeds(category_id)
 
 
 @app.route('/<path:category_id>/', methods=['DELETE'])
 def delete_category(category_id):
-    feed_list, cursor, target = check_path_valid(category_id, True)
+    stage = get_stage()
+    subscriptions, cursor, target = check_path_valid(category_id, True)
     if not cursor:
         r = jsonify(
             error='category-path-invalid',
@@ -373,10 +388,10 @@ def delete_category(category_id):
         r.status_code = 404
         return r
     for child in cursor:
-        if isinstance(child, CategoryOutline):
-            if child.text == target:
+        if isinstance(child, Category):
+            if child.label == target:
                 cursor.remove(child)
-    feed_list.save_file()
+    stage.subscriptions = subscriptions
     index = category_id.rfind('/')
     if index == -1:
         return feeds('/')
@@ -388,8 +403,9 @@ def delete_category(category_id):
            defaults={'category_id': '/'})
 @app.route('/<path:category_id>/feeds/<feed_id>/', methods=['DELETE'])
 def delete_feed(category_id, feed_id):
+    stage = get_stage()
     REPOSITORY = app.config['REPOSITORY']
-    feed_list, cursor, _ = check_path_valid(category_id)
+    subscriptions, cursor, _ = check_path_valid(category_id)
     if not cursor:
         r = jsonify(
             error='category-path-invalid',
@@ -398,12 +414,13 @@ def delete_feed(category_id, feed_id):
         r.status_code = 404
         return r
     target = None
-    for feed in cursor:
-        if isinstance(feed, FeedOutline):
-            if feed_id == hashlib.sha1(binary(feed.xml_url)).hexdigest():
-                target = feed
+    for subscription in cursor:
+        if isinstance(subscription, Subscription):
+            if feed_id == hashlib.sha1(
+                    binary(subscription.feed_uri)).hexdigest():
+                target = subscription
     if target:
-        cursor.remove(target)
+        cursor.discard(target)
     else:
         r = jsonify(
             error='feed-not-found-in-path',
@@ -411,8 +428,8 @@ def delete_feed(category_id, feed_id):
         )
         r.status_code = 400
         return r
-    feed_list.save_file()
-    if not find_feed_in_opml(feed_id, feed_list):
+    stage.subscriptions = subscriptions
+    if not find_feed_in_opml(feed_id, subscriptions):
         os.remove(os.path.join(REPOSITORY, feed_id + '.xml'))
     return feeds(category_id)
 
@@ -448,17 +465,15 @@ def feed_entries(category_id, feed_id):
 @app.route('/entries/', defaults={'category_id': '/'})
 @app.route('/<path:category_id>/entries/')
 def category_entries(category_id):
-    lst, cursor, target = check_path_valid(category_id)
-    if not isinstance(lst, FeedList):
+    subscriptions, cursor, target = check_path_valid(category_id)
+    if not isinstance(subscriptions, SubscriptionList):
         r = jsonify(
             error='category-path-invalid',
             message='Given category was not found'
         )
         r.status_code = 404
         return r
-    feed_list = []
-    for child in cursor.get_all_feeds():
-        feed_list.append(get_hash(child.xml_url))
+    feed_list = get_feeds(cursor)
     _, entries, url_token = get_entries(feed_list, category_id)
     if len(entries) < 20:
         next_url = None
