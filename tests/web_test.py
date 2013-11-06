@@ -22,7 +22,7 @@ from libearth.compat import binary
 from libearth.crawler import crawl
 from libearth.feed import Entry, Feed, Person, Text
 from libearth.repository import FileSystemRepository
-from libearth.schema import read, write
+from libearth.schema import read
 from libearth.session import Session
 from libearth.stage import Stage
 from libearth.subscribe import Category, Subscription, SubscriptionList
@@ -241,7 +241,6 @@ def fx_test_stage(tmpdir):
 
 @fixture
 def xmls(request, fx_test_stage):
-    REPOSITORY = app.config['REPOSITORY']
     stage = fx_test_stage
     subscriptions = read(SubscriptionList, opml)
     feed_urls = get_feed_urls(subscriptions)
@@ -249,19 +248,9 @@ def xmls(request, fx_test_stage):
     for result in generator:
         feed_data = result[1][0]
         feed_url = result[0]
-        file_name = get_hash(feed_url) + '.xml'
-        with open(os.path.join(REPOSITORY, file_name), 'w+') as f:
-            for chunk in write(feed_data, indent='    ',
-                               canonical_order=True):
-                f.write(chunk)
+        feed_id = get_hash(feed_url)
+        stage.feeds[feed_id] = feed_data
     stage.subscriptions = subscriptions
-
-    def remove_test_repo():
-        files = glob.glob(os.path.join(REPOSITORY, '*'))
-        for file in files:
-            os.remove(file)
-
-    request.addfinalizer(remove_test_repo)
 
 
 def test_all_feeds(xmls):
@@ -520,7 +509,7 @@ def test_add_category_in_category(xmls):
         # assert opml[0][2].text == 'addedcategory'
 
 
-def test_add_category_without_opml():
+def test_add_category_without_opml(fx_test_stage):
     with app.test_client() as client:
         r = client.post('/',
                         data=dict(title='testcategory'))
@@ -568,48 +557,16 @@ def test_delete_feed(xmls):
 
 
 def test_delete_feed_in_category(xmls):
-    REPOSITORY = app.config['REPOSITORY']
     with app.test_client() as client:
-        feed_id = get_hash('http://feedone.com/feed/atom/')
-        assert os.path.join(REPOSITORY, feed_id + '.xml') in glob.glob(
-            os.path.join(REPOSITORY, '*'))
         r = client.get('/-categoryone/feeds/')
         assert r.status_code == 200
         result = json.loads(r.data)
+        assert len(result['feeds']) == 1
         remove_feed_url = result['feeds'][0]['remove_feed_url']
         r = client.delete(remove_feed_url)
         assert r.status_code == 200
         result = json.loads(r.data)
         assert len(result['feeds']) == 0
-        assert not os.path.join(REPOSITORY, feed_id + '.xml') in glob.glob(
-            os.path.join(REPOSITORY, '*')
-        )
-
-
-def test_delete_feed_in_two_category(xmls):
-    REPOSITORY = app.config['REPOSITORY']
-    with app.test_client() as client:
-        feed_id = get_hash('http://feedone.com/feed/atom/')
-        assert os.path.join(REPOSITORY, feed_id + '.xml') in glob.glob(
-            os.path.join(REPOSITORY, '*'))
-        r = client.post('/feeds/',
-                        data=dict(url='http://feedone.com/feed/atom/'))
-        assert r.status_code == 200
-        """
-        feed_list = FeedList(os.path.join(REPOSITORY, OPML))
-        assert feed_list[0][0].title == 'Feed One'
-        assert feed_list[3].title == 'Feed One'
-        feed_id = hashlib.sha1(
-            binary('http://feedone.com/feed/atom/')).hexdigest()
-        r = client.delete('/-categoryone/feeds/' + feed_id + '/')
-        assert r.status_code == 200
-        feed_list = FeedList(os.path.join(REPOSITORY, OPML))
-        for child in feed_list[0]:
-            assert not child.title == 'Feed One'
-        assert feed_list[3].title == 'Feed One'
-        assert os.path.join(REPOSITORY, feed_id + '.xml') in glob.glob(
-            os.path.join(REPOSITORY, '*'))
-        """
 
 
 def test_delete_non_exists_feed(xmls):
@@ -695,7 +652,6 @@ def test_empty_category_all_entries(xmls):
 
 @fixture
 def xmls_for_next(request, fx_test_stage):
-    REPOSITORY = app.config['REPOSITORY']
     stage = fx_test_stage
     opml = '''
     <opml version="1.0">
@@ -755,28 +711,9 @@ def xmls_for_next(request, fx_test_stage):
         )
     subscriptions = read(SubscriptionList, opml)
     stage.subscriptions = subscriptions
-    with open(os.path.join(
-            REPOSITORY, get_hash('http://feedone.com/') + '.xml'), 'w+') as f:
-        for chunk in write(feed_one, indent='    ',
-                           canonical_order=True):
-            f.write(chunk)
-    with open(os.path.join(
-            REPOSITORY, get_hash('http://feedtwo.com/') + '.xml'), 'w+') as f:
-        for chunk in write(feed_two, indent='    ',
-                           canonical_order=True):
-            f.write(chunk)
-    with open(os.path.join(
-            REPOSITORY, get_hash('http://feedthree.com/') + '.xml'), 'w+') as f:
-        for chunk in write(feed_three, indent='    ',
-                           canonical_order=True):
-            f.write(chunk)
-
-    def remove_test_repo():
-        files = glob.glob(os.path.join(REPOSITORY, '*'))
-        for file in files:
-            os.remove(file)
-
-    request.addfinalizer(remove_test_repo)
+    stage.feeds[get_hash('http://feedone.com/')] = feed_one
+    stage.feeds[get_hash('http://feedtwo.com/')] = feed_two
+    stage.feeds[get_hash('http://feedthree.com/')] = feed_three
 
 
 def test_feed_entries_next(xmls_for_next):

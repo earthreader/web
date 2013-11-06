@@ -75,7 +75,7 @@ def get_feeds(cursor):
 
 def get_entries(feed_list, category_id):
     tidy_iterators_up()
-    REPOSITORY = app.config['REPOSITORY']
+    stage = get_stage()
     url_token = request.args.get('url_token')
     feed_title = None
     it = None
@@ -87,21 +87,20 @@ def get_entries(feed_list, category_id):
         feed_permalinks = {}
         sorting_pool = []
         for feed_id in feed_list:
-            with open(os.path.join(REPOSITORY, feed_id + '.xml')) as f:
-                feed = read(Feed, f)
-                feed_permalink = feed_permalinks.get(feed_id)
+            feed = stage.feeds[feed_id]
+            feed_permalink = feed_permalinks.get(feed_id)
+            if not feed_permalink:
+                for link in feed.links:
+                    if link.relation == 'alternate' and \
+                            link.mimetype == 'text/html':
+                        feed_permalinks[feed_id] = link.uri
+                        feed_permalink = link.uri
                 if not feed_permalink:
-                    for link in feed.links:
-                        if link.relation == 'alternate' and \
-                                link.mimetype == 'text/html':
-                            feed_permalinks[feed_id] = link.uri
-                            feed_permalink = link.uri
-                    if not feed_permalink:
-                        feed_permalinks[feed_id] = feed.id
-                        feed_permalink = feed.id
-                for entry in feed.entries:
-                    sorting_pool.append((feed.title, feed_id,
-                                        feed_permalink, entry))
+                    feed_permalinks[feed_id] = feed.id
+                    feed_permalink = feed.id
+            for entry in feed.entries:
+                sorting_pool.append((feed.title, feed_id,
+                                    feed_permalink, entry))
         sorting_pool.sort(key=lambda entry: entry[3].updated_at,
                           reverse=True)
         it = iter(sorting_pool)
@@ -299,7 +298,6 @@ def feeds(category_id):
 @app.route('/<path:category_id>/feeds/', methods=['POST'])
 def add_feed(category_id):
     stage = get_stage()
-    REPOSITORY = app.config['REPOSITORY']
     subscriptions, cursor, _ = check_path_valid(category_id)
     if (not isinstance(cursor, Category) and
             not isinstance(cursor, SubscriptionList)):
@@ -348,10 +346,8 @@ def add_feed(category_id):
                 subscription.alternate_uri = link.uri
     cursor.add(subscription)
     stage.subscriptions = subscriptions
-    file_name = get_hash(feed_url) + '.xml'
-    with open(os.path.join(REPOSITORY, file_name), 'w') as f:
-        for chunk in write(feed, indent='    ', canonical_order=True):
-            f.write(chunk)
+    feed_id = get_hash(feed_url) + '.xml'
+    stage.feeds[feed_id] = feed
     return feeds(category_id)
 
 
@@ -404,7 +400,6 @@ def delete_category(category_id):
 @app.route('/<path:category_id>/feeds/<feed_id>/', methods=['DELETE'])
 def delete_feed(category_id, feed_id):
     stage = get_stage()
-    REPOSITORY = app.config['REPOSITORY']
     subscriptions, cursor, _ = check_path_valid(category_id)
     if not cursor:
         r = jsonify(
@@ -429,8 +424,6 @@ def delete_feed(category_id, feed_id):
         r.status_code = 400
         return r
     stage.subscriptions = subscriptions
-    if not find_feed_in_opml(feed_id, subscriptions):
-        os.remove(os.path.join(REPOSITORY, feed_id + '.xml'))
     return feeds(category_id)
 
 
@@ -495,6 +488,7 @@ def category_entries(category_id):
            defaults={'category_id': '/'})
 @app.route('/<path:category_id>/feeds/<feed_id>/entries/<entry_id>/')
 def feed_entry(category_id, feed_id, entry_id):
+    stage = get_stage()
     if not check_path_valid(category_id)[0]:
         r = jsonify(
             error='category-path-invalid',
@@ -502,53 +496,50 @@ def feed_entry(category_id, feed_id, entry_id):
         )
         r.status_code = 404
         return r
-    REPOSITORY = app.config['REPOSITORY']
     try:
-        with open(os.path.join(REPOSITORY, feed_id + '.xml')) as f:
-            feed = read(Feed, f)
-            feed_permalink = None
-            for link in feed.links:
-                if link.relation == 'alternate'\
-                   and link.mimetype == 'text/html':
-                    feed_permalink = link.uri
-                if not feed_permalink:
-                    feed_permalink = feed.id
-            for entry in feed.entries:
-                entry_permalink = None
-                for link in entry.links:
-                    if link.relation == 'alternate'\
-                       and link.mimetype == 'text/html':
-                        entry_permalink = link.uri
-                if not entry_permalink:
-                    entry_permalink = entry.id
-                if entry_id == get_hash(entry.id):
-                    return jsonify(
-                        title=entry.title,
-                        content=entry.content.sanitized_html
-                        if entry.content else entry.summary.sanitized_html,
-                        updated=entry.updated_at.__str__(),
-                        permalink=entry_permalink or None,
-                        feed={
-                            'title': feed.title,
-                            'entries_url': url_for(
-                                'feed_entries',
-                                feed_id=feed_id,
-                                _external=True
-                            ),
-                            'permalink': feed_permalink or None
-                        }
-                    )
-            r = jsonify(
-                error='entry-not-found',
-                message='Given entry does not exist'
-            )
-            r.status_code = 404
-            return r
-
-    except IOError:
+        feed = stage.feeds[feed_id]
+    except KeyError:
         r = jsonify(
             error='feed-not-found',
             message='Given feed does not exist'
         )
         r.status_code = 404
         return r
+    feed_permalink = None
+    for link in feed.links:
+        if link.relation == 'alternate'\
+           and link.mimetype == 'text/html':
+            feed_permalink = link.uri
+        if not feed_permalink:
+            feed_permalink = feed.id
+    for entry in feed.entries:
+        entry_permalink = None
+        for link in entry.links:
+            if link.relation == 'alternate'\
+               and link.mimetype == 'text/html':
+                entry_permalink = link.uri
+        if not entry_permalink:
+            entry_permalink = entry.id
+        if entry_id == get_hash(entry.id):
+            return jsonify(
+                title=entry.title,
+                content=entry.content.sanitized_html
+                if entry.content else entry.summary.sanitized_html,
+                updated=entry.updated_at.__str__(),
+                permalink=entry_permalink or None,
+                feed={
+                    'title': feed.title,
+                    'entries_url': url_for(
+                        'feed_entries',
+                        feed_id=feed_id,
+                        _external=True
+                    ),
+                    'permalink': feed_permalink or None
+                }
+            )
+    r = jsonify(
+        error='entry-not-found',
+        message='Given entry does not exist'
+    )
+    r.status_code = 404
+    return r
