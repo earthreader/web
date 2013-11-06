@@ -245,30 +245,6 @@ def check_path_valid(category_id, return_category_parent=False):
     return feed_list, cursor, target
 
 
-def find_feed_in_opml(feed_id, category, parent_categories=[], result=[]):
-    categories = []
-    if parent_categories:
-        feed_path = '/'.join(parent_categories)
-    else:
-        feed_path = '/'
-    for child in category:
-        if isinstance(child, Subscription):
-            current_feed_id = hashlib.sha1(binary(child.feed_uri)).hexdigest()
-            if current_feed_id == feed_id:
-                result.append(feed_path)
-        elif isinstance(child, Category):
-            categories.append(child)
-    for category in categories:
-        find_feed_in_opml(
-            feed_id,
-            category,
-            parent_categories.append(category.label)
-            if parent_categories else [category.label],
-            result
-        )
-    return result
-
-
 @app.route('/', methods=['GET'])
 def index():
     return render_template('index.html')
