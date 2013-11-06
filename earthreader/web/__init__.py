@@ -220,21 +220,16 @@ def check_path_valid(category_id, return_category_parent=False):
     if category_id == '/':
         subscriptions = stage.subscriptions
         return subscriptions, subscriptions, None
+    categories = category_id.split('/')
     if return_category_parent:
-        category_list = category_id.split('/')
-        target = category_list.pop()[1:]
-        categories = collections.deque([category[1:] for category
-                                       in category_list])
+        target = categories.pop()[1:]
     else:
         target = None
-        categories = collections.deque([category[1:] for category in
-                                       category_id.split('/')])
     feed_list = stage.subscriptions
     cursor = feed_list
-    while categories:
-        looking_for = categories.popleft()
+    for child in categories:
         try:
-            cursor = cursor.categories[looking_for]
+            cursor = cursor.categories[child[1:]]
         except KeyError:
             return None, None, None
     return feed_list, cursor, target
