@@ -438,17 +438,18 @@ function loadNextPage() {
 
 function autoNextPager(event) {
 	//FIXME
-	var main = $('[role=main]');
-	var nextPage = main.find('.nextPage');
+	var nextPage = $('[role=main] .nextPage');
 
 	if (nextPage.length === 0) {
 		return;
 	}
 
-	var scroll_bottom = main[0].scrollTop + main[0].offsetHeight;
-	var nextPage_bottom = nextPage[0].offsetTop + nextPage[0].offsetHeight;
+	var screenBottom = $(window).scrollTop() + $(window).height();
+	var pagerTop = nextPage.offset().top;
 
-	if (scroll_bottom >= nextPage_bottom) {
+	console.log(screenBottom - pagerTop);
+
+	if (screenBottom >= pagerTop) {
 		loadNextPage();
 	}
 }
@@ -602,7 +603,6 @@ $(function () {
 
 	var main = $('[role=main]');
 	main.on('click', clickEntry);
-	main.on('scroll', autoNextPager);
 
 	var side = $('[role=complementary]');
 	side.on('click', clickComplementaryMenu);
@@ -613,6 +613,7 @@ $(function () {
 
 	$(document).on('submit', 'form', processForm);
 	$(document).on('keydown', keyboardShortcut);
+	$(window).on('scroll', autoNextPager);
 
 	//FIXME: clean it
     var animationEnd;
