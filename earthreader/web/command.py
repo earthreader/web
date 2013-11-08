@@ -1,7 +1,10 @@
+from __future__ import print_function
+
 import argparse
 import hashlib
 import os.path
 import socket
+import sys
 
 from earthreader.web import app
 
@@ -58,7 +61,7 @@ def earthreader():
         stage = Stage(session, repo)
         opml = stage.subscriptions
         if not opml:
-            print('OPML does not exist in the repository')
+            print('OPML does not exist in the repository', file=sys.stderr)
             return
         urllist = [subscription.feed_uri for subscription
                    in opml.recursive_subscriptions]
@@ -68,4 +71,4 @@ def earthreader():
                 feed_id = hashlib.sha1(feed_url).hexdigest()
                 stage.feeds[feed_id] = feed_data
         except CrawlError as e:
-            print(e.msg)
+            print(e.msg, file=sys.stderr)
