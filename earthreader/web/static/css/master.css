@@ -2,7 +2,6 @@ html, body {
 	width: 100%;
 	margin: 0;
 	padding: 0;
-	overflow: hidden;
 	height: 100%;
 	font-family: "Helvetica Neue", clean, sans-serif;
 }
@@ -72,7 +71,6 @@ body .wrapper {
 [role=main],
 [role=complementary] {
 	width: 100%;
-	height: 100%;
 	transition: all .2s ease 0s;
 	overflow-x: hidden;
 	overflow-y: auto;
@@ -80,44 +78,45 @@ body .wrapper {
 
 [role=navigation],
 [role=complementary] {
-	position: relative;
-	float: left;
+	width: 90%;
+	height: 100%;
+	top: 0;
+	padding-top: 3em;
+	box-sizing: border-box;
+	position: fixed;
 	z-index: 2;
 	user-select: none;
 }
 
 [role=navigation] {
+	left: 0;
 	box-shadow: 1px 0 2px #aaa;
 	margin-left: -100%;
 }
 
 [role=complementary] {
+	right: 0;
 	box-shadow: -1px 0 2px #aaa;
 	margin-right: -100%;
 }
 
 [role=main] {
-	float: left;
 	z-index: 1;
 	position: relative;
 }
 
 .menu-open [role=navigation] {
-	width: 90%;
 	margin-left: 0;
 }
 
 .menu-open [role=main] {
-	margin-right: -100%;
+	margin-left: 90%;
 }
 
 .menu-open [role=complementary] {
-	margin-right: -100%;
-	float: right;
 }
 
 .side-open [role=complementary] {
-	width: 90%;
 	margin-right: 0;
 }
 
