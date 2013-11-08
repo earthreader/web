@@ -8,6 +8,7 @@ except ImportError:
 from flask import Flask, jsonify, render_template, request, url_for
 from libearth.codecs import Rfc3339
 from libearth.compat import binary
+from libearth.feed import Mark
 from libearth.parser.autodiscovery import autodiscovery, FeedUrlNotFoundError
 from libearth.parser.heuristic import get_format
 from libearth.repository import FileSystemRepository
@@ -30,6 +31,14 @@ app.config.update(dict(
 
 class InvalidCategoryPath(ValueError):
     """Rise when the category path is not valid"""
+
+
+class FeedNotFound(ValueError):
+    """Rise when the feed is not reachable"""
+
+
+class EntryNotFound(ValueError):
+    """Rise when the entry is not reachable"""
 
 
 def get_stage():
@@ -331,8 +340,9 @@ def add_category(category_id):
 @app.route('/<path:category_id>/', methods=['DELETE'])
 def delete_category(category_id):
     stage = get_stage()
-    subscriptions, cursor, target = check_path_valid(category_id, True)
-    if not cursor:
+    try:
+        subscriptions, cursor, target = check_path_valid(category_id, True)
+    except InvalidCategoryPath:
         r = jsonify(
             error='category-path-invalid',
             message='Given category path is not valid'
@@ -455,27 +465,13 @@ def category_entries(category_id):
     )
 
 
-@app.route('/feeds/<feed_id>/entries/<entry_id>/',
-           defaults={'category_id': '/'})
-@app.route('/<path:category_id>/feeds/<feed_id>/entries/<entry_id>/')
-def feed_entry(category_id, feed_id, entry_id):
+def find_feed_and_entry(category_id, feed_id, entry_id):
     stage = get_stage()
-    if not check_path_valid(category_id)[0]:
-        r = jsonify(
-            error='category-path-invalid',
-            message='Given category path is not valid'
-        )
-        r.status_code = 404
-        return r
+    check_path_valid(category_id)
     try:
         feed = stage.feeds[feed_id]
     except KeyError:
-        r = jsonify(
-            error='feed-not-found',
-            message='Given feed does not exist'
-        )
-        r.status_code = 404
-        return r
+        raise FeedNotFound('The feed is not reachable')
     feed_permalink = None
     for link in feed.links:
         if link.relation == 'alternate'\
@@ -492,25 +488,89 @@ def feed_entry(category_id, feed_id, entry_id):
         if not entry_permalink:
             entry_permalink = entry.id
         if entry_id == get_hash(entry.id):
-            return jsonify(
-                title=entry.title,
-                content=entry.content.sanitized_html
-                if entry.content else entry.summary.sanitized_html,
-                updated=entry.updated_at.__str__(),
-                permalink=entry_permalink or None,
-                feed={
-                    'title': feed.title,
-                    'entries_url': url_for(
-                        'feed_entries',
-                        feed_id=feed_id,
-                        _external=True
-                    ),
-                    'permalink': feed_permalink or None
-                }
-            )
-    r = jsonify(
-        error='entry-not-found',
-        message='Given entry does not exist'
+            return feed, feed_permalink, entry, entry_permalink
+    raise EntryNotFound('The entry is not reachable')
+
+
+@app.route('/feeds/<feed_id>/entries/<entry_id>/',
+           defaults={'category_id': '/'})
+@app.route('/<path:category_id>/feeds/<feed_id>/entries/<entry_id>/')
+def feed_entry(category_id, feed_id, entry_id):
+    try:
+        feed, feed_permalink, entry, entry_permalink = \
+            find_feed_and_entry(category_id, feed_id, entry_id)
+    except (InvalidCategoryPath, FeedNotFound, EntryNotFound):
+        r = jsonify(
+            error='entry-not-found',
+            message='Given entry does not exist'
+        )
+        r.status_code = 404
+        return r
+    return jsonify(
+        title=entry.title,
+        content=entry.content.sanitized_html
+        if entry.content else entry.summary.sanitized_html,
+        updated=entry.updated_at.__str__(),
+        permalink=entry_permalink or None,
+        read_url=url_for(
+            'read_entry',
+            category_id=category_id,
+            feed_id=feed_id,
+            entry_id=entry_id
+        ),
+        unread_url=url_for(
+            'unread_entry',
+            category_id=category_id,
+            feed_id=feed_id,
+            entry_id=entry_id
+        ),
+        feed={
+            'title': feed.title,
+            'entries_url': url_for(
+                'feed_entries',
+                feed_id=feed_id,
+                _external=True
+            ),
+            'permalink': feed_permalink or None
+        }
     )
-    r.status_code = 404
-    return r
+
+
+@app.route('/feeds/<feed_id>/entries/<entry_id>/read/',
+           defaults={'category_id': '/'}, methods=['PUT'])
+@app.route('/<path:category_id>/feeds/<feed_id>/entries/<entry_id>/read',
+           methods=['PUT'])
+def read_entry(category_id, feed_id, entry_id):
+    stage = get_stage()
+    try:
+        feed, _, entry, _ = find_feed_and_entry(category_id, feed_id, entry_id)
+    except (InvalidCategoryPath, FeedNotFound, EntryNotFound):
+        r = jsonify(
+            error='entry-not-found',
+            message='Given entry does not exist'
+        )
+        r.status_code = 404
+        return r
+    entry.read = Mark(marked=True, updated_at=now())
+    stage.feeds[feed_id] = feed
+    return jsonify()
+
+
+@app.route('/feeds/<feed_id>/entries/<entry_id>/read/',
+           defaults={'category_id': '/'}, methods=['DELETE'])
+@app.route('/<path:category_id>/feeds/<feed_id>/entries/<entry_id>/read/',
+           methods=['DELETE'])
+def unread_entry(category_id, feed_id, entry_id):
+    stage = get_stage()
+    try:
+        feed, _, entry, _ = find_feed_and_entry(category_id, feed_id, entry_id)
+    except (InvalidCategoryPath, FeedNotFound, EntryNotFound):
+        r = jsonify(
+            error='entry-not-found',
+            message='Given entry does not exist'
+        )
+        r.status_code = 404
+        return r
+    entry.read = Mark(marked=False, updated_at=now())
+    stage.feeds[feed_id] = feed
+    return jsonify()

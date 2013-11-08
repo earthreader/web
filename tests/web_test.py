@@ -629,6 +629,24 @@ def test_category_all_entries(xmls):
         assert result['entries'][0]['title'] == 'Feed Two: Entry One'
 
 
+def test_entry_read_unread(xmls, fx_test_stage):
+    stage = fx_test_stage
+    with app.test_client() as client:
+        feed_three_id = get_hash('http://feedthree.com/feed/atom/')
+        test_entry_id = get_hash('http://feedthree.com/feed/atom/1/')
+        assert not stage.feeds[feed_three_id].entries[0].read
+        r = client.get('/feeds/' + feed_three_id + '/entries/' +
+                       test_entry_id + '/')
+        assert r.status_code == 200
+        result = json.loads(r.data)
+        r = client.put(result['read_url'])
+        assert r.status_code == 200
+        assert stage.feeds[feed_three_id].entries[0].read
+        r = client.delete(result['unread_url'])
+        assert r.status_code == 200
+        assert not stage.feeds[feed_three_id].entries[0].read
+
+
 def test_empty_category_all_entries(xmls):
     with app.test_client() as client:
         r = client.post('/', data=dict(title='test'))
