@@ -394,7 +394,7 @@ function getEntries(feed_url) {
 
 		if (obj.next_url) {
 			var nextLoader = main.find('.nextPage');
-			if (nextLoader.length == 0) {
+			if (nextLoader.length === 0) {
 				nextLoader = $('<div>');
 				nextLoader.addClass('nextPage');
 				nextLoader.text("Load next page");
@@ -403,7 +403,7 @@ function getEntries(feed_url) {
 			nextLoader.attr('data-next-url', obj.next_url);
 			main.append(nextLoader);
 		}
-		main.scrollTop(0);
+		$(window).scrollTop(0);
 	});
 }
 
@@ -422,7 +422,7 @@ function loadNextPage() {
 
 		var nextLoader;
 		if (obj.next_url) {
-			var nextLoader = main.find('.nextPage');
+			nextLoader = main.find('.nextPage');
 			if (nextLoader === null) {
 				nextLoader = $('<div>');
 				nextLoader.addClass('nextPage');
@@ -441,7 +441,7 @@ function autoNextPager(event) {
 	var main = $('[role=main]');
 	var nextPage = main.find('.nextPage');
 
-	if (nextPage.length == 0) {
+	if (nextPage.length === 0) {
 		return;
 	}
 
@@ -475,17 +475,17 @@ function clickFeed(event) {
 }
 
 function clickEntry(event) {
-	var target = event.target;
+	var target = $(event.target);
 	var main = $('[role=main]');
 
-	while (target.classList.contains('entry-title') === false) {
-		target = target.parentElement;
+	while (target.hasClass('entry-title') === false) {
+		target = target.parent();
 		if (target === null) {
 			return;
 		}
 	}
 
-	var entry = $(target.parentElement);
+	var entry = target.parent();
 	var entry_url = entry.attr('data-entries');
 
 
@@ -499,11 +499,8 @@ function clickEntry(event) {
 	getJSON(entry_url, function(obj) {
 		var i;
 		//set current marker
-		var list = main.find('.current');
-		for (i=0; i<list.length; i++) {
-			list[i].removeClass('current');
-		}
-		target.parentElement.addClass('current');
+		main.find('.current').removeClass('.current');
+		target.parent().addClass('current');
 
 		//remove content
 		contents = main.find('.entry-content');
@@ -532,7 +529,7 @@ function clickEntry(event) {
 		wrapper.append(bottom_bar);
 		entry.append(wrapper);
 
-		scrollToElement(main, entry);
+		$(window).scrollTop(entry.position().top);
 	});
 }
 
@@ -555,24 +552,24 @@ function keyboardShortcut(event) {
 
 	switch (event.keyCode) {
 		case 74: //j
-			var entry = main.find('.current').first();
-			if (entry.length == 0) {
+			entry = main.find('.current').first();
+			if (entry.length === 0) {
 				main.find('.entry .entry-title').first().click();
 				return;
 			}
-			var next = entry.next().first();
-			if (next.length == 0) {
+			next = entry.next().first();
+			if (next.length === 0) {
 				return;
 			}
 			next.find('.entry-title').click();
 			break;
 		case 75: //k
 			entry = main.find('.current').first();
-			if (entry.length == 0) {
+			if (entry.length === 0) {
 				return;
 			}
 			prev = entry.prev().last();
-			if (prev.length == 0 || prev.hasClass('entry')) {
+			if (prev.length === 0 || prev.hasClass('entry')) {
 				//close current
 				entry.click();
 			}
