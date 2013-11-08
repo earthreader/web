@@ -58,7 +58,6 @@ def tidy_iterators_up():
 
 
 def get_entries(feed_list, category_id):
-    tidy_iterators_up()
     stage = get_stage()
     url_token = request.args.get('url_token')
     feed_title = None
