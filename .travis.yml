@@ -23,7 +23,7 @@ script:
     python -c "from earthreader.web import app; print(app.test_client().get('/').data)" | python tests/html5check.py -h ||
     exit $?;
   fi
-- jshint .
+- jshint earthreader/web/static/js/master.js
 after_success:
 - if [ `python -c 'from platform import *; print(python_implementation())'` != 'PyPy' ]; then
     coveralls;
