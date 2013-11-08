@@ -189,8 +189,8 @@ function processForm(event) {
 
 	var data = target.serialize();
 	var after = target.attr('data-after');
+	var action = target.attr('action');
 	if (after === "makeFeedList") {
-		var action = target.attr('action');
 		try {
 			var current = $('[role=navigation] .feedlist .current');
 			if (target.attr('data-action') === 'addFeed') {
@@ -213,7 +213,9 @@ function processForm(event) {
 				//makeCategory(fold, res);
 				makeFeedList(res, fold);
 			}
-			target.reset();
+			target.each(function(){
+				this.reset();
+			});
 		});
 	} else {
 		post(target.attr(action), data, function(res) {
