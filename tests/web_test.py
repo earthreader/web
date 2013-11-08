@@ -2,14 +2,9 @@ try:
     from StringIO import StringIO
 except ImportError:
     from io import StringIO
-import atexit
 import datetime
-import glob
 import hashlib
-import os
-import os.path
 import re
-import tempfile
 import traceback
 try:
     import urllib2
