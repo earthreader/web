@@ -89,22 +89,6 @@ function post(url, parameter, onSuccess, onFail) {
 	xhr.send(parameter);
 }
 
-function serializeForm(form) {
-	//FIXME
-	var elements = form.querySelectorAll('input, textarea, select');
-	var serialized = [];
-
-	for (var i=0; i<elements.length; i++) {
-		if (elements[i].name) {
-			var name = encodeURIComponent(elements[i].name);
-			var value = encodeURIComponent(elements[i].value);
-			serialized.push(name + '=' + value);
-		}
-	}
-
-	return serialized.join('&');
-}
-
 function resizer(event) {
 	var name = event.animationName;
 
@@ -156,8 +140,8 @@ function removeCurrentSelected() {
 	var url = current.attr('data-remove-feed-url') || current.attr('data-remove-category-url');
 	if (url) {
 		var parentMenu = current;
-		while (parentMenu.classList.contains('fold') === false) {
-			parentMenu = parentMenu.parentElement;
+		while (parentMenu.hasClass('fold') === false) {
+			parentMenu = parentMenu.parent();
 			if (parentMenu === null) {
 				break;
 			}
@@ -203,7 +187,7 @@ function processForm(event) {
 	var target = $(event.target);
 	event.preventDefault();
 
-	var data = serializeForm(target);
+	var data = target.serialize();
 	var after = target.attr('data-after');
 	if (after === "makeFeedList") {
 		var action = target.action;
