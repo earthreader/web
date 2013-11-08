@@ -16,7 +16,7 @@ Element.prototype.addClass = function(name) {
 	if (this.classList.contains(name) === false) {
 		this.classList.add(name);
 	}
-}
+};
 
 function scrollToElement(parentElement, childElement) {
 	var x = 0;
@@ -59,7 +59,7 @@ function getJSON(url, onSuccess, onFail) {
 				}
 			}
 		}
-	}
+	};
 	xhr.send();
 }
 
@@ -90,7 +90,7 @@ function deleteJSON(url, onSuccess, onFail) {
 				}
 			}
 		}
-	}
+	};
 	xhr.send();
 }
 
@@ -113,7 +113,7 @@ function post(url, parameter, onSuccess, onFail) {
 				(onFail)(xhr);
 			}
 		}
-	}
+	};
 	xhr.send(parameter);
 }
 
