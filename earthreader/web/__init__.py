@@ -297,7 +297,7 @@ def add_feed(category_id):
                 subscription.alternate_uri = link.uri
     cursor.add(subscription)
     stage.subscriptions = subscriptions
-    feed_id = get_hash(feed_url) + '.xml'
+    feed_id = get_hash(feed_url)
     stage.feeds[feed_id] = feed
     return feeds(category_id)
 
