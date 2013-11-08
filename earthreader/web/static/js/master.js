@@ -332,10 +332,7 @@ function refreshFeedList() {
 
 function getAllEntries() {
 	var all_feed = $('[role=navigation] [data-action=all]');
-	var list = $('[role=navigation] .current');
-	for (var i=0; i<list.length; i++) {
-		list[i].removeClass('current');
-	}
+	$('[role=navigation] .current').removeClass('current');
 	all_feed.addClass('current');
 	getEntries(URLS.entries);
 }
@@ -593,7 +590,7 @@ $(function () {
 	var feedlist = navi.find('.feedlist');
 	feedlist.on('click', clickFeed);
 	persistent.on('click', '[data-action]', clickPersistentMenu);
-	persistent.on('click', toggleFolding);
+	persistent.on('click', '.header', toggleFolding);
 
 	var main = $('[role=main]');
 	main.on('click', '.entry-title', clickEntry);
