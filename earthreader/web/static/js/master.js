@@ -592,7 +592,8 @@ function changeTheme(name) {
 $(function () {
 	var navi = $('[role=navigation]');
 	var persistent = navi.find('.persistent');
-	navi.on('click', clickFeed);
+	var feedlist = navi.find('.feedlist');
+	feedlist.on('click', clickFeed);
 	persistent.on('click', '[data-action]', clickPersistentMenu);
 	persistent.on('click', toggleFolding);
 
