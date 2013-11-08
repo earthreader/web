@@ -71,7 +71,6 @@ body .wrapper {
 [role=main],
 [role=complementary] {
 	width: 100%;
-	transition: all .2s ease 0s;
 	overflow-x: hidden;
 	overflow-y: auto;
 }
@@ -269,6 +268,12 @@ input:not([type=button]):not([type=submit]):focus, textarea:focus {
 
 	.off-canvas-menu {
 		display: none;
+	}
+
+	[role=navigation],
+	[role=main],
+	[role=complementary] {
+		transition: all .2s ease 0s;
 	}
 
 	[role=navigation],

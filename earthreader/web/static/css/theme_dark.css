@@ -36,11 +36,6 @@ body {
 	background: rgb(43, 73, 63);
 }
 
-[role=navigation] li:not(.fold):hover,
-[role=complementary] li:not(.fold):hover {
-	background: rgb(60, 70, 60);
-}
-
 [role=main] article .entry-title {
 	background: rgb(43, 43, 43);
 }
@@ -49,10 +44,17 @@ body {
 	background: rgb(43, 73, 63);
 }
 
-[role=main] article .entry-title:hover {
-	background: rgb(65, 65, 75);
-}
-
 [role=main] article .entry-content {
 	background: rgb(20, 20, 20);
+}
+
+@media all and (min-width: 800px) {
+	[role=navigation] li:not(.fold):hover,
+	[role=complementary] li:not(.fold):hover {
+		background: rgb(60, 70, 60);
+	}
+
+	[role=main] article .entry-title:hover {
+		background: rgb(65, 65, 75);
+	}
 }

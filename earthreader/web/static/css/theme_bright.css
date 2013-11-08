@@ -30,11 +30,6 @@ body {
 	background: rgb(245, 245, 255);
 }
 
-[role=navigation] li:not(.fold):hover,
-[role=complementary] li:not(.fold):hover {
-	background: rgb(230, 230, 253);
-}
-
 [role=main] article .entry-title {
 	background: rgb(253, 253, 253);
 }
@@ -43,10 +38,17 @@ body {
 	background: rgb(243, 243, 253);
 }
 
-[role=main] article .entry-title:hover {
-	background: rgb(245, 245, 255);
-}
-
 [role=main] article .entry-content {
 	background: rgb(255, 255, 255);
+}
+
+@media all and (min-width: 800px) {
+	[role=navigation] li:not(.fold):hover,
+	[role=complementary] li:not(.fold):hover {
+		background: rgb(230, 230, 253);
+	}
+
+	[role=main] article .entry-title:hover {
+		background: rgb(245, 245, 255);
+	}
 }
