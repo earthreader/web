@@ -1,4 +1,3 @@
-import collections
 import datetime
 import hashlib
 try:
