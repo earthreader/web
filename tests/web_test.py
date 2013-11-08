@@ -642,6 +642,48 @@ def test_empty_category_all_entries(xmls):
         assert r.status_code == 200
 
 
+opml_with_non_exist_feed = '''
+<opml version="1.0">
+  <head>
+    <title>test opml</title>
+  </head>
+  <body>
+    <outline text="categoryone" title="categoryone">
+        <outline type="atom" text="Feed One" title="Feed One"
+        xmlUrl="http://feedone.com/feed/atom/" />
+        <outline type="atom" text="Non Exist" title="Non Exist"
+        xmlUrl="Non Exsist" />
+    </outline>
+  </body>
+</opml>
+'''
+
+
+@fixture
+def fx_non_exist_opml(fx_test_stage):
+    stage = fx_test_stage
+    feed_urls = ['http://feedone.com/feed/atom/']
+    generator = crawl(feed_urls, 1)
+    for result in generator:
+        feed_data = result[1][0]
+        feed_url = result[0]
+        feed_id = get_hash(feed_url)
+        stage.feeds[feed_id] = feed_data
+    stage.subscriptions = read(SubscriptionList, opml_with_non_exist_feed)
+
+
+def test_non_exist_feed(fx_non_exist_opml):
+    with app.test_client() as client:
+        r = client.get('/-categoryone/entries/')
+        assert r.status_code == 200
+        with_non_exist_feed_result = json.loads(r.data)
+        feed_one_id = get_hash('http://feedone.com/feed/atom/')
+        r = client.get('/-categoryone/feeds/' + feed_one_id + '/entries/')
+        feed_one_result = json.loads(r.data)
+        assert len(with_non_exist_feed_result['entries']) == \
+            len(feed_one_result['entries']) == 2
+
+
 @fixture
 def xmls_for_next(request, fx_test_stage):
     stage = fx_test_stage

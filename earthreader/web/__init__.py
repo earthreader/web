@@ -70,7 +70,10 @@ def get_entries(feed_list, category_id):
         feed_permalinks = {}
         sorting_pool = []
         for feed_id in feed_list:
-            feed = stage.feeds[feed_id]
+            try:
+                feed = stage.feeds[feed_id]
+            except KeyError:
+                continue
             feed_permalink = feed_permalinks.get(feed_id)
             if not feed_permalink:
                 for link in feed.links:
