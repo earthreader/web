@@ -296,7 +296,9 @@ function processForm(event) {
 			if (target.getAttribute('data-action') === 'addFeed') {
 				action = current.getAttribute('data-add-feed-url');
 			} else if (target.getAttribute('data-action') === 'addCategory') {
-				action = current.getAttribute('data-add-category-url');
+				action = current.getAttribute('data-add-category-url') ||
+				current.parentElement.priviousSibling.getAttribute('data-add-category-url') ||
+				target.action;
 			}
 		} catch (err) {
 		}
