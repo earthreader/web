@@ -91,13 +91,13 @@ body .wrapper {
 [role=navigation] {
 	left: 0;
 	box-shadow: 1px 0 2px #aaa;
-	margin-left: -100%;
+	margin-left: -90%;
 }
 
 [role=complementary] {
 	right: 0;
 	box-shadow: -1px 0 2px #aaa;
-	margin-right: -100%;
+	margin-right: -90%;
 }
 
 [role=main] {
@@ -271,18 +271,22 @@ input:not([type=button]):not([type=submit]):focus, textarea:focus {
 		display: none;
 	}
 
-	[role=navigation] {
+	[role=navigation],
+	[role=complementary] {
 		width: 20%;
-		margin-left: 0;
 	}
 
-	[role=main] {
-		width: 80%;
+	[role=navigation] {
 		margin-left: 0;
 	}
 
 	[role=complementary] {
-		width: 20%;
+		margin-right: -20%;
+	}
+
+	[role=main] {
+		width: 80%;
+		margin-left: 20%;
 	}
 
 	.side-open [role=navigation] {
@@ -291,10 +295,6 @@ input:not([type=button]):not([type=submit]):focus, textarea:focus {
 
 	.side-open [role=main] {
 		margin-left: 0;
-	}
-
-	.side-open [role=complementary] {
-		width: 20%;
 	}
 
 	[role=main] .entry-title time,
