@@ -148,7 +148,7 @@ function clickPersistentMenu(event) {
 	if (["input", "textarea"].indexOf(target.localName) >= 0) {
 		return;
 	}
-	while (target.getAttribute('data-action') == null) {
+	while (target.getAttribute('data-action') === null) {
 		target = target.parentElement;
 		if (target === null) {
 			return;
@@ -169,7 +169,7 @@ function clickComplementaryMenu(event) {
 		return;
 	}
 
-	while (target.getAttribute('data-action') == null) {
+	while (target.getAttribute('data-action') === null) {
 		target = target.parentElement;
 		if (target === null) {
 			return;
@@ -193,9 +193,9 @@ function removeCurrentSelected() {
 	var url = current.getAttribute('data-remove-feed-url') || current.getAttribute('data-remove-category-url');
 	if (url) {
 		var parentMenu = current;
-		while (parentMenu.classList.contains('fold') == false) {
+		while (parentMenu.classList.contains('fold') === false) {
 			parentMenu = parentMenu.parentElement;
-			if (parentMenu == null) {
+			if (parentMenu === null) {
 				break;
 			}
 		}
@@ -208,7 +208,7 @@ function removeCurrentSelected() {
 
 function toggleMenu(event) {
 	var target = event.target;
-	while (target.classList.contains('off-canvas-menu') == false) {
+	while (target.classList.contains('off-canvas-menu') === false) {
 		target = target.parentElement;
 		if (target === null) {
 			return;
@@ -221,7 +221,7 @@ function toggleMenu(event) {
 
 function toggleSide(event) {
 	var target = event.target;
-	while (target.classList.contains('off-canvas-side') == false) {
+	while (target.classList.contains('off-canvas-side') === false) {
 		target = target.parentElement;
 		if (target === null) {
 			return;
@@ -234,7 +234,7 @@ function toggleSide(event) {
 
 function toggleFolding(event) {
 	var target = event.target;
-	while (target.classList.contains('header') == false) {
+	while (target.classList.contains('header') === false) {
 		target = target.parentElement;
 		if (target === null) {
 			return;
@@ -274,7 +274,7 @@ function processForm(event) {
 		} catch (err) {
 		}
 		post(action, data, function(res) {
-			if (current == null) {
+			if (current === null) {
 				makeFeedList(res);
 			} else {
 				var fold = current.nextElementSibling;
