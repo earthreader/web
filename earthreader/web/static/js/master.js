@@ -447,8 +447,6 @@ function autoNextPager(event) {
 	var screenBottom = $(window).scrollTop() + $(window).height();
 	var pagerTop = nextPage.offset().top;
 
-	console.log(screenBottom - pagerTop);
-
 	if (screenBottom >= pagerTop) {
 		loadNextPage();
 	}
@@ -479,13 +477,6 @@ function clickEntry(event) {
 	var target = $(event.target);
 	var main = $('[role=main]');
 
-	while (target.hasClass('entry-title') === false) {
-		target = target.parent();
-		if (target === null) {
-			return;
-		}
-	}
-
 	var entry = target.parent();
 	var entry_url = entry.attr('data-entries');
 
@@ -500,7 +491,7 @@ function clickEntry(event) {
 	getJSON(entry_url, function(obj) {
 		var i;
 		//set current marker
-		main.find('.current').removeClass('.current');
+		main.find('.current').removeClass('current');
 		target.parent().addClass('current');
 
 		//remove content
@@ -602,7 +593,7 @@ $(function () {
 	persistent.on('click', toggleFolding);
 
 	var main = $('[role=main]');
-	main.on('click', clickEntry);
+	main.on('click', '.entry-title', clickEntry);
 
 	var side = $('[role=complementary]');
 	side.on('click', clickComplementaryMenu);
@@ -612,7 +603,7 @@ $(function () {
 	$(document).on('click', 'a', clickLink);
 
 	$(document).on('submit', 'form', processForm);
-	$(document).on('keydown', keyboardShortcut);
+	$(window).on('keydown', keyboardShortcut);
 	$(window).on('scroll', autoNextPager);
 
 	//FIXME: clean it
