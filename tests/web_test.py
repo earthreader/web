@@ -279,7 +279,7 @@ def test_all_feeds(xmls):
                 'feed_entry',
                 feed_id=feed_id,
                 entry_id=get_hash('http://feedthree.com/feed/atom/1/'),
-                _external=True
+                _external=True,
             )
         assert entries[0]['updated'] == '2013-08-21 07:49:20+07:00'
         r = client.get(entries[0]['entry_url'])
@@ -629,6 +629,14 @@ def test_category_all_entries(xmls):
         assert result['entries'][0]['title'] == 'Feed Two: Entry One'
 
 
+def test_empty_category_all_entries(xmls):
+    with app.test_client() as client:
+        r = client.post('/', data=dict(title='test'))
+        assert r.status_code == 200
+        r = client.get('/-test/entries/')
+        assert r.status_code == 200
+
+
 def test_entry_read_unread(xmls, fx_test_stage):
     stage = fx_test_stage
     with app.test_client() as client:
@@ -647,12 +655,30 @@ def test_entry_read_unread(xmls, fx_test_stage):
         assert not stage.feeds[feed_three_id].entries[0].read
 
 
-def test_empty_category_all_entries(xmls):
+def test_entries_filtering(xmls):
     with app.test_client() as client:
-        r = client.post('/', data=dict(title='test'))
+        feed_three_id = get_hash('http://feedone.com/feed/atom/')
+        test_entry_id = get_hash('http://feedone.com/feed/atom/1/')
+        r = client.get('/feeds/' + feed_three_id + '/entries/' +
+                       test_entry_id + '/')
         assert r.status_code == 200
-        r = client.get('/-test/entries/')
+        result = json.loads(r.data)
+        r = client.put(result['read_url'])
         assert r.status_code == 200
+        r = client.get('/feeds/' + feed_three_id + '/entries/?read=True')
+        assert r.status_code == 200
+        read_result = json.loads(r.data)
+        assert len(read_result['entries'])
+        assert read_result['entries'][0]['title'] == 'Feed One: Entry One'
+        assert read_result['entries'][0]['read'] == True
+        r = client.get('/feeds/' + feed_three_id + '/entries/?read=False')
+        unread_result = json.loads(r.data)
+        assert len(unread_result['entries'])
+        assert unread_result['entries'][0]['title'] == 'Feed One: Entry Two'
+        assert unread_result['entries'][0]['read'] == False
+        r = client.get('/feeds/' + feed_three_id + '/entries/')
+        not_filtered = json.loads(r.data)
+        assert len(not_filtered['entries']) == 2
 
 
 opml_with_non_exist_feed = '''

@@ -69,7 +69,11 @@ def tidy_iterators_up():
     iterators = dict(lists)
 
 
-def get_entries(feed_list, category_id):
+def to_bool(str):
+    return str.strip().lower() == 'true'
+
+
+def get_entries(feed_list, category_id, read):
     stage = get_stage()
     url_token = request.args.get('url_token')
     feed_title = None
@@ -97,8 +101,17 @@ def get_entries(feed_list, category_id):
                     feed_permalinks[feed_id] = feed.id
                     feed_permalink = feed.id
             for entry in feed.entries:
-                sorting_pool.append((feed.title, feed_id,
-                                    feed_permalink, entry))
+                if not read:
+                    sorting_pool.append(
+                        (feed.title, feed_id, feed_permalink, entry))
+                elif to_bool(read):
+                    (sorting_pool.append(
+                        (feed.title, feed_id, feed_permalink, entry))
+                     if entry.read else None)
+                else:
+                    (sorting_pool.append(
+                        (feed.title, feed_id, feed_permalink, entry))
+                     if not entry.read else None)
         sorting_pool.sort(key=lambda entry: entry[3].updated_at,
                           reverse=True)
         it = iter(sorting_pool)
@@ -133,10 +146,11 @@ def get_entries(feed_list, category_id):
                 category_id=category_id,
                 feed_id=feed_id,
                 entry_id=get_hash(entry.id),
-                _external=True
+                _external=True,
             ),
             'permalink': entry_permalink or None,
             'updated': entry.updated_at.__str__(),
+            'read': entry.read.marked if entry.read else False,
             'feed': {
                 'title': feed_title,
                 'entries_url': url_for(
@@ -406,15 +420,9 @@ def feed_entries(category_id, feed_id):
         )
         r.status_code = 404
         return r
-    try:
-        feed_title, entries, url_token = get_entries([feed_id], category_id)
-    except KeyError:
-        r = jsonify(
-            error='feed-not-found',
-            message='Given feed hash not found'
-        )
-        r.status_code = 404
-        return r
+    read = request.args.get('read')
+    feed_title, entries, url_token = get_entries([feed_id], category_id,
+                                                 read)
     if len(entries) < 20:
         next_url = None
     else:
@@ -448,7 +456,8 @@ def category_entries(category_id):
     uris = []
     for subscription in subscriptions:
         uris.append(get_hash(subscription.feed_uri))
-    _, entries, url_token = get_entries(uris, category_id)
+    read = request.args.get('read')
+    _, entries, url_token = get_entries(uris, category_id, read)
     if len(entries) < 20:
         next_url = None
     else:
@@ -538,7 +547,7 @@ def feed_entry(category_id, feed_id, entry_id):
 
 @app.route('/feeds/<feed_id>/entries/<entry_id>/read/',
            defaults={'category_id': '/'}, methods=['PUT'])
-@app.route('/<path:category_id>/feeds/<feed_id>/entries/<entry_id>/read',
+@app.route('/<path:category_id>/feeds/<feed_id>/entries/<entry_id>/read/',
            methods=['PUT'])
 def read_entry(category_id, feed_id, entry_id):
     stage = get_stage()
