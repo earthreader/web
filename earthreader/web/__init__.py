@@ -1,7 +1,5 @@
-import collections
 import datetime
 import hashlib
-import os.path
 try:
     import urllib2
 except ImportError:
@@ -10,12 +8,13 @@ except ImportError:
 from flask import Flask, jsonify, render_template, request, url_for
 from libearth.codecs import Rfc3339
 from libearth.compat import binary
-from libearth.feed import Feed
-from libearth.feedlist import (Feed as FeedOutline,
-                               FeedCategory as CategoryOutline, FeedList)
+from libearth.feed import Mark
 from libearth.parser.autodiscovery import autodiscovery, FeedUrlNotFoundError
 from libearth.parser.heuristic import get_format
-from libearth.schema import read, write
+from libearth.repository import FileSystemRepository
+from libearth.session import Session
+from libearth.stage import Stage
+from libearth.subscribe import Category, Subscription, SubscriptionList
 from libearth.tz import now
 
 from .wsgi import MethodRewriteMiddleware
@@ -26,29 +25,34 @@ app.wsgi_app = MethodRewriteMiddleware(app.wsgi_app)
 
 
 app.config.update(dict(
-    OPML='earthreader.opml',
     ALLFEED='All Feeds',
 ))
 
 
+class InvalidCategoryPath(ValueError):
+    """Rise when the category path is not valid"""
+
+
+class FeedNotFound(ValueError):
+    """Rise when the feed is not reachable"""
+
+
+class EntryNotFound(ValueError):
+    """Rise when the entry is not reachable"""
+
+
+def get_stage():
+    session = Session()
+    repo = FileSystemRepository(app.config['REPOSITORY'])
+    return Stage(session, repo)
+
+
 def feedlist_exists():
-    REPOSITORY = app.config['REPOSITORY']
-    OPML = app.config['OPML']
-    if not os.path.isfile(os.path.join(REPOSITORY, OPML)):
+    stage = get_stage()
+    if stage.subscriptions:
+        return True
+    else:
         return False
-    return True
-
-
-def get_feedlist():
-    REPOSITORY = app.config['REPOSITORY']
-    OPML = app.config['OPML']
-    if not os.path.isfile(os.path.join(REPOSITORY, OPML)):
-        if not os.path.isdir(REPOSITORY):
-            os.mkdir(REPOSITORY)
-        feed_list = FeedList()
-        feed_list.save_file(os.path.join(REPOSITORY, OPML))
-    feed_list = FeedList(os.path.join(REPOSITORY, OPML))
-    return feed_list
 
 
 iterators = {}
@@ -66,7 +70,7 @@ def tidy_iterators_up():
 
 
 def get_entries(feed_list, category_id):
-    REPOSITORY = app.config['REPOSITORY']
+    stage = get_stage()
     url_token = request.args.get('url_token')
     feed_title = None
     it = None
@@ -78,21 +82,23 @@ def get_entries(feed_list, category_id):
         feed_permalinks = {}
         sorting_pool = []
         for feed_id in feed_list:
-            with open(os.path.join(REPOSITORY, feed_id + '.xml')) as f:
-                feed = read(Feed, f)
-                feed_permalink = feed_permalinks.get(feed_id)
+            try:
+                feed = stage.feeds[feed_id]
+            except KeyError:
+                continue
+            feed_permalink = feed_permalinks.get(feed_id)
+            if not feed_permalink:
+                for link in feed.links:
+                    if link.relation == 'alternate' and \
+                            link.mimetype == 'text/html':
+                        feed_permalinks[feed_id] = link.uri
+                        feed_permalink = link.uri
                 if not feed_permalink:
-                    for link in feed.links:
-                        if link.relation == 'alternate' and \
-                                link.mimetype == 'text/html':
-                            feed_permalinks[feed_id] = link.uri
-                            feed_permalink = link.uri
-                    if not feed_permalink:
-                        feed_permalinks[feed_id] = feed.id
-                        feed_permalink = feed.id
-                for entry in feed.entries:
-                    sorting_pool.append((feed.title, feed_id,
-                                        feed_permalink, entry))
+                    feed_permalinks[feed_id] = feed.id
+                    feed_permalink = feed.id
+            for entry in feed.entries:
+                sorting_pool.append((feed.title, feed_id,
+                                    feed_permalink, entry))
         sorting_pool.sort(key=lambda entry: entry[3].updated_at,
                           reverse=True)
         it = iter(sorting_pool)
@@ -156,10 +162,10 @@ def get_all_feeds(category, path=None):
     else:
         feed_path = path
     for child in category:
-        if isinstance(child, FeedOutline):
-            feed_id = get_hash(child.xml_url)
+        if isinstance(child, Subscription):
+            feed_id = get_hash(child.feed_uri)
             feeds.append({
-                'title': child.title,
+                'title': child._title,
                 'entries_url': url_for(
                     'feed_entries',
                     category_id=feed_path,
@@ -173,37 +179,37 @@ def get_all_feeds(category, path=None):
                     _external=True
                 )
             })
-        elif isinstance(child, CategoryOutline):
+        elif isinstance(child, Category):
             categories.append({
-                'title': child.title,
+                'title': child._title,
                 'feeds_url': url_for(
                     'feeds',
-                    category_id=feed_path + '/-' + child.title
-                    if path else '-' + child.title,
+                    category_id=feed_path + '/-' + child._title
+                    if path else '-' + child._title,
                     _external=True
                 ),
                 'entries_url': url_for(
                     'category_entries',
-                    category_id=feed_path + '/-' + child.title
-                    if path else '-' + child.title,
+                    category_id=feed_path + '/-' + child._title
+                    if path else '-' + child._title,
                     _external=True
                 ),
                 'add_feed_url': url_for(
                     'add_feed',
-                    category_id=feed_path + '/-' + child.title
-                    if path else '-' + child.title,
+                    category_id=feed_path + '/-' + child._title
+                    if path else '-' + child._title,
                     _external=True
                 ),
                 'add_category_url': url_for(
                     'add_category',
-                    category_id=feed_path + '/-' + child.title
-                    if path else '-' + child.title,
+                    category_id=feed_path + '/-' + child._title
+                    if path else '-' + child._title,
                     _external=True
                 ),
                 'remove_category_url': url_for(
                     'delete_category',
-                    category_id=feed_path + '/-' + child.title
-                    if path else '-' + child.title,
+                    category_id=feed_path + '/-' + child._title
+                    if path else '-' + child._title,
                     _external=True
                 ),
             })
@@ -211,55 +217,26 @@ def get_all_feeds(category, path=None):
 
 
 def check_path_valid(category_id, return_category_parent=False):
+    stage = get_stage()
+    if not stage.subscriptions:
+        subscriptions = SubscriptionList()
+        stage.subscriptions = subscriptions
     if category_id == '/':
-        feed_list = get_feedlist()
-        return feed_list, feed_list, None
+        subscriptions = stage.subscriptions
+        return subscriptions, subscriptions, None
+    categories = category_id.split('/')
     if return_category_parent:
-        category_list = category_id.split('/')
-        target = category_list.pop()[1:]
-        categories = collections.deque([category[1:] for category
-                                       in category_list])
+        target = categories.pop()[1:]
     else:
         target = None
-        categories = collections.deque([category[1:] for category in
-                                       category_id.split('/')])
-    feed_list = get_feedlist()
+    feed_list = stage.subscriptions
     cursor = feed_list
-    while categories:
-        is_searched = False
-        looking_for = categories.popleft()
-        for category in cursor:
-            if category.text == looking_for:
-                is_searched = True
-                cursor = category
-                break
-        if not is_searched:
-            return None, None, None
+    for child in categories:
+        try:
+            cursor = cursor.categories[child[1:]]
+        except KeyError:
+            raise InvalidCategoryPath('Category path is not valid')
     return feed_list, cursor, target
-
-
-def find_feed_in_opml(feed_id, category, parent_categories=[], result=[]):
-    categories = []
-    if parent_categories:
-        feed_path = '/'.join(parent_categories)
-    else:
-        feed_path = '/'
-    for child in category:
-        if isinstance(child, FeedOutline):
-            current_feed_id = hashlib.sha1(binary(child.xml_url)).hexdigest()
-            if current_feed_id == feed_id:
-                result.append(feed_path)
-        elif isinstance(child, CategoryOutline):
-            categories.append(child)
-    for category in categories:
-        find_feed_in_opml(
-            feed_id,
-            category,
-            parent_categories.append(category.title)
-            if parent_categories else [category.title],
-            result
-        )
-    return result
 
 
 @app.route('/', methods=['GET'])
@@ -270,8 +247,9 @@ def index():
 @app.route('/feeds/', defaults={'category_id': '/'})
 @app.route('/<path:category_id>/feeds/')
 def feeds(category_id):
-    feed_list, cursor, _ = check_path_valid(category_id)
-    if not isinstance(feed_list, FeedList):
+    try:
+        feed_list, cursor, _ = check_path_valid(category_id)
+    except InvalidCategoryPath:
         r = jsonify(
             error='category-path-invalid',
             message='Given category path is not valid'
@@ -285,10 +263,10 @@ def feeds(category_id):
 @app.route('/feeds/', methods=['POST'], defaults={'category_id': '/'})
 @app.route('/<path:category_id>/feeds/', methods=['POST'])
 def add_feed(category_id):
-    REPOSITORY = app.config['REPOSITORY']
-    feed_list, cursor, _ = check_path_valid(category_id)
-    if (not isinstance(cursor, CategoryOutline) and
-            not isinstance(cursor, FeedList)):
+    stage = get_stage()
+    try:
+        subscriptions, cursor, _ = check_path_valid(category_id)
+    except InvalidCategoryPath:
         r = jsonify(
             error='category-path-invalid',
             message='Given category path is not valid'
@@ -325,44 +303,46 @@ def add_feed(category_id):
     format = get_format(xml)
     result = format(xml, feed_url)
     feed = result[0]
-    outline = FeedOutline('atom', feed.title.value, feed_url)
+    subscription = Subscription(type='atom', label=feed.title.value,
+                                _title=feed.title.value,
+                                feed_uri=feed_url)
     for link in feed.links:
             if link.relation == 'alternate' and \
                     link.mimetype == 'text/html':
-                outline.blog_url = link.uri
-    cursor.append(outline)
-    feed_list.save_file()
-    file_name = get_hash(feed_url) + '.xml'
-    with open(os.path.join(REPOSITORY, file_name), 'w') as f:
-        for chunk in write(feed, indent='    ', canonical_order=True):
-            f.write(chunk)
+                subscription.alternate_uri = link.uri
+    cursor.add(subscription)
+    stage.subscriptions = subscriptions
+    feed_id = get_hash(feed_url)
+    stage.feeds[feed_id] = feed
     return feeds(category_id)
 
 
 @app.route('/', methods=['POST'], defaults={'category_id': '/'})
 @app.route('/<path:category_id>/', methods=['POST'])
 def add_category(category_id):
-    feed_list, cursor, _ = check_path_valid(category_id)
-    if (not isinstance(cursor, CategoryOutline) and
-            not isinstance(cursor, FeedList)):
+    stage = get_stage()
+    try:
+        subscriptions, cursor, _ = check_path_valid(category_id)
+    except InvalidCategoryPath:
         r = jsonify(
             error='category-path-invalid',
             message='Given category path is not valid'
         )
         r.status_code = 404
         return r
-
     title = request.form['title']
-    outline = CategoryOutline(title)
-    cursor.append(outline)
-    feed_list.save_file()
+    outline = Category(label=title, _title=title)
+    cursor.add(outline)
+    stage.subscriptions = subscriptions
     return feeds(category_id)
 
 
 @app.route('/<path:category_id>/', methods=['DELETE'])
 def delete_category(category_id):
-    feed_list, cursor, target = check_path_valid(category_id, True)
-    if not cursor:
+    stage = get_stage()
+    try:
+        subscriptions, cursor, target = check_path_valid(category_id, True)
+    except InvalidCategoryPath:
         r = jsonify(
             error='category-path-invalid',
             message='Given category path is not valid'
@@ -370,10 +350,10 @@ def delete_category(category_id):
         r.status_code = 404
         return r
     for child in cursor:
-        if isinstance(child, CategoryOutline):
-            if child.text == target:
+        if isinstance(child, Category):
+            if child.label == target:
                 cursor.remove(child)
-    feed_list.save_file()
+    stage.subscriptions = subscriptions
     index = category_id.rfind('/')
     if index == -1:
         return feeds('/')
@@ -385,9 +365,10 @@ def delete_category(category_id):
            defaults={'category_id': '/'})
 @app.route('/<path:category_id>/feeds/<feed_id>/', methods=['DELETE'])
 def delete_feed(category_id, feed_id):
-    REPOSITORY = app.config['REPOSITORY']
-    feed_list, cursor, _ = check_path_valid(category_id)
-    if not cursor:
+    stage = get_stage()
+    try:
+        subscriptions, cursor, _ = check_path_valid(category_id)
+    except InvalidCategoryPath:
         r = jsonify(
             error='category-path-invalid',
             message='Given category path is not valid'
@@ -395,12 +376,13 @@ def delete_feed(category_id, feed_id):
         r.status_code = 404
         return r
     target = None
-    for feed in cursor:
-        if isinstance(feed, FeedOutline):
-            if feed_id == hashlib.sha1(binary(feed.xml_url)).hexdigest():
-                target = feed
+    for subscription in cursor:
+        if isinstance(subscription, Subscription):
+            if feed_id == hashlib.sha1(
+                    binary(subscription.feed_uri)).hexdigest():
+                target = subscription
     if target:
-        cursor.remove(target)
+        cursor.discard(target)
     else:
         r = jsonify(
             error='feed-not-found-in-path',
@@ -408,23 +390,31 @@ def delete_feed(category_id, feed_id):
         )
         r.status_code = 400
         return r
-    feed_list.save_file()
-    if not find_feed_in_opml(feed_id, feed_list):
-        os.remove(os.path.join(REPOSITORY, feed_id + '.xml'))
+    stage.subscriptions = subscriptions
     return feeds(category_id)
 
 
 @app.route('/feeds/<feed_id>/entries/', defaults={'category_id': '/'})
 @app.route('/<path:category_id>/feeds/<feed_id>/entries/')
 def feed_entries(category_id, feed_id):
-    if not check_path_valid(category_id)[0]:
+    try:
+        check_path_valid(category_id)
+    except InvalidCategoryPath:
         r = jsonify(
             error='category-path-invalid',
             message='Given category path is not valid'
         )
         r.status_code = 404
         return r
-    feed_title, entries, url_token = get_entries([feed_id], category_id)
+    try:
+        feed_title, entries, url_token = get_entries([feed_id], category_id)
+    except KeyError:
+        r = jsonify(
+            error='feed-not-found',
+            message='Given feed hash not found'
+        )
+        r.status_code = 404
+        return r
     if len(entries) < 20:
         next_url = None
     else:
@@ -445,18 +435,20 @@ def feed_entries(category_id, feed_id):
 @app.route('/entries/', defaults={'category_id': '/'})
 @app.route('/<path:category_id>/entries/')
 def category_entries(category_id):
-    lst, cursor, target = check_path_valid(category_id)
-    if not isinstance(lst, FeedList):
+    try:
+        subscriptions, cursor, target = check_path_valid(category_id)
+    except InvalidCategoryPath:
         r = jsonify(
             error='category-path-invalid',
             message='Given category was not found'
         )
         r.status_code = 404
         return r
-    feed_list = []
-    for child in cursor.get_all_feeds():
-        feed_list.append(get_hash(child.xml_url))
-    _, entries, url_token = get_entries(feed_list, category_id)
+    subscriptions = cursor.recursive_subscriptions
+    uris = []
+    for subscription in subscriptions:
+        uris.append(get_hash(subscription.feed_uri))
+    _, entries, url_token = get_entries(uris, category_id)
     if len(entries) < 20:
         next_url = None
     else:
@@ -473,64 +465,112 @@ def category_entries(category_id):
     )
 
 
+def find_feed_and_entry(category_id, feed_id, entry_id):
+    stage = get_stage()
+    check_path_valid(category_id)
+    try:
+        feed = stage.feeds[feed_id]
+    except KeyError:
+        raise FeedNotFound('The feed is not reachable')
+    feed_permalink = None
+    for link in feed.links:
+        if link.relation == 'alternate'\
+           and link.mimetype == 'text/html':
+            feed_permalink = link.uri
+        if not feed_permalink:
+            feed_permalink = feed.id
+    for entry in feed.entries:
+        entry_permalink = None
+        for link in entry.links:
+            if link.relation == 'alternate'\
+               and link.mimetype == 'text/html':
+                entry_permalink = link.uri
+        if not entry_permalink:
+            entry_permalink = entry.id
+        if entry_id == get_hash(entry.id):
+            return feed, feed_permalink, entry, entry_permalink
+    raise EntryNotFound('The entry is not reachable')
+
+
 @app.route('/feeds/<feed_id>/entries/<entry_id>/',
            defaults={'category_id': '/'})
 @app.route('/<path:category_id>/feeds/<feed_id>/entries/<entry_id>/')
 def feed_entry(category_id, feed_id, entry_id):
-    if not check_path_valid(category_id)[0]:
-        r = jsonify(
-            error='category-path-invalid',
-            message='Given category path is not valid'
-        )
-        r.status_code = 404
-        return r
-    REPOSITORY = app.config['REPOSITORY']
     try:
-        with open(os.path.join(REPOSITORY, feed_id + '.xml')) as f:
-            feed = read(Feed, f)
-            feed_permalink = None
-            for link in feed.links:
-                if link.relation == 'alternate'\
-                   and link.mimetype == 'text/html':
-                    feed_permalink = link.uri
-                if not feed_permalink:
-                    feed_permalink = feed.id
-            for entry in feed.entries:
-                entry_permalink = None
-                for link in entry.links:
-                    if link.relation == 'alternate'\
-                       and link.mimetype == 'text/html':
-                        entry_permalink = link.uri
-                if not entry_permalink:
-                    entry_permalink = entry.id
-                if entry_id == get_hash(entry.id):
-                    return jsonify(
-                        title=entry.title,
-                        content=entry.content.sanitized_html
-                        if entry.content else entry.summary.sanitized_html,
-                        updated=entry.updated_at.__str__(),
-                        permalink=entry_permalink or None,
-                        feed={
-                            'title': feed.title,
-                            'entries_url': url_for(
-                                'feed_entries',
-                                feed_id=feed_id,
-                                _external=True
-                            ),
-                            'permalink': feed_permalink or None
-                        }
-                    )
-            r = jsonify(
-                error='entry-not-found',
-                message='Given entry does not exist'
-            )
-            r.status_code = 404
-            return r
-
-    except IOError:
+        feed, feed_permalink, entry, entry_permalink = \
+            find_feed_and_entry(category_id, feed_id, entry_id)
+    except (InvalidCategoryPath, FeedNotFound, EntryNotFound):
         r = jsonify(
-            error='feed-not-found',
-            message='Given feed does not exist'
+            error='entry-not-found',
+            message='Given entry does not exist'
         )
         r.status_code = 404
         return r
+    return jsonify(
+        title=entry.title,
+        content=entry.content.sanitized_html
+        if entry.content else entry.summary.sanitized_html,
+        updated=entry.updated_at.__str__(),
+        permalink=entry_permalink or None,
+        read_url=url_for(
+            'read_entry',
+            category_id=category_id,
+            feed_id=feed_id,
+            entry_id=entry_id
+        ),
+        unread_url=url_for(
+            'unread_entry',
+            category_id=category_id,
+            feed_id=feed_id,
+            entry_id=entry_id
+        ),
+        feed={
+            'title': feed.title,
+            'entries_url': url_for(
+                'feed_entries',
+                feed_id=feed_id,
+                _external=True
+            ),
+            'permalink': feed_permalink or None
+        }
+    )
+
+
+@app.route('/feeds/<feed_id>/entries/<entry_id>/read/',
+           defaults={'category_id': '/'}, methods=['PUT'])
+@app.route('/<path:category_id>/feeds/<feed_id>/entries/<entry_id>/read',
+           methods=['PUT'])
+def read_entry(category_id, feed_id, entry_id):
+    stage = get_stage()
+    try:
+        feed, _, entry, _ = find_feed_and_entry(category_id, feed_id, entry_id)
+    except (InvalidCategoryPath, FeedNotFound, EntryNotFound):
+        r = jsonify(
+            error='entry-not-found',
+            message='Given entry does not exist'
+        )
+        r.status_code = 404
+        return r
+    entry.read = Mark(marked=True, updated_at=now())
+    stage.feeds[feed_id] = feed
+    return jsonify()
+
+
+@app.route('/feeds/<feed_id>/entries/<entry_id>/read/',
+           defaults={'category_id': '/'}, methods=['DELETE'])
+@app.route('/<path:category_id>/feeds/<feed_id>/entries/<entry_id>/read/',
+           methods=['DELETE'])
+def unread_entry(category_id, feed_id, entry_id):
+    stage = get_stage()
+    try:
+        feed, _, entry, _ = find_feed_and_entry(category_id, feed_id, entry_id)
+    except (InvalidCategoryPath, FeedNotFound, EntryNotFound):
+        r = jsonify(
+            error='entry-not-found',
+            message='Given entry does not exist'
+        )
+        r.status_code = 404
+        return r
+    entry.read = Mark(marked=False, updated_at=now())
+    stage.feeds[feed_id] = feed
+    return jsonify()

@@ -1,23 +1,3 @@
-Element.prototype.toggleClass = function(name) {
-	if (this.classList.contains(name)) {
-		this.classList.remove(name);
-	} else {
-		this.classList.add(name);
-	}
-};
-
-Element.prototype.removeClass = function(name) {
-	if (this.classList.contains(name)) {
-		this.classList.remove(name);
-	}
-};
-
-Element.prototype.addClass = function(name) {
-	if (this.classList.contains(name) === false) {
-		this.classList.add(name);
-	}
-}
-
 function scrollToElement(parentElement, childElement) {
 	parentElement.scrollTop(parentElement.scrollTop() + childElement.offset().top - parentElement.offset().top);
 	parentElement.scrollLeft(parentElement.scrollLeft() + childElement.offset().left - parentElement.offset().left);
@@ -613,7 +593,7 @@ $(function () {
 	var navi = $('[role=navigation]');
 	var persistent = navi.find('.persistent');
 	navi.on('click', clickFeed);
-	persistent.on('click', clickPersistentMenu);
+	persistent.on('click', '[data-action]', clickPersistentMenu);
 	persistent.on('click', toggleFolding);
 
 	var main = $('[role=main]');
