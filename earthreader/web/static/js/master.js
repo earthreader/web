@@ -176,13 +176,13 @@ function toggleMenu(event) {
 
 function toggleSide(event) {
 	closeMenu();
-	document.body.toggleClass('side-open');
+	$(document.body).toggleClass('side-open');
 }
 
 function toggleFolding(event) {
-	var target = event.target;
-	while (target.classList.contains('header') == false) {
-		target = target.parentElement;
+	var target = $(event.target);
+	while (target.hasClass('header') == false) {
+		target = target.parent();
 		if (target === null) {
 			return;
 		}
@@ -192,11 +192,11 @@ function toggleFolding(event) {
 }
 
 function closeMenu() {
-	document.body.removeClass('menu-open');
+	$(document.body).removeClass('menu-open');
 }
 
 function closeSide() {
-	document.body.removeClass('side-open');
+	$(document.body).removeClass('side-open');
 }
 
 function processForm(event) {
