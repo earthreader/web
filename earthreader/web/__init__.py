@@ -57,7 +57,6 @@ def tidy_iterators_up():
 
 
 def get_entries(feed_list, category_id):
-    tidy_iterators_up()
     stage = get_stage()
     url_token = request.args.get('url_token')
     feed_title = None
@@ -387,7 +386,15 @@ def feed_entries(category_id, feed_id):
         )
         r.status_code = 404
         return r
-    feed_title, entries, url_token = get_entries([feed_id], category_id)
+    try:
+        feed_title, entries, url_token = get_entries([feed_id], category_id)
+    except KeyError:
+        r = jsonify(
+            error='feed-not-found',
+            message='Given feed hash not found'
+        )
+        r.status_code = 404
+        return r
     if len(entries) < 20:
         next_url = None
     else:
