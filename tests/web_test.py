@@ -670,12 +670,12 @@ def test_entries_filtering(xmls):
         read_result = json.loads(r.data)
         assert len(read_result['entries'])
         assert read_result['entries'][0]['title'] == 'Feed One: Entry One'
-        assert read_result['entries'][0]['read'] == True
+        assert read_result['entries'][0]['read']
         r = client.get('/feeds/' + feed_three_id + '/entries/?read=False')
         unread_result = json.loads(r.data)
         assert len(unread_result['entries'])
         assert unread_result['entries'][0]['title'] == 'Feed One: Entry Two'
-        assert unread_result['entries'][0]['read'] == False
+        assert not unread_result['entries'][0]['read']
         r = client.get('/feeds/' + feed_three_id + '/entries/')
         not_filtered = json.loads(r.data)
         assert len(not_filtered['entries']) == 2
