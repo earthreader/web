@@ -398,7 +398,6 @@ function getEntries(feed_url) {
 				nextLoader = $('<div>');
 				nextLoader.addClass('nextPage');
 				nextLoader.text("Load next page");
-				nextLoader.onclick = loadNextPage;
 			}
 			nextLoader.attr('data-next-url', obj.next_url);
 			main.append(nextLoader);
@@ -445,9 +444,10 @@ function autoNextPager(event) {
 	}
 
 	var screenBottom = $(window).scrollTop() + $(window).height();
+	var prefetch_offset = $(window).height()/2;
 	var pagerTop = nextPage.offset().top;
 
-	if (screenBottom >= pagerTop) {
+	if (screenBottom + prefetch_offset >= pagerTop) {
 		loadNextPage();
 	}
 }
@@ -598,6 +598,7 @@ $(function () {
 
 	var main = $('[role=main]');
 	main.on('click', '.entry-title', clickEntry);
+	main.on('click', '.nextPage', loadNextPage);
 
 	var side = $('[role=complementary]');
 	side.on('click', clickComplementaryMenu);
