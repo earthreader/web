@@ -679,9 +679,15 @@ def test_non_exist_feed(fx_non_exist_opml):
         with_non_exist_feed_result = json.loads(r.data)
         feed_one_id = get_hash('http://feedone.com/feed/atom/')
         r = client.get('/-categoryone/feeds/' + feed_one_id + '/entries/')
+        assert r.status_code == 200
         feed_one_result = json.loads(r.data)
         assert len(with_non_exist_feed_result['entries']) == \
             len(feed_one_result['entries']) == 2
+        non_exist_id = get_hash('Non Exist')
+        r = client.get('/-categoryone/feeds/' + non_exist_id + '/entries/')
+        assert r.status_code == 200
+        non_exist_result = json.loads(r.data)
+        assert len(non_exist_result['entries']) == 0
 
 
 @fixture
