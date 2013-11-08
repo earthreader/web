@@ -30,6 +30,7 @@ iframe {
 body .wrapper {
 	padding-top:3em;
 	height: 100%;
+	overflow-x: hidden;
 	box-sizing: border-box;
 }
 
