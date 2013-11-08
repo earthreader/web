@@ -90,9 +90,7 @@ function deleteJSON(url, onSuccess, onFail) {
 				}
 			}
 		}
-		setBlocker(false);
 	}
-	setBlocker(true);
 	xhr.send();
 }
 
@@ -115,9 +113,7 @@ function post(url, parameter, onSuccess, onFail) {
 				(onFail)(xhr);
 			}
 		}
-		setBlocker(false);
 	}
-	setBlocker(true);
 	xhr.send(parameter);
 }
 
