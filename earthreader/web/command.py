@@ -7,7 +7,6 @@ import socket
 from earthreader.web import app
 
 from libearth.crawler import crawl, CrawlError
-from libearth.feedlist import FeedList
 from libearth.schema import write
 
 
