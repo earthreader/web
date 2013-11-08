@@ -477,6 +477,10 @@ function clickEntry(event) {
 	var target = $(event.target);
 	var main = $('[role=main]');
 
+	while (target.hasClass('entry-title') === false) {
+		target = target.parent();
+	}
+
 	var entry = target.parent();
 	var entry_url = entry.attr('data-entries');
 
