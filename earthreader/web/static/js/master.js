@@ -232,7 +232,9 @@ function processForm(event) {
 			if (target.attr('data-action') === 'addFeed') {
 				action = current.attr('data-add-feed-url');
 			} else if (target.attr('data-action') === 'addCategory') {
-				action = current.attr('data-add-category-url');
+				action = current.attr('data-add-category-url') ||
+					current.parent().prev().attr('data-add-category-url') ||
+					target.attr('action');
 			}
 		} catch (err) {
 		}
