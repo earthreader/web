@@ -413,20 +413,19 @@ function loadNextPage() {
 		return;
 	}
 
-	getJSON(nextLoader.attr('data-next-url'), function(obj) {
+	var nextUrl = nextLoader.attr('data-next-url');
+	nextLoader.remove();
+
+	getJSON(nextUrl, function(obj) {
 		var entries = obj.entries;
 		for (var i=0; i<entries.length; i++) {
 			appendEntry(entries[i]);
 		}
 
-		var nextLoader;
 		if (obj.next_url) {
-			nextLoader = main.find('.nextPage');
-			if (nextLoader === null) {
-				nextLoader = $('<div>');
-				nextLoader.addClass('nextPage');
-				nextLoader.text("Load next page");
-			}
+			var nextLoader = $('<div>');
+			nextLoader.addClass('nextPage');
+			nextLoader.text("Load next page");
 			nextLoader.attr('data-next-url', obj.next_url);
 			main.append(nextLoader);
 		} else {
