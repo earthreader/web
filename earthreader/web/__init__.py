@@ -28,6 +28,10 @@ app.config.update(dict(
 ))
 
 
+class InvalidCategoryPath(ValueError):
+    """Rise when the category path is not valid"""
+
+
 def get_stage():
     session = Session()
     repo = FileSystemRepository(app.config['REPOSITORY'])
@@ -222,7 +226,7 @@ def check_path_valid(category_id, return_category_parent=False):
         try:
             cursor = cursor.categories[child[1:]]
         except KeyError:
-            return None, None, None
+            raise InvalidCategoryPath('Category path is not valid')
     return feed_list, cursor, target
 
 
@@ -234,8 +238,9 @@ def index():
 @app.route('/feeds/', defaults={'category_id': '/'})
 @app.route('/<path:category_id>/feeds/')
 def feeds(category_id):
-    feed_list, cursor, _ = check_path_valid(category_id)
-    if not isinstance(feed_list, SubscriptionList):
+    try:
+        feed_list, cursor, _ = check_path_valid(category_id)
+    except InvalidCategoryPath:
         r = jsonify(
             error='category-path-invalid',
             message='Given category path is not valid'
@@ -250,9 +255,9 @@ def feeds(category_id):
 @app.route('/<path:category_id>/feeds/', methods=['POST'])
 def add_feed(category_id):
     stage = get_stage()
-    subscriptions, cursor, _ = check_path_valid(category_id)
-    if (not isinstance(cursor, Category) and
-            not isinstance(cursor, SubscriptionList)):
+    try:
+        subscriptions, cursor, _ = check_path_valid(category_id)
+    except InvalidCategoryPath:
         r = jsonify(
             error='category-path-invalid',
             message='Given category path is not valid'
@@ -307,16 +312,15 @@ def add_feed(category_id):
 @app.route('/<path:category_id>/', methods=['POST'])
 def add_category(category_id):
     stage = get_stage()
-    subscriptions, cursor, _ = check_path_valid(category_id)
-    if (not isinstance(cursor, Category) and
-            not isinstance(cursor, SubscriptionList)):
+    try:
+        subscriptions, cursor, _ = check_path_valid(category_id)
+    except InvalidCategoryPath:
         r = jsonify(
             error='category-path-invalid',
             message='Given category path is not valid'
         )
         r.status_code = 404
         return r
-
     title = request.form['title']
     outline = Category(label=title, _title=title)
     cursor.add(outline)
@@ -352,8 +356,9 @@ def delete_category(category_id):
 @app.route('/<path:category_id>/feeds/<feed_id>/', methods=['DELETE'])
 def delete_feed(category_id, feed_id):
     stage = get_stage()
-    subscriptions, cursor, _ = check_path_valid(category_id)
-    if not cursor:
+    try:
+        subscriptions, cursor, _ = check_path_valid(category_id)
+    except InvalidCategoryPath:
         r = jsonify(
             error='category-path-invalid',
             message='Given category path is not valid'
@@ -382,7 +387,9 @@ def delete_feed(category_id, feed_id):
 @app.route('/feeds/<feed_id>/entries/', defaults={'category_id': '/'})
 @app.route('/<path:category_id>/feeds/<feed_id>/entries/')
 def feed_entries(category_id, feed_id):
-    if not check_path_valid(category_id)[0]:
+    try:
+        check_path_valid(category_id)
+    except InvalidCategoryPath:
         r = jsonify(
             error='category-path-invalid',
             message='Given category path is not valid'
@@ -418,8 +425,9 @@ def feed_entries(category_id, feed_id):
 @app.route('/entries/', defaults={'category_id': '/'})
 @app.route('/<path:category_id>/entries/')
 def category_entries(category_id):
-    subscriptions, cursor, target = check_path_valid(category_id)
-    if not isinstance(subscriptions, SubscriptionList):
+    try:
+        subscriptions, cursor, target = check_path_valid(category_id)
+    except InvalidCategoryPath:
         r = jsonify(
             error='category-path-invalid',
             message='Given category was not found'
