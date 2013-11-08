@@ -142,7 +142,7 @@ function removeCurrentSelected() {
 		var parentMenu = current;
 		while (parentMenu.hasClass('fold') === false) {
 			parentMenu = parentMenu.parent();
-			if (parentMenu === null) {
+			if (parentMenu.length === 0) {
 				break;
 			}
 		}
@@ -190,11 +190,13 @@ function processForm(event) {
 	var data = target.serialize();
 	var after = target.attr('data-after');
 	if (after === "makeFeedList") {
-		var action = target.action;
+		var action = target.attr('action');
 		try {
 			var current = $('[role=navigation] .feedlist .current');
 			if (target.attr('data-action') === 'addFeed') {
-				action = current.attr('data-add-feed-url');
+				action = current.attr('data-add-feed-url') ||
+					current.parent().prev().attr('data-add-category-url') ||
+					target.attr('action');
 			} else if (target.attr('data-action') === 'addCategory') {
 				action = current.attr('data-add-category-url') ||
 					current.parent().prev().attr('data-add-category-url') ||
@@ -214,9 +216,11 @@ function processForm(event) {
 			target.reset();
 		});
 	} else {
-		post(target.action, data, function(res) {
+		post(target.attr(action), data, function(res) {
 			alert(res);
-			target.reset();
+			target.each(function(){
+				this.reset();
+			});
 		});
 	}
 }
@@ -295,7 +299,7 @@ function makeFeedList(obj, target) {
 	var feedList;
 	var i;
   
-	if (target) {
+	if (target && target.length !== 0) {
 		feedList = target;
 	} else {
 		feedList = $('.feedlist');
