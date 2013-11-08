@@ -263,7 +263,9 @@ function processForm(event) {
 		try {
 			var current = document.querySelector('[role=navigation] .feedlist .current');
 			if (target.getAttribute('data-action') === 'addFeed') {
-				action = current.getAttribute('data-add-feed-url');
+				action = current.getAttribute('data-add-feed-url') ||
+				current.parentElement.priviousSibling.getAttribute('data-add-feed-url') ||
+				target.action;
 			} else if (target.getAttribute('data-action') === 'addCategory') {
 				action = current.getAttribute('data-add-category-url') ||
 				current.parentElement.priviousSibling.getAttribute('data-add-category-url') ||
