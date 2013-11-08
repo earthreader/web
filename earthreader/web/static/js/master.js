@@ -32,31 +32,6 @@ function scrollToElement(parentElement, childElement) {
 	parentElement.scrollLeft = x;
 }
 
-function setBlocker(isEnable) {
-	var blocker = document.querySelector('.blockerUI');
-	if (isEnable == true || isEnable == undefined) {
-		if (blocker !== null) {
-			return;
-		}
-		blocker = document.createElement('div');
-		blocker.addClass('blockerUI');
-		blocker.style.background = "rgba(0, 0, 0, .4)";
-		blocker.style.position = "fixed";
-		blocker.style.top = "0";
-		blocker.style.left = "0";
-		blocker.style.width = "100%";
-		blocker.style.height = "100%";
-		blocker.style.zIndex = "10";
-
-		blocker.style.animation = "fade-in .7s";
-		document.body.appendChild(blocker);
-	} else {
-		if (blocker !== null) {
-			blocker.parentElement.removeChild(blocker);
-		}
-	}
-}
-
 function getJSON(url, onSuccess, onFail) {
 	var xhr = new XMLHttpRequest();
 	xhr.open('get', url);
@@ -84,9 +59,7 @@ function getJSON(url, onSuccess, onFail) {
 				}
 			}
 		}
-		setBlocker(false);
 	}
-	setBlocker(true);
 	xhr.send();
 }
 
@@ -117,9 +90,7 @@ function deleteJSON(url, onSuccess, onFail) {
 				}
 			}
 		}
-		setBlocker(false);
 	}
-	setBlocker(true);
 	xhr.send();
 }
 
@@ -142,9 +113,7 @@ function post(url, parameter, onSuccess, onFail) {
 				(onFail)(xhr);
 			}
 		}
-		setBlocker(false);
 	}
-	setBlocker(true);
 	xhr.send(parameter);
 }
 
@@ -294,9 +263,13 @@ function processForm(event) {
 		try {
 			var current = document.querySelector('[role=navigation] .feedlist .current');
 			if (target.getAttribute('data-action') === 'addFeed') {
-				action = current.getAttribute('data-add-feed-url');
+				action = current.getAttribute('data-add-feed-url') ||
+				current.parentElement.priviousSibling.getAttribute('data-add-feed-url') ||
+				target.action;
 			} else if (target.getAttribute('data-action') === 'addCategory') {
-				action = current.getAttribute('data-add-category-url');
+				action = current.getAttribute('data-add-category-url') ||
+				current.parentElement.priviousSibling.getAttribute('data-add-category-url') ||
+				target.action;
 			}
 		} catch (err) {
 		}
