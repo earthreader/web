@@ -515,10 +515,14 @@ def feed_entry(category_id, feed_id, entry_id):
         )
         r.status_code = 404
         return r
+
+    content = entry.content or entry.summary
+    if content is not None:
+        content = content.sanitized_html
+
     return jsonify(
         title=entry.title,
-        content=entry.content.sanitized_html
-        if entry.content else entry.summary.sanitized_html,
+        content=content,
         updated=entry.updated_at.__str__(),
         permalink=entry_permalink or None,
         read_url=url_for(
