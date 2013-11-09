@@ -50,6 +50,10 @@ setup(
     },
     license='AGPLv3 or later',
     packages=find_packages(exclude=['tests']),
+    package_data={
+        'earthreader.web': ['templates/*.*', 'templates/*/*.*',
+                            'static/*.*', 'static/*/*.*']
+    },
     install_requires=install_requires,
     dependency_links=[
         'https://github.com/earthreader/libearth/archive/master.zip'

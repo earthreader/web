@@ -1,0 +1,2 @@
+recursive-include earthreader/web/templates *
+recursive-include earthreader/web/static *
