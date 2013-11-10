@@ -143,7 +143,8 @@ def get_entries(feed_list, category_id, read, starred):
             ),
             'permalink': entry_permalink or None,
             'updated': entry.updated_at.__str__(),
-            'read': entry.read.marked if entry.read else False,
+            'read': bool(entry.read) if entry.read else False,
+            'starred': bool(entry.starred) if entry.starred else False,
             'feed': {
                 'title': feed_title,
                 'entries_url': url_for(
@@ -532,6 +533,18 @@ def feed_entry(category_id, feed_id, entry_id):
             feed_id=feed_id,
             entry_id=entry_id
         ),
+        star_url=url_for(
+            'star_entry',
+            category_id=category_id,
+            feed_id=feed_id,
+            entry_id=entry_id
+        ),
+        unstar_url=url_for(
+            'unstar_entry',
+            category_id=category_id,
+            feed_id=feed_id,
+            entry_id=entry_id
+        ),
         feed={
             'title': feed.title,
             'entries_url': url_for(
@@ -580,5 +593,45 @@ def unread_entry(category_id, feed_id, entry_id):
         r.status_code = 404
         return r
     entry.read = Mark(marked=False, updated_at=now())
+    stage.feeds[feed_id] = feed
+    return jsonify()
+
+
+@app.route('/feeds/<feed_id>/entries/<entry_id>/star/',
+           defaults={'category_id': '/'}, methods=['PUT'])
+@app.route('/<path:category_id>/feeds/<feed_id>/entries/<entry_id>/star/',
+           methods=['PUT'])
+def star_entry(category_id, feed_id, entry_id):
+    stage = get_stage()
+    try:
+        feed, _, entry, _ = find_feed_and_entry(category_id, feed_id, entry_id)
+    except (InvalidCategoryPath, FeedNotFound, EntryNotFound):
+        r = jsonify(
+            error='entry-not-found',
+            message='Given entry does not exist'
+        )
+        r.status_code = 404
+        return r
+    entry.starred = Mark(marked=True, updated_at=now())
+    stage.feeds[feed_id] = feed
+    return jsonify()
+
+
+@app.route('/feeds/<feed_id>/entries/<entry_id>/star/',
+           defaults={'category_id': '/'}, methods=['DELETE'])
+@app.route('/<path:category_id>/feeds/<feed_id>/entries/<entry_id>/star/',
+           methods=['DELETE'])
+def unstar_entry(category_id, feed_id, entry_id):
+    stage = get_stage()
+    try:
+        feed, _, entry, _ = find_feed_and_entry(category_id, feed_id, entry_id)
+    except (InvalidCategoryPath, FeedNotFound, EntryNotFound):
+        r = jsonify(
+            error='entry-not-found',
+            message='Given entry does not exist'
+        )
+        r.status_code = 404
+        return r
+    entry.starred = Mark(marked=False, updated_at=now())
     stage.feeds[feed_id] = feed
     return jsonify()
