@@ -196,7 +196,7 @@ function processForm(event) {
 			var current = $('[role=navigation] .feedlist .current');
 			if (target.attr('data-action') === 'addFeed') {
 				action = current.attr('data-add-feed-url') ||
-					current.parent().prev().attr('data-add-category-url') ||
+					current.parent().prev().attr('data-add-feed-url') ||
 					target.attr('action');
 			} else if (target.attr('data-action') === 'addCategory') {
 				action = current.attr('data-add-category-url') ||
