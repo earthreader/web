@@ -690,7 +690,7 @@ def fx_filtering_entries(fx_test_stage):
     stage.subscriptions = read(SubscriptionList, opml_for_filtering)
 
 
-@mark.parametrize(('read', 'star', 'expected_entries'), [
+@mark.parametrize(('read', 'starred', 'expected_entries'), [
     (True, True, [4, 5]),
     (False, True, [6, 7]),
     (None, True, [4, 5, 6, 7]),
@@ -701,14 +701,14 @@ def fx_filtering_entries(fx_test_stage):
     (False, None, [6, 7, 8, 9, 10]),
     (None, None, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
 ])
-def test_entries_filtering(read, star, expected_entries,
+def test_entries_filtering(read, starred, expected_entries,
                            fx_filtering_entries, fx_test_stage):
     feed_id = get_hash('http://feedone.com/feed/atom/')
     options = {}
     if read is not None:
         options['read'] = str(read)
-    if star is not None:
-        options['starred'] = str(star)
+    if starred is not None:
+        options['starred'] = str(starred)
     qs = url_encode(options)
     with app.test_client() as client:
         r = client.get('/feeds/' + feed_id + '/entries/?' + qs)
