@@ -108,6 +108,8 @@ function changeFilter(event) {
 
 	$('[role=navigation] .persistent .current').removeClass('current');
 	target.addClass('current');
+
+	reloadEntries();
 }
 
 function clickComplementaryMenu(event) {
@@ -323,7 +325,7 @@ function getAllEntries() {
 	var all_feed = $('[role=navigation] .allfeed.header');
 	$('[role=navigation] .allfeed .current').removeClass('current');
 	all_feed.addClass('current');
-	getEntries(URLS.entries);
+	reloadEntries();
 }
 
 function appendEntry(entry) {
@@ -360,10 +362,7 @@ function appendEntry(entry) {
 
 function getEntries(feed_url) {
 	var main = $('[role=main]');
-	var currentFilter = $('[role=navigation] .persistent .current');
-	var filter = currentFilter.attr('data-filter');
-
-	getJSON(feed_url + filter, function(obj) {
+	getJSON(feed_url, function(obj) {
 		main.html(null);
 
 		var feed_title = obj.title;
@@ -439,9 +438,19 @@ function autoNextPager(event) {
 	}
 }
 
+function reloadEntries() {
+	var currentFilter = $('[role=navigation] .persistent .current');
+	var currentFeed = $('[role=navigation] .feedlist .current');
+
+	var filter = currentFilter.attr('data-filter');
+	var url = currentFeed.attr('data-entries') || currentFeed.parent().attr('data-entries') || URLS.entries;
+
+	getEntries(url + filter);
+}
+
 function clickFeed(event) {
 	var target = $(event.target);
-	var navi = $('[role=navigation]');
+	var feedlist = $('[role=navigation] .feedlist');
 
 	//toggle folding
 	if (target.hasClass('toggle')) {
@@ -450,14 +459,13 @@ function clickFeed(event) {
 	}
 
 	//set current marker
-	navi.find('.current').removeClass('current');
+	feedlist.find('.current').removeClass('current');
 	target.addClass('current');
 
-	var url = target.attr('data-entries') || target.parent().attr('data-entries');
 
 	closeMenu();
 
-	getEntries(url);
+	reloadEntries();
 }
 
 function clickEntry(event) {
@@ -622,5 +630,5 @@ $(function () {
 
 	$('[role=navigation] .persistent .unread').click();
 	refreshFeedList();
-	getAllEntries();
+	reloadEntries();
 });
