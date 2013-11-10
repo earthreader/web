@@ -232,7 +232,7 @@ function processForm(event) {
 
 var makeCategory = function(parentObj, obj) {
 	var container = $('<li>');
-	var header = $('<header>');
+	var header = $('<div>');
 	var list = $('<ul>');
 	var i;
 
