@@ -8,6 +8,7 @@ except ImportError:
 from flask import Flask, jsonify, render_template, request, url_for
 from libearth.codecs import Rfc3339
 from libearth.compat import binary
+from libearth.crawler import CrawlError, crawl
 from libearth.feed import Mark
 from libearth.parser.autodiscovery import autodiscovery, FeedUrlNotFoundError
 from libearth.parser.heuristic import get_format
@@ -468,6 +469,43 @@ def category_entries(category_id):
         entries=entries,
         next_url=next_url
     )
+
+
+@app.route('/feeds/<feed_id>/entries/', defaults={'category_id': '/'},
+           methods=['PUT'])
+@app.route('/<path:category_id>/feeds/<feed_id>/entries/', methods=['PUT'])
+@app.route('/entries/', defaults={'category_id': '/'}, methods=['PUT'])
+@app.route('/<path:category_id>/entries/', methods=['PUT'])
+def update_entries(category_id, feed_id=None):
+    print(category_id, feed_id)
+    stage = get_stage()
+    try:
+        subscription_list, cursor, target = check_path_valid(category_id)
+    except InvalidCategoryPath:
+        r = jsonify(
+            error='category-path-invalid',
+            message='Given category path is not valid'
+        )
+        r.status_code = 404
+        return r
+    failed = []
+    if feed_id:
+        for subscription in cursor.subscriptions:
+            urls = [subscription.feed_uri]
+            break
+    else:
+        urls = [subscription.feed_uri for subscription
+                in cursor.recursive_subscriptions]
+    generator = crawl(urls, 4)
+    try:
+        for feed_url, (feed_data, crawler_hints) in generator:
+            feed_id = get_hash(feed_url)
+            stage.feeds[feed_id] = feed_data
+    except CrawlError as e:
+        failed.append(e.msg)
+    r = jsonify(failed=failed)
+    r.status_code = 202
+    return r
 
 
 def find_feed_and_entry(category_id, feed_id, entry_id):

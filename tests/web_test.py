@@ -55,6 +55,11 @@ def server_error_handler_for_testing(exception):
     )
 
 
+def get_url(endpoint, **values):
+    with app.test_request_context():
+        return url_for(endpoint, **values)
+
+
 opml = '''
 <opml version="1.0">
   <head>
@@ -226,7 +231,6 @@ urllib2.install_opener(my_opener)
 def fx_test_stage(tmpdir):
     app.config.update(dict(
         REPOSITORY=str(tmpdir),
-        OPML='test.opml'
     ))
     session = Session()
     repo = FileSystemRepository(str(tmpdir))
@@ -634,6 +638,128 @@ def test_empty_category_all_entries(xmls):
         assert r.status_code == 200
         r = client.get('/-test/entries/')
         assert r.status_code == 200
+
+
+@fixture
+def fx_xml_for_update(xmls, request):
+    updated_feed_two = '''
+    <feed xmlns="http://www.w3.org/2005/Atom">
+        <title type="text">Feed Two</title>
+        <id>http://feedtwo.com/feed/atom/</id>
+        <updated>2013-11-20T07:49:20+07:00</updated>
+        <link type="text/html" rel="alternate" href="http://feedtwo.com" />
+        <entry>
+            <title>Feed Two: Entry Two</title>
+            <id>http://feedtwo.com/feed/atom/1/</id>
+            <updated>2013-11-20T07:49:20+07:00</updated>
+            <published>2013-11-20T07:49:20+07:00</published>
+            <content>This is content of Entry One in Feed Two</content>
+        </entry>
+        <entry>
+            <title>Feed Two: Entry One</title>
+            <id>http://feedtwo.com/feed/atom/1/</id>
+            <updated>2013-08-20T07:49:20+07:00</updated>
+            <published>2013-08-20T07:49:20+07:00</published>
+            <content>This is content of Entry One in Feed Two</content>
+        </entry>
+    </feed>
+    '''
+    updated_feed_three = '''
+    <feed xmlns="http://www.w3.org/2005/Atom">
+        <title type="text">Feed Three</title>
+        <id>http://feedthree.com/feed/atom/</id>
+        <updated>2013-11-21T07:49:20+07:00</updated>
+        <link type="text/html" rel="alternate" href="http://feedthree.com" />
+        <entry>
+            <title>Feed Three: Entry One</title>
+            <id>http://feedthree.com/feed/atom/1/</id>
+            <updated>2013-11-21T07:49:20+07:00</updated>
+            <published>2013-11-21T07:49:20+07:00</published>
+            <content>This is content of Entry One in Feed Three</content>
+        </entry>
+        <entry>
+            <title>Feed Three: Entry One</title>
+            <id>http://feedthree.com/feed/atom/1/</id>
+            <updated>2013-08-21T07:49:20+07:00</updated>
+            <published>2013-08-21T07:49:20+07:00</published>
+            <content>This is content of Entry One in Feed Three</content>
+        </entry>
+    </feed>
+    '''
+
+    def mock_response2(req):
+        if req.get_full_url() == 'http://feedone.com/feed/atom/':
+            resp = urllib2.addinfourl(StringIO(feed_one), 'mock message',
+                                      req.get_full_url())
+            resp.code = 200
+            resp.msg = "OK"
+            return resp
+        if req.get_full_url() == 'http://feedtwo.com/feed/atom/':
+            resp = urllib2.addinfourl(StringIO(updated_feed_two),
+                                      'mock message',
+                                      req.get_full_url())
+            resp.code = 200
+            resp.msg = "OK"
+            return resp
+        if req.get_full_url() == 'http://feedthree.com/feed/atom/':
+            resp = urllib2.addinfourl(StringIO(updated_feed_three),
+                                      'mock message',
+                                      req.get_full_url())
+            resp.code = 200
+            resp.msg = "OK"
+            return resp
+        if req.get_full_url() == 'http://feedfour.com/feed/atom/':
+            resp = urllib2.addinfourl(StringIO(feed_four), 'mock message',
+                                      req.get_full_url())
+            resp.code = 200
+            resp.msg = "OK"
+            return resp
+        if req.get_full_url() == 'http://feedfive.com/feed/atom/':
+            resp = urllib2.addinfourl(StringIO(feed_to_add), 'mock message',
+                                      req.get_full_url())
+            resp.code = 200
+            resp.msg = "OK"
+            return resp
+
+    class TestHTTPHandler2(urllib2.HTTPHandler):
+        def http_open(self, req):
+            return mock_response2(req)
+
+    my_opener2 = urllib2.build_opener(TestHTTPHandler2)
+    urllib2.install_opener(my_opener2)
+
+    def finalizer():
+        urllib2.install_opener(my_opener)
+
+    request.addfinalizer(finalizer)
+
+
+def test_update_feed_entries(fx_xml_for_update, fx_test_stage):
+    with app.test_client() as client:
+        stage = fx_test_stage
+        feed_two_id = get_hash('http://feedtwo.com/feed/atom/')
+        assert len(stage.feeds[feed_two_id].entries) == 1
+        r = client.put(
+            get_url(
+                'update_entries',
+                category_id='-categoryone/-categorytwo',
+                feed_id=feed_two_id
+            )
+        )
+        assert r.status_code == 202
+        assert len(stage.feeds[feed_two_id].entries) == 2
+
+
+def test_update_category_entries(fx_xml_for_update, fx_test_stage):
+    with app.test_client() as client:
+        stage = fx_test_stage
+        feed_two_id = get_hash('http://feedtwo.com/feed/atom/')
+        feed_three_id = get_hash('http://feedthree.com/feed/atom/')
+        assert len(stage.feeds[feed_two_id].entries) == 1
+        assert len(stage.feeds[feed_three_id].entries) == 1
+        r = client.put('/entries/')
+        assert r.status_code == 202
+        assert len(stage.feeds[feed_two_id].entries) == 2
 
 
 def test_entry_read_unread(xmls, fx_test_stage):
