@@ -654,6 +654,24 @@ def test_entry_read_unread(xmls, fx_test_stage):
         assert not stage.feeds[feed_three_id].entries[0].read
 
 
+def test_entry_star_unstar(xmls, fx_test_stage):
+    stage = fx_test_stage
+    with app.test_client() as client:
+        feed_three_id = get_hash('http://feedthree.com/feed/atom/')
+        test_entry_id = get_hash('http://feedthree.com/feed/atom/1/')
+        assert not stage.feeds[feed_three_id].entries[0].read
+        r = client.get('/feeds/' + feed_three_id + '/entries/' +
+                       test_entry_id + '/')
+        assert r.status_code == 200
+        result = json.loads(r.data)
+        r = client.put(result['star_url'])
+        assert r.status_code == 200
+        assert stage.feeds[feed_three_id].entries[0].starred
+        r = client.delete(result['unstar_url'])
+        assert r.status_code == 200
+        assert not stage.feeds[feed_three_id].entries[0].starred
+
+
 opml_for_filtering = '''
 <opml version="1.0">
   <head>
