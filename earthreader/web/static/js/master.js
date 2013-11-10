@@ -16,7 +16,6 @@ function resizer(event) {
 
 function changeFilter(event) {
 	var target = $(event.target);
-	//FIXME: data-filter
 	var filter = target.attr('data-filter');
 	closeMenu();
 
@@ -335,7 +334,6 @@ function loadNextPage() {
 }
 
 function autoNextPager(event) {
-	//FIXME
 	var nextPage = $('[role=main] .nextPage');
 
 	if (nextPage.length === 0) {
