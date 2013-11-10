@@ -231,7 +231,6 @@ urllib2.install_opener(my_opener)
 def fx_test_stage(tmpdir):
     app.config.update(dict(
         REPOSITORY=str(tmpdir),
-        OPML='test.opml'
     ))
     session = Session()
     repo = FileSystemRepository(str(tmpdir))
