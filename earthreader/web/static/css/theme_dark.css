@@ -49,7 +49,7 @@ body {
 }
 
 @media all and (min-width: 800px) {
-	[role=navigation] li:not(.fold):hover,
+	[role=navigation] li[clickable]:hover,
 	[role=complementary] li:not(.fold):hover {
 		background: rgb(60, 70, 60);
 	}

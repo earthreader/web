@@ -100,14 +100,16 @@ function resizer(event) {
 	}
 }
 
-function clickPersistentMenu(event) {
+function changeFilter(event) {
 	var target = $(event.target);
-	var action = target.attr('data-action');
+	//FIXME: data-filter
+	var filter = target.attr('data-filter');
 	closeMenu();
 
-	if (action === 'all') {
-		getAllEntries();
-	}
+	$('[role=navigation] .persistent .current').removeClass('current');
+	target.addClass('current');
+
+	reloadEntries();
 }
 
 function clickComplementaryMenu(event) {
@@ -195,11 +197,11 @@ function processForm(event) {
 			var current = $('[role=navigation] .feedlist .current');
 			if (target.attr('data-action') === 'addFeed') {
 				action = current.attr('data-add-feed-url') ||
-					current.parent().prev().attr('data-add-category-url') ||
+					current.parent().attr('data-add-feed-url') ||
 					target.attr('action');
 			} else if (target.attr('data-action') === 'addCategory') {
 				action = current.attr('data-add-category-url') ||
-					current.parent().prev().attr('data-add-category-url') ||
+					current.parent().attr('data-add-category-url') ||
 					target.attr('action');
 			}
 		} catch (err) {
@@ -229,25 +231,25 @@ function processForm(event) {
 
 
 var makeCategory = function(parentObj, obj) {
-	var header = $('<li>');
-	var list = $('<li>');
+	var container = $('<li>');
+	var header = $('<div>');
+	var list = $('<ul>');
 	var i;
 
-	header.addClass('header');
-	header.addClass('feed');
+	header.addClass('feed header');
 	header.attr('role', 'link');
-	header.attr('data-entries', obj.entries_url);
+	container.attr('data-entries', obj.entries_url);
 	if (obj.add_category_url) {
-		header.attr('data-add-category-url', obj.add_category_url);
+		container.attr('data-add-category-url', obj.add_category_url);
 	}
 	if (obj.add_feed_url) {
-		header.attr('data-add-feed-url', obj.add_feed_url);
+		container.attr('data-add-feed-url', obj.add_feed_url);
 	}
 	if (obj.remove_feed_url) {
-		header.attr('data-remove-feed-url', obj.remove_feed_url);
+		container.attr('data-remove-feed-url', obj.remove_feed_url);
 	}
 	if (obj.remove_category_url) {
-		header.attr('data-remove-category-url', obj.remove_category_url);
+		container.attr('data-remove-category-url', obj.remove_category_url);
 	}
 
 	header.text(obj.title);
@@ -262,22 +264,21 @@ var makeCategory = function(parentObj, obj) {
 
 	header.attr('draggable', true);
 
-	list.addClass('fold');
-
-	var ul = $('<ul>');
 	getJSON(obj.feeds_url, function(obj) {
 		for (i=0; i<obj.categories.length; i++) {
-			makeCategory(ul, obj.categories[i]);
+			makeCategory(list, obj.categories[i]);
 		}
 		for (i=0; i<obj.feeds.length; i++) {
-			makeFeed(ul, obj.feeds[i]);
+			makeFeed(list, obj.feeds[i]);
 		}
 	});
+	list.addClass('fold');
 
-	list.append(ul);
+	container.append(header);
+	container.append(list);
 
-	parentObj.append(header);
-	parentObj.append(list);
+	container.addClass('folder');
+	parentObj.append(container);
 };
 
 var makeFeed = function(parentObj, obj) {
@@ -304,7 +305,7 @@ function makeFeedList(obj, target) {
 	if (target && target.length !== 0) {
 		feedList = target;
 	} else {
-		feedList = $('.feedlist');
+		feedList = $('.allfeed.folder');
 	}
 	feedList.html("");
 
@@ -321,10 +322,10 @@ function refreshFeedList() {
 }
 
 function getAllEntries() {
-	var all_feed = $('[role=navigation] [data-action=all]');
-	$('[role=navigation] .current').removeClass('current');
+	var all_feed = $('[role=navigation] .allfeed.header');
+	$('[role=navigation] .allfeed .current').removeClass('current');
 	all_feed.addClass('current');
-	getEntries(URLS.entries);
+	reloadEntries();
 }
 
 function appendEntry(entry) {
@@ -361,7 +362,6 @@ function appendEntry(entry) {
 
 function getEntries(feed_url) {
 	var main = $('[role=main]');
-
 	getJSON(feed_url, function(obj) {
 		main.html(null);
 
@@ -438,9 +438,19 @@ function autoNextPager(event) {
 	}
 }
 
+function reloadEntries() {
+	var currentFilter = $('[role=navigation] .persistent .current');
+	var currentFeed = $('[role=navigation] .feedlist .current');
+
+	var filter = currentFilter.attr('data-filter');
+	var url = currentFeed.attr('data-entries') || currentFeed.parent().attr('data-entries') || URLS.entries;
+
+	getEntries(url + filter);
+}
+
 function clickFeed(event) {
 	var target = $(event.target);
-	var navi = $('[role=navigation]');
+	var feedlist = $('[role=navigation] .feedlist');
 
 	//toggle folding
 	if (target.hasClass('toggle')) {
@@ -449,14 +459,13 @@ function clickFeed(event) {
 	}
 
 	//set current marker
-	navi.find('.current').removeClass('current');
+	feedlist.find('.current').removeClass('current');
 	target.addClass('current');
 
-	var url = target.attr('data-entries');
 
 	closeMenu();
 
-	getEntries(url);
+	reloadEntries();
 }
 
 function clickEntry(event) {
@@ -510,6 +519,12 @@ function clickEntry(event) {
 		wrapper.append(content);
 		wrapper.append(bottom_bar);
 		entry.append(wrapper);
+
+		//read
+		$.ajax({
+			'type': 'put',
+			'url': obj.read_url,
+		});
 
 		$(window).scrollTop(entry.position().top);
 	});
@@ -577,9 +592,10 @@ function changeTheme(name) {
 $(function () {
 	var navi = $('[role=navigation]');
 	var persistent = navi.find('.persistent');
-	var feedlist = navi.find('.feedlist');
-	feedlist.on('click', clickFeed);
-	persistent.on('click', '[data-action]', clickPersistentMenu);
+	var feedlist = navi.find('.allfeed.folder');
+	navi.on('click', '.allfeed.header', getAllEntries);
+	feedlist.on('click', '.feed', clickFeed);
+	persistent.on('click', '[data-filter]', changeFilter);
 	persistent.on('click', '.header', toggleFolding);
 
 	var main = $('[role=main]');
@@ -612,6 +628,7 @@ $(function () {
     }
     $(document.body).on(animationEnd, resizer);
 
+	$('[role=navigation] .persistent .unread').click();
 	refreshFeedList();
-	getAllEntries();
+	reloadEntries();
 });
