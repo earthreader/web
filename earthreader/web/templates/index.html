@@ -26,11 +26,11 @@
 		<div class="wrapper">
 			<nav role="navigation">
 				<ul class="persistent">
-					<li role="button" data-action="all">All</li>
-					<li role="button" data-action="starred">Starred</li>
-					<li role="button" data-action="unread">Unread</li>
+					<li role="button" data-filter="all">All</li>
+					<li role="button" data-filter="starred">Starred</li>
+					<li role="button" data-filter="unread">Unread</li>
 					<li role="button" class="header closed">Add Feed/Category</li>
-					<li class="fold">
+					<div class="fold">
 						<div class="form">
 							<h2>Add Feed</h2>
 							<form action="/feeds/" data-action="addFeed" data-after="makeFeedList">
@@ -45,9 +45,10 @@
 								<input type="submit" value="Add"/>
 							</form>
 						</div>
-					</li>
+					</div>
 				</ul>
-				<ul class="feedlist">
+				<header class="allfeed header" role="button">All</header>
+				<ul class="feedlist folder">
 					<li> <h1>Loading...</h1> </li>
 				</ul>
 			</nav>

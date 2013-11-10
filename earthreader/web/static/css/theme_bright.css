@@ -43,8 +43,8 @@ body {
 }
 
 @media all and (min-width: 800px) {
-	[role=navigation] li:not(.fold):hover,
-	[role=complementary] li:not(.fold):hover {
+	[role=navigation] li:not(.folder):hover,
+	[role=navigation] .header:hover {
 		background: rgb(230, 230, 253);
 	}
 

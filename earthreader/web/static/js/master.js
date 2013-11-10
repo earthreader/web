@@ -102,6 +102,7 @@ function resizer(event) {
 
 function clickPersistentMenu(event) {
 	var target = $(event.target);
+	//FIXME: data-filter
 	var action = target.attr('data-action');
 	closeMenu();
 
@@ -229,25 +230,25 @@ function processForm(event) {
 
 
 var makeCategory = function(parentObj, obj) {
-	var header = $('<li>');
-	var list = $('<li>');
+	var container = $('<li>');
+	var header = $('<header>');
+	var list = $('<ul>');
 	var i;
 
-	header.addClass('header');
-	header.addClass('feed');
+	header.addClass('feed header');
 	header.attr('role', 'link');
-	header.attr('data-entries', obj.entries_url);
+	container.attr('data-entries', obj.entries_url);
 	if (obj.add_category_url) {
-		header.attr('data-add-category-url', obj.add_category_url);
+		container.attr('data-add-category-url', obj.add_category_url);
 	}
 	if (obj.add_feed_url) {
-		header.attr('data-add-feed-url', obj.add_feed_url);
+		container.attr('data-add-feed-url', obj.add_feed_url);
 	}
 	if (obj.remove_feed_url) {
-		header.attr('data-remove-feed-url', obj.remove_feed_url);
+		container.attr('data-remove-feed-url', obj.remove_feed_url);
 	}
 	if (obj.remove_category_url) {
-		header.attr('data-remove-category-url', obj.remove_category_url);
+		container.attr('data-remove-category-url', obj.remove_category_url);
 	}
 
 	header.text(obj.title);
@@ -262,22 +263,21 @@ var makeCategory = function(parentObj, obj) {
 
 	header.attr('draggable', true);
 
-	list.addClass('fold');
-
-	var ul = $('<ul>');
 	getJSON(obj.feeds_url, function(obj) {
 		for (i=0; i<obj.categories.length; i++) {
-			makeCategory(ul, obj.categories[i]);
+			makeCategory(list, obj.categories[i]);
 		}
 		for (i=0; i<obj.feeds.length; i++) {
-			makeFeed(ul, obj.feeds[i]);
+			makeFeed(list, obj.feeds[i]);
 		}
 	});
+	list.addClass('fold');
 
-	list.append(ul);
+	container.append(header);
+	container.append(list);
 
-	parentObj.append(header);
-	parentObj.append(list);
+	container.addClass('folder');
+	parentObj.append(container);
 };
 
 var makeFeed = function(parentObj, obj) {
@@ -452,7 +452,7 @@ function clickFeed(event) {
 	navi.find('.current').removeClass('current');
 	target.addClass('current');
 
-	var url = target.attr('data-entries');
+	var url = target.attr('data-entries') || target.parent().attr('data-entries');
 
 	closeMenu();
 
@@ -584,7 +584,8 @@ $(function () {
 	var navi = $('[role=navigation]');
 	var persistent = navi.find('.persistent');
 	var feedlist = navi.find('.feedlist');
-	feedlist.on('click', clickFeed);
+	navi.on('click', '.allfeed', getAllEntries);
+	feedlist.on('click', '.feed', clickFeed);
 	persistent.on('click', '[data-action]', clickPersistentMenu);
 	persistent.on('click', '.header', toggleFolding);
 

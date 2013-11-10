@@ -164,11 +164,16 @@ h2 {
 
 }
 
-[role=navigation] ul > li,
-[role=complementary] ul > li {
+[role=navigation] ul > li:not(.folder),
+[role=complementary] ul > li:not(.folder) {
 	list-style: none;
-	padding: 0;
+	padding: 0.4em 0 .5em .7em;
 	margin: 0;
+	border-bottom: 1px solid rgba(0, 0, 0, .1);
+}
+
+[role=navigation] .fold {
+	margin-left: .5em;
 }
 
 input, textarea {
@@ -212,12 +217,6 @@ input:not([type=button]):not([type=submit]):focus, textarea:focus {
 
 .header.closed + .fold {
 	display: none;
-}
-
-[role=navigation] li:not(.fold),
-[role=complementary] li:not(.fold) {
-	padding: 0.4em 0 .5em .7em;
-	border-bottom: 1px solid rgba(0, 0, 0, .1);
 }
 
 [role=navigation] > ul,
