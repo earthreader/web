@@ -143,7 +143,8 @@ def get_entries(feed_list, category_id, read, starred):
             ),
             'permalink': entry_permalink or None,
             'updated': entry.updated_at.__str__(),
-            'read': entry.read.marked if entry.read else False,
+            'read': bool(entry.read) if entry.read else False,
+            'starred': bool(entry.starred) if entry.starred else False,
             'feed': {
                 'title': feed_title,
                 'entries_url': url_for(
