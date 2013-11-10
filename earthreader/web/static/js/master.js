@@ -100,15 +100,14 @@ function resizer(event) {
 	}
 }
 
-function clickPersistentMenu(event) {
+function changeFilter(event) {
 	var target = $(event.target);
 	//FIXME: data-filter
-	var action = target.attr('data-action');
+	var filter = target.attr('data-filter');
 	closeMenu();
 
-	if (action === 'all') {
-		getAllEntries();
-	}
+	$('[role=navigation] .persistent .current').removeClass('current');
+	target.addClass('current');
 }
 
 function clickComplementaryMenu(event) {
@@ -304,7 +303,7 @@ function makeFeedList(obj, target) {
 	if (target && target.length !== 0) {
 		feedList = target;
 	} else {
-		feedList = $('.feedlist');
+		feedList = $('.allfeed.folder');
 	}
 	feedList.html("");
 
@@ -321,8 +320,8 @@ function refreshFeedList() {
 }
 
 function getAllEntries() {
-	var all_feed = $('[role=navigation] [data-action=all]');
-	$('[role=navigation] .current').removeClass('current');
+	var all_feed = $('[role=navigation] .allfeed.header');
+	$('[role=navigation] .allfeed .current').removeClass('current');
 	all_feed.addClass('current');
 	getEntries(URLS.entries);
 }
@@ -361,8 +360,10 @@ function appendEntry(entry) {
 
 function getEntries(feed_url) {
 	var main = $('[role=main]');
+	var currentFilter = $('[role=navigation] .persistent .current');
+	var filter = currentFilter.attr('data-filter');
 
-	getJSON(feed_url, function(obj) {
+	getJSON(feed_url + filter, function(obj) {
 		main.html(null);
 
 		var feed_title = obj.title;
@@ -583,10 +584,10 @@ function changeTheme(name) {
 $(function () {
 	var navi = $('[role=navigation]');
 	var persistent = navi.find('.persistent');
-	var feedlist = navi.find('.feedlist');
-	navi.on('click', '.allfeed', getAllEntries);
+	var feedlist = navi.find('.allfeed.folder');
+	navi.on('click', '.allfeed.header', getAllEntries);
 	feedlist.on('click', '.feed', clickFeed);
-	persistent.on('click', '[data-action]', clickPersistentMenu);
+	persistent.on('click', '[data-filter]', changeFilter);
 	persistent.on('click', '.header', toggleFolding);
 
 	var main = $('[role=main]');
@@ -619,6 +620,7 @@ $(function () {
     }
     $(document.body).on(animationEnd, resizer);
 
+	$('[role=navigation] .persistent .unread').click();
 	refreshFeedList();
 	getAllEntries();
 });
