@@ -73,7 +73,7 @@ def to_bool(str):
     return str.strip().lower() == 'true'
 
 
-def get_entries(feed_list, category_id, read):
+def get_entries(feed_list, category_id, read, starred):
     stage = get_stage()
     url_token = request.args.get('url_token')
     feed_title = None
@@ -101,17 +101,10 @@ def get_entries(feed_list, category_id, read):
                     feed_permalinks[feed_id] = feed.id
                     feed_permalink = feed.id
             for entry in feed.entries:
-                if not read:
+                if (read is None or to_bool(read) == bool(entry.read)) and \
+                   (starred is None or to_bool(starred) == bool(entry.starred)):
                     sorting_pool.append(
                         (feed.title, feed_id, feed_permalink, entry))
-                elif to_bool(read):
-                    (sorting_pool.append(
-                        (feed.title, feed_id, feed_permalink, entry))
-                     if entry.read else None)
-                else:
-                    (sorting_pool.append(
-                        (feed.title, feed_id, feed_permalink, entry))
-                     if not entry.read else None)
         sorting_pool.sort(key=lambda entry: entry[3].updated_at,
                           reverse=True)
         it = iter(sorting_pool)
@@ -421,8 +414,9 @@ def feed_entries(category_id, feed_id):
         r.status_code = 404
         return r
     read = request.args.get('read')
+    starred = request.args.get('starred')
     feed_title, entries, url_token = get_entries([feed_id], category_id,
-                                                 read)
+                                                 read, starred)
     if len(entries) < 20:
         next_url = None
     else:
@@ -457,7 +451,8 @@ def category_entries(category_id):
     for subscription in subscriptions:
         uris.append(get_hash(subscription.feed_uri))
     read = request.args.get('read')
-    _, entries, url_token = get_entries(uris, category_id, read)
+    starred = request.args.get('starred')
+    _, entries, url_token = get_entries(uris, category_id, read, starred)
     if len(entries) < 20:
         next_url = None
     else:

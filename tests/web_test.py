@@ -12,20 +12,19 @@ except ImportError:
     import urllib.request as urllib2
 
 from flask import json, url_for
-
 from libearth.compat import binary
 from libearth.crawler import crawl
-from libearth.feed import Entry, Feed, Person, Text
+from libearth.feed import Entry, Feed, Mark, Person, Text
 from libearth.repository import FileSystemRepository
 from libearth.schema import read
 from libearth.session import Session
 from libearth.stage import Stage
 from libearth.subscribe import Category, Subscription, SubscriptionList
 from libearth.tz import utc
+from pytest import fixture, mark
+from werkzeug.urls import url_encode
 
 from earthreader.web import app, get_hash
-
-from pytest import fixture
 
 
 @app.errorhandler(400)
@@ -655,30 +654,67 @@ def test_entry_read_unread(xmls, fx_test_stage):
         assert not stage.feeds[feed_three_id].entries[0].read
 
 
-def test_entries_filtering(xmls):
+opml_for_filtering = '''
+<opml version="1.0">
+  <head>
+    <title>test opml</title>
+  </head>
+  <body>
+    <outline type="atom" text="Feed Three" title="Feed Three"
+    xmlUrl="http://feedthree.com/feed/atom/" />
+  </body>
+</opml>
+'''
+
+
+@fixture
+def fx_filtering_entries(fx_test_stage):
+    stage = fx_test_stage
+    authors = [Person(name='vio')]
+    now = datetime.datetime(2013, 10, 30, 20, 55, 30, tzinfo=utc)
+    feed = Feed(id='http://feedone.com/feed/atom/', authors=authors,
+                title=Text(value='Feed One'),
+                updated_at=now)
+    for i in range(10):
+        feed.entries.append(
+            Entry(id='http://feedone.com/feed/atom/' + str(i) + '/',
+                  authors=authors,
+                  title=Text(value=str(i + 1)),
+                  updated_at=now + datetime.timedelta(days=1) * i)
+        )
+    for i in range(5):
+        feed.entries[i].read = Mark(marked=True, updated_at=now)
+    for i in range(3, 7):
+        feed.entries[i].starred = Mark(marked=True, updated_at=now)
+    stage.feeds[get_hash('http://feedone.com/feed/atom/')] = feed
+    stage.subscriptions = read(SubscriptionList, opml_for_filtering)
+
+
+@mark.parametrize(('read', 'star', 'expected_entries'), [
+    (True, True, [4, 5]),
+    (False, True, [6, 7]),
+    (None, True, [4, 5, 6, 7]),
+    (True, False, [1, 2, 3]),
+    (False, False, [8, 9, 10]),
+    (None, False, [1, 2, 3, 8, 9, 10]),
+    (True, None, [1, 2, 3, 4, 5]),
+    (False, None, [6, 7, 8, 9, 10]),
+    (None, None, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
+])
+def test_entries_filtering(read, star, expected_entries,
+                           fx_filtering_entries, fx_test_stage):
+    feed_id = get_hash('http://feedone.com/feed/atom/')
+    options = {}
+    if read is not None:
+        options['read'] = str(read)
+    if star is not None:
+        options['starred'] = str(star)
+    qs = url_encode(options)
     with app.test_client() as client:
-        feed_three_id = get_hash('http://feedone.com/feed/atom/')
-        test_entry_id = get_hash('http://feedone.com/feed/atom/1/')
-        r = client.get('/feeds/' + feed_three_id + '/entries/' +
-                       test_entry_id + '/')
-        assert r.status_code == 200
-        result = json.loads(r.data)
-        r = client.put(result['read_url'])
-        assert r.status_code == 200
-        r = client.get('/feeds/' + feed_three_id + '/entries/?read=True')
-        assert r.status_code == 200
-        read_result = json.loads(r.data)
-        assert len(read_result['entries'])
-        assert read_result['entries'][0]['title'] == 'Feed One: Entry One'
-        assert read_result['entries'][0]['read']
-        r = client.get('/feeds/' + feed_three_id + '/entries/?read=False')
-        unread_result = json.loads(r.data)
-        assert len(unread_result['entries'])
-        assert unread_result['entries'][0]['title'] == 'Feed One: Entry Two'
-        assert not unread_result['entries'][0]['read']
-        r = client.get('/feeds/' + feed_three_id + '/entries/')
-        not_filtered = json.loads(r.data)
-        assert len(not_filtered['entries']) == 2
+        r = client.get('/feeds/' + feed_id + '/entries/?' + qs)
+        entries = json.loads(r.data)['entries']
+        assert (frozenset(int(e['title']) for e in entries) ==
+                frozenset(expected_entries))
 
 
 opml_with_non_exist_feed = '''
