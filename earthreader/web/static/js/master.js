@@ -237,6 +237,7 @@ function getAllEntries() {
 	var all_feed = $('[role=navigation] .allfeed.header');
 	$('[role=navigation] .allfeed .current').removeClass('current');
 	all_feed.addClass('current');
+	closeMenu();
 	reloadEntries();
 }
 
