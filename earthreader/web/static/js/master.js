@@ -96,9 +96,13 @@ function clickComplementaryMenu(event) {
 }
 
 function removeCurrentSelected() {
-	var current = $('[role=navigation] .current');
+	var current = $('[role=navigation] .feedlist .current');
+	var url;
 
-	var url = current.attr('data-remove-feed-url') || current.attr('data-remove-category-url');
+	if (current.hasClass('header')) {
+		current = current.parent();
+	}
+	url = current.attr('data-remove-feed-url') || current.attr('data-remove-category-url');
 	if (url) {
 		var parentMenu = current;
 		while (parentMenu.hasClass('fold') === false) {
@@ -258,7 +262,6 @@ var makeFeed = function(parentObj, obj) {
 };
 
 function makeFeedList(obj, target) {
-	console.log(obj, target);
 	var feedList;
 	var i;
   
