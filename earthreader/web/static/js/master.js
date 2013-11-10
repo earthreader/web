@@ -4,37 +4,6 @@ function scrollToElement(parentElement, childElement) {
 }
 
 //FIXME: delete these
-function deleteJSON(url, onSuccess, onFail) {
-	var xhr = new XMLHttpRequest();
-	xhr.open('post', url + '?_method=DELETE');
-	xhr.onreadystatechange = function() {
-		if (xhr.readyState !== 4) {
-			return;
-		}
-
-		if (xhr.status === 200) {
-			if (onSuccess instanceof Function) {
-				var obj = JSON.parse(xhr.responseText);
-				(onSuccess)(obj);
-			}
-		} else {
-			if(onFail instanceof Function) {
-				(onFail)(xhr);
-			} else {
-				try {
-					var json = JSON.parse(xhr.responseText);
-					var error = json.error;
-					var message = json.message;
-					alert(error + '\n' + message);
-				}catch(err) {
-					alert(xhr.statusText);
-				}
-			}
-		}
-	};
-	xhr.send();
-}
-
 function post(url, parameter, onSuccess, onFail) {
 	var xhr = new XMLHttpRequest();
 	xhr.open('post', url);
@@ -112,7 +81,10 @@ function removeCurrentSelected() {
 			}
 		}
 
-		deleteJSON(url, function(obj) {
+		$.ajax({
+			'url': url,
+			'type': 'delete',
+		}).done(function(obj) {
 			makeFeedList(obj, parentMenu);
 		});
 	}
