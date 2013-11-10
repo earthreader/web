@@ -511,6 +511,12 @@ function clickEntry(event) {
 		wrapper.append(bottom_bar);
 		entry.append(wrapper);
 
+		//read
+		$.ajax({
+			'type': 'put',
+			'url': obj.read_url,
+		});
+
 		$(window).scrollTop(entry.position().top);
 	});
 }
