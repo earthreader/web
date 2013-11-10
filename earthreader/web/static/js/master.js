@@ -628,7 +628,8 @@ $(function () {
     }
     $(document.body).on(animationEnd, resizer);
 
-	$('[role=navigation] .persistent .unread').click();
+	$('[role=navigation] .persistent .unread').addClass('current');
+	$('[role=navigation] .feedlist .allfeed.header').addClass('current');
 	refreshFeedList();
 	reloadEntries();
 });
