@@ -4,37 +4,6 @@ function scrollToElement(parentElement, childElement) {
 }
 
 //FIXME: delete these
-function getJSON(url, onSuccess, onFail) {
-	var xhr = new XMLHttpRequest();
-	xhr.open('get', url);
-	xhr.onreadystatechange = function() {
-		if (xhr.readyState !== 4) {
-			return;
-		}
-
-		if (xhr.status === 200) {
-			if (onSuccess instanceof Function) {
-				var obj = JSON.parse(xhr.responseText);
-				(onSuccess)(obj);
-			}
-		} else {
-			if(onFail instanceof Function) {
-				(onFail)(xhr);
-			} else {
-				try {
-					var json = JSON.parse(xhr.responseText);
-					var error = json.error;
-					var message = json.message;
-					alert(error + '\n' + message);
-				}catch(err) {
-					alert(xhr.statusText);
-				}
-			}
-		}
-	};
-	xhr.send();
-}
-
 function deleteJSON(url, onSuccess, onFail) {
 	var xhr = new XMLHttpRequest();
 	xhr.open('post', url + '?_method=DELETE');
@@ -114,16 +83,6 @@ function changeFilter(event) {
 
 function clickComplementaryMenu(event) {
 	var target = $(event.target);
-	if (["input", "textarea"].indexOf(target.localName) >= 0) {
-		return;
-	}
-
-	while (target.attr('data-action') === null) {
-		target = target.parentElement;
-		if (target === null) {
-			return;
-		}
-	}
 
 	var action = target.attr('data-action');
 	closeSide();
@@ -264,7 +223,7 @@ var makeCategory = function(parentObj, obj) {
 
 	header.attr('draggable', true);
 
-	getJSON(obj.feeds_url, function(obj) {
+	$.get(obj.feeds_url, function(obj) {
 		for (i=0; i<obj.categories.length; i++) {
 			makeCategory(list, obj.categories[i]);
 		}
@@ -299,6 +258,7 @@ var makeFeed = function(parentObj, obj) {
 };
 
 function makeFeedList(obj, target) {
+	console.log(obj, target);
 	var feedList;
 	var i;
   
@@ -318,7 +278,9 @@ function makeFeedList(obj, target) {
 }
 
 function refreshFeedList() {
-	getJSON(URLS.feeds, makeFeedList);
+	$.get(URLS.feeds, function(obj) {
+		makeFeedList(obj);
+	});
 }
 
 function getAllEntries() {
@@ -362,7 +324,7 @@ function appendEntry(entry) {
 
 function getEntries(feed_url) {
 	var main = $('[role=main]');
-	getJSON(feed_url, function(obj) {
+	$.get(feed_url, function(obj) {
 		main.html(null);
 
 		var feed_title = obj.title;
@@ -403,7 +365,7 @@ function loadNextPage() {
 	var nextUrl = nextLoader.attr('data-next-url');
 	nextLoader.remove();
 
-	getJSON(nextUrl, function(obj) {
+	$.get(nextUrl, function(obj) {
 		var entries = obj.entries;
 		for (var i=0; i<entries.length; i++) {
 			appendEntry(entries[i]);
@@ -490,7 +452,7 @@ function clickEntry(event) {
 		return;
 	}
 
-	getJSON(entry_url, function(obj) {
+	$.get(entry_url, function(obj) {
 		var i;
 		//set current marker
 		main.find('.current').removeClass('current');
@@ -606,7 +568,7 @@ $(function () {
 	main.on('click', '.nextPage', loadNextPage);
 
 	var side = $('[role=complementary]');
-	side.on('click', clickComplementaryMenu);
+	side.on('click', '[data-action]', clickComplementaryMenu);
 
 	$(document).on('click', '.off-canvas-menu', toggleMenu);
 	$(document).on('click', '.off-canvas-side', toggleSide);
