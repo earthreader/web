@@ -452,10 +452,13 @@ function clickFeed(event) {
 	var target = $(event.target);
 	var feedlist = $('[role=navigation] .feedlist');
 
-	//toggle folding
-	if (target.hasClass('toggle')) {
-		target.parent().toggleClass('closed');
-		return;
+	while (target.hasClass('feed') === false) {
+		//toggle folding
+		if (target.hasClass('toggle')) {
+			target.parent().toggleClass('closed');
+			return;
+		}
+		target = target.parent();
 	}
 
 	//set current marker
