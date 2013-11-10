@@ -3,30 +3,6 @@ function scrollToElement(parentElement, childElement) {
 	parentElement.scrollLeft(parentElement.scrollLeft() + childElement.offset().left - parentElement.offset().left);
 }
 
-//FIXME: delete these
-function post(url, parameter, onSuccess, onFail) {
-	var xhr = new XMLHttpRequest();
-	xhr.open('post', url);
-	xhr.setRequestHeader("Content-type","application/x-www-form-urlencoded");
-	xhr.onreadystatechange = function() {
-		if (xhr.readyState !== 4) {
-			return;
-		}
-
-		if (xhr.status === 200) {
-			if (onSuccess instanceof Function) {
-				var obj = JSON.parse(xhr.responseText);
-				(onSuccess)(obj);
-			}
-		} else {
-			if(onFail instanceof Function) {
-				(onFail)(xhr);
-			}
-		}
-	};
-	xhr.send(parameter);
-}
-
 function resizer(event) {
 	var name = event.animationName;
 
@@ -141,7 +117,7 @@ function processForm(event) {
 			}
 		} catch (err) {
 		}
-		post(action, data, function(res) {
+		$.post(action,data).done(function(res) {
 			if (current === null) {
 				makeFeedList(res);
 			} else {
@@ -155,7 +131,7 @@ function processForm(event) {
 			});
 		});
 	} else {
-		post(target.attr(action), data, function(res) {
+		$.post(target.attr(action), data).done(function(res) {
 			alert(res);
 			target.each(function(){
 				this.reset();
