@@ -248,6 +248,7 @@ function appendEntry(entry) {
 	var header = $('<div>');
 	var time = $('<time>');
 	var title = $('<span>');
+	var marks = $('<div>');
 
 	article.addClass('entry');
 	article.attr('data-entries', entry.entry_url);
@@ -268,6 +269,21 @@ function appendEntry(entry) {
 	title.text(entry.title);
 	title.addClass('title');
 	header.append(title);
+
+	if (entry.read) {
+		header.addClass('read');
+		var readMark = $('<span>');
+		readMark.addClass('read');
+		marks.append(readMark);
+	}
+	if (entry.starred) {
+		header.addClass('starred');
+		var starMark = $('<span>');
+		starMark.addClass('star');
+		marks.append(starMark);
+	}
+	marks.addClass('marks');
+	header.append(marks);
 
 	article.append(header);
 	main.append(article);
@@ -435,6 +451,8 @@ function clickEntry(event) {
 		wrapper.append(bottom_bar);
 		entry.append(wrapper);
 
+		content.attr('data-read-url', obj.read_url);
+		content.attr('data-star-url', obj.star_url);
 		//read
 		$.ajax({
 			'type': 'put',
