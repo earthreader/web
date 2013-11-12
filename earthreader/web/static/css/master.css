@@ -259,6 +259,7 @@ input:not([type=button]):not([type=submit]):focus, textarea:focus {
 	padding: 1em 3em;
 	line-height: 1.4;
 	box-shadow: 0 1px 2px rgb(100, 100, 100) inset;
+	border-bottom: 1px solid rgb(238, 238, 238);
 }
 
 [role=main] .entry-content > h1 {
