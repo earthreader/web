@@ -76,7 +76,7 @@ function unreadCurrent() {
 	var method = 'DELETE';
 
 	$.ajax(url, {
-		'type': url,
+		'type': method,
 	}).done(function() {
 		markRead.remove();
 	});
