@@ -563,25 +563,29 @@ def feed_entry(category_id, feed_id, entry_id):
             'read_entry',
             category_id=category_id,
             feed_id=feed_id,
-            entry_id=entry_id
+            entry_id=entry_id,
+            _external=True
         ),
         unread_url=url_for(
             'unread_entry',
             category_id=category_id,
             feed_id=feed_id,
-            entry_id=entry_id
+            entry_id=entry_id,
+            _external=True
         ),
         star_url=url_for(
             'star_entry',
             category_id=category_id,
             feed_id=feed_id,
-            entry_id=entry_id
+            entry_id=entry_id,
+            _external=True
         ),
         unstar_url=url_for(
             'unstar_entry',
             category_id=category_id,
             feed_id=feed_id,
-            entry_id=entry_id
+            entry_id=entry_id,
+            _external=True
         ),
         feed={
             'title': feed.title,
