@@ -512,6 +512,7 @@ function clickEntry(event) {
 				markRead.addClass('read');
 				target.parent().find('.marks').append(markRead);
 			}
+			target.addClass('read');
 		});
 
 		$(window).scrollTop(entry.position().top);

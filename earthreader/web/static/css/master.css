@@ -131,6 +131,10 @@ body .wrapper {
 	position: relative;
 }
 
+[role=main] .entry-title:not(.read) {
+	font-weight: bold;
+}
+
 [role=main] .entry-title .marks {
 	position: absolute;
 	top: 0;
