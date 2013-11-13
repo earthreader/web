@@ -60,12 +60,14 @@ function removeCurrentSelected() {
 			}
 		}
 
-		$.ajax({
-			'url': url,
-			'type': 'delete',
-		}).done(function(obj) {
-			makeFeedList(obj, parentMenu);
-		});
+		if (confirm('remove ' + current.text() + '\nAre you sure?') == true){
+			$.ajax({
+				'url': url,
+				'type': 'delete',
+			}).done(function(obj) {
+				makeFeedList(obj, parentMenu);
+			});
+		}
 	}
 }
 
