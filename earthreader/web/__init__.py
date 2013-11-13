@@ -27,6 +27,7 @@ app.wsgi_app = MethodRewriteMiddleware(app.wsgi_app)
 
 app.config.update(dict(
     ALLFEED='All Feeds',
+    SESSION_NAME=None,
 ))
 
 
@@ -43,7 +44,7 @@ class EntryNotFound(ValueError):
 
 
 def get_stage():
-    session = Session()
+    session = Session(app.config['SESSION_NAME'])
     repo = FileSystemRepository(app.config['REPOSITORY'])
     return Stage(session, repo)
 
