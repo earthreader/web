@@ -79,6 +79,7 @@ function unreadCurrent() {
 		'type': method,
 	}).done(function() {
 		markRead.remove();
+		current.find('.entry-title').removeClass('read');
 	});
 }
 
