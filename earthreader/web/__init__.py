@@ -610,7 +610,7 @@ def read_entry(category_id, feed_id, entry_id):
         )
         r.status_code = 404
         return r
-    entry.read = Mark(marked=True, updated_at=now())
+    entry.read = True
     stage.feeds[feed_id] = feed
     return jsonify()
 
@@ -630,7 +630,7 @@ def unread_entry(category_id, feed_id, entry_id):
         )
         r.status_code = 404
         return r
-    entry.read = Mark(marked=False, updated_at=now())
+    entry.read = False
     stage.feeds[feed_id] = feed
     return jsonify()
 
@@ -650,7 +650,7 @@ def star_entry(category_id, feed_id, entry_id):
         )
         r.status_code = 404
         return r
-    entry.starred = Mark(marked=True, updated_at=now())
+    entry.starred = True
     stage.feeds[feed_id] = feed
     return jsonify()
 
@@ -670,6 +670,6 @@ def unstar_entry(category_id, feed_id, entry_id):
         )
         r.status_code = 404
         return r
-    entry.starred = Mark(marked=False, updated_at=now())
+    entry.starred = False
     stage.feeds[feed_id] = feed
     return jsonify()
