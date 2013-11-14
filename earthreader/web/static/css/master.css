@@ -125,6 +125,32 @@ body .wrapper {
 	font-weight: 900;
 }
 
+[role=main] .entry-title {
+	padding: .5em 2em;
+	border-bottom: 1px solid rgb(238, 238, 238);
+	position: relative;
+}
+
+[role=main] .entry-title:not(.read) {
+	font-weight: bold;
+}
+
+[role=main] .entry-title .marks {
+	position: absolute;
+	top: 0;
+	right: 0;
+	padding: .2em .5em;
+	font-size: 1.4em;
+}
+
+[role=main] .entry-title .read:before {
+	content: '\2713';
+}
+
+[role=main] .entry-title .star:before {
+	content: '\2606';
+}
+
 [role=main] .entry-title time,
 [role=main] .entry-title .feed,
 [role=main] .entry-title .title {
@@ -233,15 +259,11 @@ input:not([type=button]):not([type=submit]):focus, textarea:focus {
 	padding: 1.5em 2em;
 }
 
-[role=main] article .entry-title {
-	padding: .5em 2em;
-	border-bottom: 1px solid rgb(238, 238, 238);
-}
-
 [role=main] article .entry-content {
 	padding: 1em 3em;
 	line-height: 1.4;
 	box-shadow: 0 1px 2px rgb(100, 100, 100) inset;
+	border-bottom: 1px solid rgb(238, 238, 238);
 }
 
 [role=main] .entry-content > h1 {

@@ -26,6 +26,7 @@ app.wsgi_app = MethodRewriteMiddleware(app.wsgi_app)
 
 app.config.update(dict(
     ALLFEED='All Feeds',
+    SESSION_NAME=None,
 ))
 
 
@@ -42,7 +43,7 @@ class EntryNotFound(ValueError):
 
 
 def get_stage():
-    session = Session()
+    session = Session(app.config['SESSION_NAME'])
     repo = FileSystemRepository(app.config['REPOSITORY'])
     return Stage(session, repo)
 
@@ -561,25 +562,29 @@ def feed_entry(category_id, feed_id, entry_id):
             'read_entry',
             category_id=category_id,
             feed_id=feed_id,
-            entry_id=entry_id
+            entry_id=entry_id,
+            _external=True
         ),
         unread_url=url_for(
             'unread_entry',
             category_id=category_id,
             feed_id=feed_id,
-            entry_id=entry_id
+            entry_id=entry_id,
+            _external=True
         ),
         star_url=url_for(
             'star_entry',
             category_id=category_id,
             feed_id=feed_id,
-            entry_id=entry_id
+            entry_id=entry_id,
+            _external=True
         ),
         unstar_url=url_for(
             'unstar_entry',
             category_id=category_id,
             feed_id=feed_id,
-            entry_id=entry_id
+            entry_id=entry_id,
+            _external=True
         ),
         feed={
             'title': feed.title,

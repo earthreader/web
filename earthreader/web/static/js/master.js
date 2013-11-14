@@ -3,92 +3,6 @@ function scrollToElement(parentElement, childElement) {
 	parentElement.scrollLeft(parentElement.scrollLeft() + childElement.offset().left - parentElement.offset().left);
 }
 
-//FIXME: delete these
-function getJSON(url, onSuccess, onFail) {
-	var xhr = new XMLHttpRequest();
-	xhr.open('get', url);
-	xhr.onreadystatechange = function() {
-		if (xhr.readyState !== 4) {
-			return;
-		}
-
-		if (xhr.status === 200) {
-			if (onSuccess instanceof Function) {
-				var obj = JSON.parse(xhr.responseText);
-				(onSuccess)(obj);
-			}
-		} else {
-			if(onFail instanceof Function) {
-				(onFail)(xhr);
-			} else {
-				try {
-					var json = JSON.parse(xhr.responseText);
-					var error = json.error;
-					var message = json.message;
-					alert(error + '\n' + message);
-				}catch(err) {
-					alert(xhr.statusText);
-				}
-			}
-		}
-	};
-	xhr.send();
-}
-
-function deleteJSON(url, onSuccess, onFail) {
-	var xhr = new XMLHttpRequest();
-	xhr.open('post', url + '?_method=DELETE');
-	xhr.onreadystatechange = function() {
-		if (xhr.readyState !== 4) {
-			return;
-		}
-
-		if (xhr.status === 200) {
-			if (onSuccess instanceof Function) {
-				var obj = JSON.parse(xhr.responseText);
-				(onSuccess)(obj);
-			}
-		} else {
-			if(onFail instanceof Function) {
-				(onFail)(xhr);
-			} else {
-				try {
-					var json = JSON.parse(xhr.responseText);
-					var error = json.error;
-					var message = json.message;
-					alert(error + '\n' + message);
-				}catch(err) {
-					alert(xhr.statusText);
-				}
-			}
-		}
-	};
-	xhr.send();
-}
-
-function post(url, parameter, onSuccess, onFail) {
-	var xhr = new XMLHttpRequest();
-	xhr.open('post', url);
-	xhr.setRequestHeader("Content-type","application/x-www-form-urlencoded");
-	xhr.onreadystatechange = function() {
-		if (xhr.readyState !== 4) {
-			return;
-		}
-
-		if (xhr.status === 200) {
-			if (onSuccess instanceof Function) {
-				var obj = JSON.parse(xhr.responseText);
-				(onSuccess)(obj);
-			}
-		} else {
-			if(onFail instanceof Function) {
-				(onFail)(xhr);
-			}
-		}
-	};
-	xhr.send(parameter);
-}
-
 function resizer(event) {
 	var name = event.animationName;
 
@@ -102,7 +16,6 @@ function resizer(event) {
 
 function changeFilter(event) {
 	var target = $(event.target);
-	//FIXME: data-filter
 	var filter = target.attr('data-filter');
 	closeMenu();
 
@@ -114,16 +27,6 @@ function changeFilter(event) {
 
 function clickComplementaryMenu(event) {
 	var target = $(event.target);
-	if (["input", "textarea"].indexOf(target.localName) >= 0) {
-		return;
-	}
-
-	while (target.attr('data-action') === null) {
-		target = target.parentElement;
-		if (target === null) {
-			return;
-		}
-	}
 
 	var action = target.attr('data-action');
 	closeSide();
@@ -133,13 +36,21 @@ function clickComplementaryMenu(event) {
 	} else if (action === 'change-theme') {
 		var theme_name = target.attr('data-theme-name');
 		changeTheme(theme_name);
+	} else if (action === 'mark-unread') {
+		unreadCurrent();
+	} else if (action === 'toggle-star') {
+		toggleStarCurrent();
 	}
 }
 
 function removeCurrentSelected() {
-	var current = $('[role=navigation] .current');
+	var current = $('[role=navigation] .feedlist .current');
+	var url;
 
-	var url = current.attr('data-remove-feed-url') || current.attr('data-remove-category-url');
+	if (current.hasClass('header')) {
+		current = current.parent();
+	}
+	url = current.attr('data-remove-feed-url') || current.attr('data-remove-category-url');
 	if (url) {
 		var parentMenu = current;
 		while (parentMenu.hasClass('fold') === false) {
@@ -149,10 +60,60 @@ function removeCurrentSelected() {
 			}
 		}
 
-		deleteJSON(url, function(obj) {
-			makeFeedList(obj, parentMenu);
-		});
+		if (confirm('remove ' + current.text() + '\nAre you sure?') == true){
+			$.ajax({
+				'url': url,
+				'type': 'delete',
+			}).done(function(obj) {
+				makeFeedList(obj, parentMenu);
+			});
+		}
 	}
+}
+
+function unreadCurrent() {
+	var current = $('[role=main] .entry.current');
+	var markRead = current.find('.marks .read');
+	var url = current.attr('data-read-url');
+	var method = 'DELETE';
+
+	$.ajax(url, {
+		'type': method,
+	}).done(function() {
+		markRead.remove();
+		current.find('.entry-title').removeClass('read');
+	});
+}
+
+function toggleStarCurrent() {
+	var current = $('[role=main] .entry.current');
+	var markStar = current.find('.marks .star');
+	var url = current.attr('data-star-url');
+	var method;
+
+	if (current.length === 0) {
+		return;
+	}
+
+	if (markStar.length === 0) {
+		method = 'PUT';
+	} else {
+		method = 'DELETE';
+	}
+
+	$.ajax(url, {
+		'type': method,
+	}).done(function() {
+		if (markStar.length === 0) {
+			markStar = $('<span>');
+			markStar.addClass('star');
+			current.find('.marks').append(markStar);
+		} else {
+			markStar.remove();
+		}
+	});
+
+
 }
 
 function toggleMenu(event) {
@@ -206,7 +167,7 @@ function processForm(event) {
 			}
 		} catch (err) {
 		}
-		post(action, data, function(res) {
+		$.post(action,data).done(function(res) {
 			if (current === null) {
 				makeFeedList(res);
 			} else {
@@ -220,7 +181,7 @@ function processForm(event) {
 			});
 		});
 	} else {
-		post(target.attr(action), data, function(res) {
+		$.post(target.attr(action), data).done(function(res) {
 			alert(res);
 			target.each(function(){
 				this.reset();
@@ -264,7 +225,7 @@ var makeCategory = function(parentObj, obj) {
 
 	header.attr('draggable', true);
 
-	getJSON(obj.feeds_url, function(obj) {
+	$.get(obj.feeds_url, function(obj) {
 		for (i=0; i<obj.categories.length; i++) {
 			makeCategory(list, obj.categories[i]);
 		}
@@ -318,13 +279,16 @@ function makeFeedList(obj, target) {
 }
 
 function refreshFeedList() {
-	getJSON(URLS.feeds, makeFeedList);
+	$.get(URLS.feeds, function(obj) {
+		makeFeedList(obj);
+	});
 }
 
 function getAllEntries() {
 	var all_feed = $('[role=navigation] .allfeed.header');
 	$('[role=navigation] .allfeed .current').removeClass('current');
 	all_feed.addClass('current');
+	closeMenu();
 	reloadEntries();
 }
 
@@ -335,6 +299,7 @@ function appendEntry(entry) {
 	var header = $('<div>');
 	var time = $('<time>');
 	var title = $('<span>');
+	var marks = $('<div>');
 
 	article.addClass('entry');
 	article.attr('data-entries', entry.entry_url);
@@ -356,13 +321,28 @@ function appendEntry(entry) {
 	title.addClass('title');
 	header.append(title);
 
+	if (entry.read) {
+		header.addClass('read');
+		var readMark = $('<span>');
+		readMark.addClass('read');
+		marks.append(readMark);
+	}
+	if (entry.starred) {
+		header.addClass('starred');
+		var starMark = $('<span>');
+		starMark.addClass('star');
+		marks.append(starMark);
+	}
+	marks.addClass('marks');
+	header.append(marks);
+
 	article.append(header);
 	main.append(article);
 }
 
 function getEntries(feed_url) {
 	var main = $('[role=main]');
-	getJSON(feed_url, function(obj) {
+	$.get(feed_url, function(obj) {
 		main.html(null);
 
 		var feed_title = obj.title;
@@ -403,7 +383,7 @@ function loadNextPage() {
 	var nextUrl = nextLoader.attr('data-next-url');
 	nextLoader.remove();
 
-	getJSON(nextUrl, function(obj) {
+	$.get(nextUrl, function(obj) {
 		var entries = obj.entries;
 		for (var i=0; i<entries.length; i++) {
 			appendEntry(entries[i]);
@@ -422,7 +402,6 @@ function loadNextPage() {
 }
 
 function autoNextPager(event) {
-	//FIXME
 	var nextPage = $('[role=main] .nextPage');
 
 	if (nextPage.length === 0) {
@@ -452,10 +431,13 @@ function clickFeed(event) {
 	var target = $(event.target);
 	var feedlist = $('[role=navigation] .feedlist');
 
-	//toggle folding
-	if (target.hasClass('toggle')) {
-		target.parent().toggleClass('closed');
-		return;
+	while (target.hasClass('feed') === false) {
+		//toggle folding
+		if (target.hasClass('toggle')) {
+			target.parent().toggleClass('closed');
+			return;
+		}
+		target = target.parent();
 	}
 
 	//set current marker
@@ -487,7 +469,7 @@ function clickEntry(event) {
 		return;
 	}
 
-	getJSON(entry_url, function(obj) {
+	$.get(entry_url, function(obj) {
 		var i;
 		//set current marker
 		main.find('.current').removeClass('current');
@@ -520,10 +502,20 @@ function clickEntry(event) {
 		wrapper.append(bottom_bar);
 		entry.append(wrapper);
 
+		target.parent().attr('data-read-url', obj.read_url);
+		target.parent().attr('data-star-url', obj.star_url);
 		//read
 		$.ajax({
 			'type': 'put',
 			'url': obj.read_url,
+		}).done(function() {
+			var markRead = target.parent().find('.marks .read');
+			if (markRead.length === 0) {
+				markRead = $('<span>');
+				markRead.addClass('read');
+				target.parent().find('.marks').append(markRead);
+			}
+			target.addClass('read');
 		});
 
 		$(window).scrollTop(entry.position().top);
@@ -603,7 +595,7 @@ $(function () {
 	main.on('click', '.nextPage', loadNextPage);
 
 	var side = $('[role=complementary]');
-	side.on('click', clickComplementaryMenu);
+	side.on('click', '[data-action]', clickComplementaryMenu);
 
 	$(document).on('click', '.off-canvas-menu', toggleMenu);
 	$(document).on('click', '.off-canvas-side', toggleSide);
@@ -628,7 +620,8 @@ $(function () {
     }
     $(document.body).on(animationEnd, resizer);
 
-	$('[role=navigation] .persistent .unread').click();
+	$('[role=navigation] .persistent .unread').addClass('current');
+	$('[role=navigation] .feedlist .allfeed.header').addClass('current');
 	refreshFeedList();
 	reloadEntries();
 });
