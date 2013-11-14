@@ -71,4 +71,4 @@ def earthreader():
                 feed_id = hashlib.sha1(feed_url).hexdigest()
                 stage.feeds[feed_id] = feed_data
         except CrawlError as e:
-            print(e.msg, file=sys.stderr)
+            print(e.message, file=sys.stderr)
