@@ -495,13 +495,17 @@ def update_entries(category_id, feed_id=None):
     else:
         urls = [subscription.feed_uri for subscription
                 in cursor.recursive_subscriptions]
-    generator = crawl(urls, 4)
-    try:
-        for feed_url, (feed_data, crawler_hints) in generator:
-            feed_id = get_hash(feed_data.id)
-            stage.feeds[feed_id] = feed_data
-    except CrawlError as e:
-        failed.append(e.msg)
+    it = iter(crawl(urls, 4))
+    while True:
+        try:
+            feed_url, (feed_data, crawler_hints) = next(it)
+        except CrawlError as e:
+            failed.append(e.message)
+            continue
+        except StopIteration:
+            break
+        feed_id = get_hash(feed_data.id)
+        stage.feeds[feed_id] = feed_data
     r = jsonify(failed=failed)
     r.status_code = 202
     return r
