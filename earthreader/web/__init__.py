@@ -9,7 +9,6 @@ from flask import Flask, jsonify, render_template, request, url_for
 from libearth.codecs import Rfc3339
 from libearth.compat import binary
 from libearth.crawler import CrawlError, crawl
-from libearth.feed import Mark
 from libearth.parser.autodiscovery import autodiscovery, FeedUrlNotFoundError
 from libearth.parser.heuristic import get_format
 from libearth.repository import FileSystemRepository
