@@ -424,6 +424,10 @@ function reloadEntries() {
 	var filter = currentFilter.attr('data-filter');
 	var url = currentFeed.attr('data-entries') || currentFeed.parent().attr('data-entries') || URLS.entries;
 
+	//crawl newer feed
+	$.ajax(url, {
+		'type': 'PUT',
+	});
 	getEntries(url + filter);
 }
 
