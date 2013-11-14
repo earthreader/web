@@ -245,14 +245,12 @@ def xmls(request, fx_test_stage):
     generator = crawl(feed_urls, 4)
     for result in generator:
         feed_data = result[1][0]
-        feed_url = result[0]
-        feed_id = get_hash(feed_url)
+        feed_id = get_hash(feed_data.id)
         stage.feeds[feed_id] = feed_data
     stage.subscriptions = subscriptions
 
 
 def test_all_feeds(xmls):
-    FEED_ID_PATTERN = re.compile('(?:.?)+/feeds/(.+)/entries/')
     with app.test_client() as client:
         # /
         r = client.get('/feeds/')
@@ -265,7 +263,7 @@ def test_all_feeds(xmls):
         assert root_categories[1]['title'] == 'categorythree'
         # /feedthree
         feed_url = root_feeds[0]['entries_url']
-        feed_id = FEED_ID_PATTERN.match(feed_url).group(1)
+        feed_id = get_hash('http://feedthree.com/feed/atom/')
         assert feed_url == \
             url_for(
                 'feed_entries',
@@ -309,7 +307,7 @@ def test_all_feeds(xmls):
         assert one_categories[0]['title'] == 'categorytwo'
         # /categoryone/feedone
         feed_url = one_feeds[0]['entries_url']
-        feed_id = FEED_ID_PATTERN.match(feed_url).group(1)
+        feed_id = get_hash('http://feedone.com/feed/atom/')
         assert feed_url == \
             url_for(
                 'feed_entries',
@@ -366,7 +364,7 @@ def test_all_feeds(xmls):
             )
 
         feed_url = two_feeds[0]['entries_url']
-        feed_id = FEED_ID_PATTERN.match(feed_url).group(1)
+        feed_id = get_hash('http://feedtwo.com/feed/atom/')
         assert feed_url == \
             url_for(
                 'feed_entries',
@@ -412,7 +410,7 @@ def test_all_feeds(xmls):
         assert len(three_categories) == 0
         # /categorythree/feedone
         feed_url = three_feeds[0]['entries_url']
-        feed_id = FEED_ID_PATTERN.match(feed_url).group(1)
+        feed_id = get_hash('http://feedfour.com/feed/atom/')
         assert feed_url == \
             url_for(
                 'feed_entries',

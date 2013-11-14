@@ -171,19 +171,18 @@ def get_all_feeds(category, path=None):
         feed_path = path
     for child in category:
         if isinstance(child, Subscription):
-            feed_id = get_hash(child.feed_uri)
             feeds.append({
                 'title': child._title,
                 'entries_url': url_for(
                     'feed_entries',
                     category_id=feed_path,
-                    feed_id=feed_id,
+                    feed_id=child.feed_id,
                     _external=True
                 ),
                 'remove_feed_url': url_for(
                     'delete_feed',
                     category_id=feed_path,
-                    feed_id=feed_id,
+                    feed_id=child.feed_id,
                     _external=True
                 )
             })
@@ -320,7 +319,7 @@ def add_feed(category_id):
                 subscription.alternate_uri = link.uri
     cursor.add(subscription)
     stage.subscriptions = subscriptions
-    feed_id = get_hash(feed_url)
+    feed_id = get_hash(feed.id)
     stage.feeds[feed_id] = feed
     return feeds(category_id)
 
@@ -448,12 +447,12 @@ def category_entries(category_id):
         r.status_code = 404
         return r
     subscriptions = cursor.recursive_subscriptions
-    uris = []
+    ids = []
     for subscription in subscriptions:
-        uris.append(get_hash(subscription.feed_uri))
+        ids.append(subscription.feed_id)
     read = request.args.get('read')
     starred = request.args.get('starred')
-    _, entries, url_token = get_entries(uris, category_id, read, starred)
+    _, entries, url_token = get_entries(ids, category_id, read, starred)
     if len(entries) < 20:
         next_url = None
     else:
@@ -498,7 +497,7 @@ def update_entries(category_id, feed_id=None):
     generator = crawl(urls, 4)
     try:
         for feed_url, (feed_data, crawler_hints) in generator:
-            feed_id = get_hash(feed_url)
+            feed_id = get_hash(feed_data.id)
             stage.feeds[feed_id] = feed_data
     except CrawlError as e:
         failed.append(e.msg)
