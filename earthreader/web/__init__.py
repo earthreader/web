@@ -566,9 +566,8 @@ def update_entries(category_id, feed_id=None):
         return r
     failed = []
     if feed_id:
-        for subscription in cursor.subscriptions:
-            urls = [subscription.feed_uri]
-            break
+        urls = [sub.feed_uri for sub in cursor.subscriptions
+                if sub.feed_id == feed_id]
     else:
         urls = [subscription.feed_uri for subscription
                 in cursor.recursive_subscriptions]
