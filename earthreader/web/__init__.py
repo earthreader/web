@@ -486,7 +486,6 @@ def category_entries(category_id):
                                 get_permalink(feed), it, entry)
                         iters.append(item)
                         break
-    iterators[url_token] = iters, now()
     entries = []
     while len(entries) < 20 and iters:
         iters = \
@@ -529,6 +528,7 @@ def category_entries(category_id):
                         entry)
                 iters[0] = item
                 break
+    iterators[url_token] = iters, now()
     tidy_iterators_up()
     if len(entries) < 20:
         next_url = None
