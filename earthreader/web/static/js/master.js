@@ -355,8 +355,14 @@ function getEntries(feed_url) {
 
 		main.append(header);
 
-		for (var i=0; i<entries.length; i++) {
-			appendEntry(entries[i]);
+		if (entries.length === 0) {
+			var noEntry = $('<p>');
+			noEntry.text('No more entry');
+			main.append(noEntry);
+		} else {
+			for (var i=0; i<entries.length; i++) {
+				appendEntry(entries[i]);
+			}
 		}
 
 		if (obj.next_url) {
