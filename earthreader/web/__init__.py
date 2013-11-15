@@ -486,7 +486,6 @@ def category_entries(category_id):
                                 get_permalink(feed), it, entry)
                         iters.append(item)
                         break
-    iterators[url_token] = iters, now()
     entries = []
     while len(entries) < 20 and iters:
         iters = \
@@ -529,6 +528,7 @@ def category_entries(category_id):
                         entry)
                 iters[0] = item
                 break
+    iterators[url_token] = iters, now()
     tidy_iterators_up()
     if len(entries) < 20:
         next_url = None
@@ -537,7 +537,9 @@ def category_entries(category_id):
             'category_entries',
             category_id=category_id,
             url_token=url_token,
-            entry_after=entries[-1]['updated'] + '@' + entries[-1]['entry_id']
+            entry_after=entries[-1]['updated'] + '@' + entries[-1]['entry_id'],
+            read=read,
+            starred=starred
         )
     return jsonify(
         title=category_id.split('/')[-1][1:] or app.config['ALLFEED'],
