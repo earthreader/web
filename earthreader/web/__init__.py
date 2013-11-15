@@ -476,7 +476,6 @@ def category_entries(category_id):
 @app.route('/entries/', defaults={'category_id': '/'}, methods=['PUT'])
 @app.route('/<path:category_id>/entries/', methods=['PUT'])
 def update_entries(category_id, feed_id=None):
-    print(category_id, feed_id)
     stage = get_stage()
     try:
         subscription_list, cursor, target = check_path_valid(category_id)
