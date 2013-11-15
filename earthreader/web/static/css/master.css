@@ -7,6 +7,7 @@ html, body {
 
 body {
 	line-height: 1.2;
+	min-height: 100%;
 
 	animation-name: small;
 	animation-duration: .001s;
