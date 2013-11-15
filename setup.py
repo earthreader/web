@@ -45,7 +45,7 @@ setup(
     author_email='earthreader' '@' 'librelist.com',
     entry_points={
         'console_scripts': [
-            'earthreader = earthreader.web.command:earthreader'
+            'earthreader = earthreader.web.command:main'
         ]
     },
     license='AGPLv3 or later',
