@@ -902,9 +902,7 @@ def test_non_exist_feed(fx_non_exist_opml):
             len(feed_one_result['entries']) == 2
         non_exist_id = get_hash('Non Exist')
         r = client.get('/-categoryone/feeds/' + non_exist_id + '/entries/')
-        assert r.status_code == 200
-        non_exist_result = json.loads(r.data)
-        assert len(non_exist_result['entries']) == 0
+        assert r.status_code == 404
 
 
 @fixture
