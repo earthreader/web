@@ -394,7 +394,7 @@ def delete_feed(category_id, feed_id):
     else:
         r = jsonify(
             error='feed-not-found-in-path',
-            message='Given feed does not exists in the path'
+            message='Given feed does not exist in the path'
         )
         r.status_code = 400
         return r
