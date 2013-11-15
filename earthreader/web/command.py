@@ -51,7 +51,8 @@ def earthreader():
             REPOSITORY=repository
             ))
         try:
-            app.run(host=args.host, port=args.port, debug=args.debug)
+            app.run(host=args.host, port=args.port, debug=args.debug,
+                    threaded=True)
         except socket.error as e:
             parser.error(str(e))
 
