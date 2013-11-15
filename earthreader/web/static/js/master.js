@@ -60,7 +60,7 @@ function removeCurrentSelected() {
 			}
 		}
 
-		if (confirm('remove ' + current.text() + '\nAre you sure?') == true){
+		if (confirm('remove ' + current.text() + '\nAre you sure?') === true){
 			$.ajax({
 				'url': url,
 				'type': 'delete',
