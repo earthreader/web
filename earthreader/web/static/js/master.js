@@ -586,6 +586,11 @@ function keyboardShortcut(event) {
 		case 85: //u
 			unreadCurrent();
 			break;
+		case 191: // /
+			if (event.shiftKey) {
+				openManual();
+			}
+			break;
 	}
 }
 
@@ -596,6 +601,14 @@ function changeTheme(name) {
 
 	var theme = $('style.theme');
 	theme.html("@import url('" + THEMES[name] + "');");
+}
+
+function openManual() {
+	$('#manual').fadeIn();
+}
+
+function closeManual() {
+	$('#manual').fadeOut();
 }
 
 $(function () {
@@ -621,6 +634,8 @@ $(function () {
 	$(document).on('submit', 'form', processForm);
 	$(window).on('keydown', keyboardShortcut);
 	$(window).on('scroll', autoNextPager);
+
+	$('#manual').click(closeManual);
 
 	//FIXME: clean it
     var animationEnd;
