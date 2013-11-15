@@ -940,29 +940,29 @@ def xmls_for_next(request, fx_test_stage):
                                                    tzinfo=utc))
     for i in range(25):
         feed_one.entries.append(
-            Entry(id='http://feedone.com/' + str(i),
+            Entry(id='http://feedone.com/' + str(24 - i),
                   authors=authors,
-                  title=Text(value='Feed One: Entry ' + str(i)),
-                  updated_at=datetime.datetime(2013, 10, 6, 20, 55, 30,
+                  title=Text(value='Feed One: Entry ' + str(24 - i)),
+                  updated_at=datetime.datetime(2013, 10, 30, 20, 55, 30,
                                                tzinfo=utc) +
-                  datetime.timedelta(days=1)*i)
+                  datetime.timedelta(days=-1)*i)
         )
         feed_two.entries.append(
-            Entry(id='http://feedtwo.com/' + str(i),
+            Entry(id='http://feedtwo.com/' + str(24 - i),
                   authors=authors,
-                  title=Text(value='Feed Two: Entry ' + str(i)),
-                  updated_at=datetime.datetime(2013, 10, 6, 19, 55, 30,
+                  title=Text(value='Feed Two: Entry ' + str(24 - i)),
+                  updated_at=datetime.datetime(2013, 10, 30, 19, 55, 30,
                                                tzinfo=utc) +
-                  datetime.timedelta(days=1)*i)
+                  datetime.timedelta(days=-1)*i)
         )
     for i in range(20):
         feed_three.entries.append(
-            Entry(id='http://feedthree.com/' + str(i),
+            Entry(id='http://feedthree.com/' + str(19 - i),
                   authors=authors,
-                  title=Text(value='Feed Three: Entry ' + str(i)),
-                  updated_at=datetime.datetime(2013, 10, 6, 20, 55, 30,
+                  title=Text(value='Feed Three: Entry ' + str(19 - i)),
+                  updated_at=datetime.datetime(2013, 10, 30, 20, 55, 30,
                                                tzinfo=utc) +
-                  datetime.timedelta(days=1)*i)
+                  datetime.timedelta(days=-1)*i)
         )
     subscriptions = read(SubscriptionList, opml)
     stage.subscriptions = subscriptions
