@@ -52,120 +52,16 @@ def get_stage():
     return Stage(session, repo)
 
 
+def get_hash(name):
+    return hashlib.sha1(binary(name)).hexdigest()
+
+
 def feedlist_exists():
     stage = get_stage()
     if stage.subscriptions:
         return True
     else:
         return False
-
-
-iterators = {}
-
-
-def tidy_iterators_up():
-    global iterators
-    lists = []
-    for key, (it, time_saved) in iterators.items():
-        if time_saved >= now() - datetime.timedelta(minutes=30):
-            lists.append((key, (it, time_saved)))
-        if len(lists) >= 10:
-            break
-    iterators = dict(lists)
-
-
-def to_bool(str):
-    return str.strip().lower() == 'true'
-
-
-def get_entries(feed_list, category_id, read, starred):
-    stage = get_stage()
-    url_token = request.args.get('url_token')
-    feed_title = None
-    it = None
-    if url_token:
-        pair = iterators.get(url_token)
-        if pair:
-            it = pair[0]
-    if not it:
-        feed_permalinks = {}
-        sorting_pool = []
-        for feed_id in feed_list:
-            try:
-                feed = stage.feeds[feed_id]
-            except KeyError:
-                continue
-            feed_permalink = feed_permalinks.get(feed_id)
-            if not feed_permalink:
-                for link in feed.links:
-                    if link.relation == 'alternate' and \
-                            link.mimetype == 'text/html':
-                        feed_permalinks[feed_id] = link.uri
-                        feed_permalink = link.uri
-                if not feed_permalink:
-                    feed_permalinks[feed_id] = feed.id
-                    feed_permalink = feed.id
-            for entry in feed.entries:
-                if (read is None or to_bool(read) == bool(entry.read)) and \
-                   (starred is None or to_bool(starred) == bool(entry.starred)):
-                    sorting_pool.append(
-                        (feed.title, feed_id, feed_permalink, entry))
-        sorting_pool.sort(key=lambda entry: entry[3].updated_at,
-                          reverse=True)
-        it = iter(sorting_pool)
-        if not url_token:
-            url_token = now().__str__()
-        iterators[url_token] = it, now()
-    entry_after = None
-    entry_after = request.args.get('entry_after')
-    next_key = None
-    if entry_after:
-        next_key = Rfc3339().decode(entry_after.replace(' ', 'T'))
-    entries = []
-    while len(entries) < 20:
-        try:
-            feed_title, feed_id, feed_permalink, entry = next(it)
-        except StopIteration:
-            iterators.pop(url_token)
-            break
-        if next_key and entry.updated_at >= next_key:
-            continue
-        entry_permalink = None
-        for link in entry.links:
-            if link.relation == 'alternate' and \
-                    link.mimetype == 'text/html':
-                entry_permalink = link.uri
-        if not entry_permalink:
-            entry_permalink = entry.id
-        entries.append({
-            'title': entry.title,
-            'entry_url': url_for(
-                'feed_entry',
-                category_id=category_id,
-                feed_id=feed_id,
-                entry_id=get_hash(entry.id),
-                _external=True,
-            ),
-            'permalink': entry_permalink or None,
-            'updated': entry.updated_at.__str__(),
-            'read': bool(entry.read) if entry.read else False,
-            'starred': bool(entry.starred) if entry.starred else False,
-            'feed': {
-                'title': feed_title,
-                'entries_url': url_for(
-                    'feed_entries',
-                    feed_id=feed_id
-                ),
-                'permalink': feed_permalink or None
-            }
-        })
-    tidy_iterators_up()
-    print feed_title
-    return feed_title if len(feed_list) == 1 else None, entries, url_token
-
-
-def get_hash(name):
-    return hashlib.sha1(binary(name)).hexdigest()
 
 
 def get_all_feeds(category, path=None):
@@ -407,6 +303,24 @@ def delete_feed(category_id, feed_id):
     return feeds(category_id)
 
 
+iterators = {}
+
+
+def tidy_iterators_up():
+    global iterators
+    lists = []
+    for key, (it, time_saved) in iterators.items():
+        if time_saved >= now() - datetime.timedelta(minutes=30):
+            lists.append((key, (it, time_saved)))
+        if len(lists) >= 10:
+            break
+    iterators = dict(lists)
+
+
+def to_bool(str):
+    return str.strip().lower() == 'true'
+
+
 def get_iterator(url_token):
     pair = iterators.get(url_token)
     if pair:
@@ -450,7 +364,7 @@ def feed_entries(category_id, feed_id):
         r.status_code = 404
         return r
     url_token = request.args.get('url_token')
-    it = None
+    it = []
     if url_token:
         try:
             it = get_iterator(url_token)
@@ -463,7 +377,7 @@ def feed_entries(category_id, feed_id):
         entry_after = request.args.get('entry_after')
         if entry_after:
             entry = next(it)
-            while str(entry.updated_at) + get_hash(entry.id) == entry_after:
+            while get_hash(entry.id) == entry_after:
                 entry = next(it)
     iterators[url_token] = it, now()
     entries = []
@@ -511,7 +425,7 @@ def feed_entries(category_id, feed_id):
             category_id=category_id,
             feed_id=feed_id,
             url_token=url_token,
-            entry_after=entries[-1]['updated'] + entries[-1]['entry_id']
+            entry_after=entries[-1]['entry_id']
         )
     return jsonify(
         title=feed.title,
@@ -523,6 +437,7 @@ def feed_entries(category_id, feed_id):
 @app.route('/entries/', defaults={'category_id': '/'})
 @app.route('/<path:category_id>/entries/')
 def category_entries(category_id):
+    stage = get_stage()
     try:
         subscriptions, cursor, target = check_path_valid(category_id)
     except InvalidCategoryPath:
@@ -532,13 +447,100 @@ def category_entries(category_id):
         )
         r.status_code = 404
         return r
-    subscriptions = cursor.recursive_subscriptions
-    ids = []
-    for subscription in subscriptions:
-        ids.append(subscription.feed_id)
+    url_token = request.args.get('url_token')
+    iters = []
+    if url_token:
+        try:
+            iters = get_iterator(url_token)
+        except IteratorNotFound:
+            pass
+    else:
+        url_token = str(now())
     read = request.args.get('read')
     starred = request.args.get('starred')
-    _, entries, url_token = get_entries(ids, category_id, read, starred)
+    if not iters:
+        subscriptions = cursor.recursive_subscriptions
+        entry_after = request.args.get('entry_after')
+        if entry_after:
+            time_after, id = entry_after.split('@')
+            time_after = Rfc3339().decode(time_after.replace(' ', 'T'))
+            for subscription in subscriptions:
+                try:
+                    feed = stage.feeds[subscription.feed_id]
+                except KeyError:
+                    continue
+                it = iter(feed.entries)
+                while True:
+                    try:
+                        entry = next(it)
+                    except StopIteration:
+                        break
+                    if (entry.updated_at <= time_after and
+                        get_hash(entry.id) != id and
+                        (read is None or to_bool(read) == bool(entry.read)) and
+                        (starred is None or
+                         to_bool(starred) == bool(entry.starred))):
+                        item = (feed.title, feed.id, get_permalink(feed), it,
+                                entry)
+                        iters.append(item)
+                        break
+        else:
+            for subscription in subscriptions:
+                try:
+                    feed = stage.feeds[subscription.feed_id]
+                except KeyError:
+                    continue
+                it = iter(feed.entries)
+                try:
+                    item = (feed.title, get_hash(feed.id), get_permalink(feed),
+                            it, next(it))
+                except KeyError:
+                    continue
+                iters.append(item)
+    iterators[url_token] = iters, now()
+    entries = []
+    while len(entries) < 20 and iters:
+        iters = \
+            sorted(iters, key=lambda item: item[4].updated_at, reverse=True)
+        feed_title, feed_id, feed_permalink, it, entry = iters[0]
+        entry_permalink = get_permalink(entry)
+        entries.append({
+            'title': entry.title,
+            'entry_url': url_for(
+                'feed_entry',
+                category_id=category_id,
+                feed_id=feed_id,
+                entry_id=get_hash(entry.id),
+                _external=True,
+            ),
+            'entry_id': get_hash(entry.id),
+            'permalink': entry_permalink or None,
+            'updated': entry.updated_at.__str__(),
+            'read': bool(entry.read) if entry.read else False,
+            'starred': bool(entry.starred) if entry.starred else False,
+            'feed': {
+                'title': feed_title,
+                'entries_url': url_for(
+                    'feed_entries',
+                    feed_id=feed_id
+                ),
+                'permalink': feed_permalink or None
+            }
+        })
+        while True:
+            try:
+                entry = next(it)
+            except StopIteration:
+                iters.pop(0)
+                break
+            if ((read is None or to_bool(read) == bool(entry.read)) and
+                (starred is None or
+                 to_bool(starred) == bool(entry.starred))):
+                item = (feed_title, feed_id, feed_permalink, it,
+                        entry)
+                iters[0] = item
+                break
+    tidy_iterators_up()
     if len(entries) < 20:
         next_url = None
     else:
@@ -546,7 +548,7 @@ def category_entries(category_id):
             'category_entries',
             category_id=category_id,
             url_token=url_token,
-            entry_after=entries[-1]['updated'] if entries else None
+            entry_after=entries[-1]['updated'] + '@' + entries[-1]['entry_id']
         )
     return jsonify(
         title=category_id.split('/')[-1][1:] or app.config['ALLFEED'],
