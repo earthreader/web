@@ -87,6 +87,18 @@ And open **http://your.website.domain/earthreader/** with your browser.
 
 __ http://flask.pocoo.org/docs/deploying/mod_wsgi/
 
+
+Shortcuts
+=========
+
+Vim-like keyboard shortcuts are available in earthreader web
+
+- j/k : Go to older/newer entry
+- o : open entry in new tab
+- u : mark as unread
+- s : star/unstar
+
+
 Links
 =====
 
