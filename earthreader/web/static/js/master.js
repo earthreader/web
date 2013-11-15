@@ -173,7 +173,6 @@ function processForm(event) {
 			} else {
 				var fold = current.next();
 				fold.html("");
-				//makeCategory(fold, res);
 				makeFeedList(res, fold);
 			}
 			target.each(function(){
@@ -213,7 +212,7 @@ var makeCategory = function(parentObj, obj) {
 		container.attr('data-remove-category-url', obj.remove_category_url);
 	}
 
-	header.text(obj.title);
+	header.html(obj.title.link(obj.entries_url));
 
 	var toggle = $('<span>');
 	toggle.addClass('toggle');
@@ -248,7 +247,7 @@ var makeFeed = function(parentObj, obj) {
 	elem.attr('data-entries', obj.entries_url);
 	elem.attr('data-remove-feed-url', obj.remove_feed_url);
 	elem.attr('role', 'link');
-	elem.text(obj.title);
+	elem.html(obj.title.link(obj.entries_url));
 
 	var handle = $('<span>');
 	handle.addClass('handle');
@@ -535,7 +534,10 @@ function clickEntry(event) {
 function clickLink(event) {
 	var target = event.target;
 
-	if (target.host != location.host) {
+	if (target.host === location.host) {
+		//FIXME: ajax request
+		event.preventDefault();
+	} else {
 		window.open(target.href);
 		event.preventDefault();
 	}
