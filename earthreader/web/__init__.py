@@ -160,6 +160,7 @@ def get_entries(feed_list, category_id, read, starred):
             }
         })
     tidy_iterators_up()
+    print feed_title
     return feed_title if len(feed_list) == 1 else None, entries, url_token
 
 
