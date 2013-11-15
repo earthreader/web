@@ -539,7 +539,8 @@ function clickEntry(event) {
 function refreshFeed(event) {
 	var target = $(event.target);
 	var url = target.attr('href');
-	$.ajax(url, {'type': 'PUT'});
+	$.ajax(url, {'type': 'PUT'})
+		.done(reloadEntries);
 }
 
 function clickLink(event) {
