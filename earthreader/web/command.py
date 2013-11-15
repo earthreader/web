@@ -2,11 +2,13 @@ from __future__ import print_function
 
 import argparse
 import hashlib
+import logging
 import os.path
 import socket
 import sys
 
 from earthreader.web import app
+from waitress import serve
 
 from libearth.crawler import crawl, CrawlError
 from libearth.repository import FileSystemRepository
@@ -39,14 +41,12 @@ def server(args):
     repository = args.repository
     if not os.path.isdir(repository):
         os.mkdir(repository)
-    app.config.update(dict(
-        REPOSITORY=repository
-    ))
-    try:
-        app.run(host=args.host, port=args.port, debug=args.debug,
-                threaded=True)
-    except socket.error as e:
-        parser.error(str(e))
+    app.config.update(REPOSITORY=repository)
+    app.debug = args.debug
+    if args.debug:
+        app.run(host=args.host, port=args.port, debug=args.debug, threaded=True)
+    else:
+        serve(app, host=args.host, port=args.port)
 
 
 parser = argparse.ArgumentParser(prog='earthreader')

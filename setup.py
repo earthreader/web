@@ -31,7 +31,11 @@ class pytest(test):
         raise SystemExit(errno)
 
 
-install_requires = ['Flask >= 0.10', 'libearth == 0.1.0, == dev']
+install_requires = [
+    'Flask >= 0.10',
+    'libearth == 0.1.0, == dev',
+    'waitress'
+]
 if sys.version_info < (2, 7):
     install_requires.append('argparse >= 1.2.1')
 
