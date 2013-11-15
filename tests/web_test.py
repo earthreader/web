@@ -964,6 +964,8 @@ def xmls_for_next(request, fx_test_stage):
                                                tzinfo=utc) +
                   datetime.timedelta(days=-1)*i)
         )
+    for i in range(10):
+        feed_two.entries[0].read = True
     subscriptions = read(SubscriptionList, opml)
     stage.subscriptions = subscriptions
     stage.feeds[get_hash('http://feedone.com/')] = feed_one
@@ -1016,6 +1018,14 @@ def test_category_entries_next(xmls_for_next):
         result = json.loads(r.data)
         assert len(result['entries']) == 10
         assert result['entries'][-1]['title'] == 'Feed Two: Entry 0'
+
+
+def test_category_entries_filtering(xmls_for_next):
+    with app.test_client() as client:
+        r = client.get('/-categoryone/entries/?read=False')
+        result = json.loads(r.data)
+        for entry in result['entries']:
+            assert entry['read'] is False
 
 
 def test_request_same_feed(xmls_for_next):

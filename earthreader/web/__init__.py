@@ -462,8 +462,10 @@ def category_entries(category_id):
         subscriptions = cursor.recursive_subscriptions
         entry_after = request.args.get('entry_after')
         if entry_after:
-            time_after, id = entry_after.split('@')
+            time_after, _id = entry_after.split('@')
             time_after = Rfc3339().decode(time_after.replace(' ', 'T'))
+        else:
+            time_after, _id = None, None
             for subscription in subscriptions:
                 try:
                     feed = stage.feeds[subscription.feed_id]
@@ -475,28 +477,15 @@ def category_entries(category_id):
                         entry = next(it)
                     except StopIteration:
                         break
-                    if (entry.updated_at <= time_after and
-                        get_hash(entry.id) != id and
+                    if ((time_after is None or entry.updated_at <= time_after)
+                        and (_id is None or get_hash(entry.id) != _id) and
                         (read is None or to_bool(read) == bool(entry.read)) and
                         (starred is None or
                          to_bool(starred) == bool(entry.starred))):
-                        item = (feed.title, feed.id, get_permalink(feed), it,
-                                entry)
+                        item = (feed.title, get_hash(feed.id),
+                                get_permalink(feed), it, entry)
                         iters.append(item)
                         break
-        else:
-            for subscription in subscriptions:
-                try:
-                    feed = stage.feeds[subscription.feed_id]
-                except KeyError:
-                    continue
-                it = iter(feed.entries)
-                try:
-                    item = (feed.title, get_hash(feed.id), get_permalink(feed),
-                            it, next(it))
-                except KeyError:
-                    continue
-                iters.append(item)
     iterators[url_token] = iters, now()
     entries = []
     while len(entries) < 20 and iters:
