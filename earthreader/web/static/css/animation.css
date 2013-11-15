@@ -7,12 +7,3 @@
 	from { clip: rect(1px, auto, auto, auto); }
 	to { clip: rect(0px, auto, auto, auto); }
 }
-
-@keyframes fade-in {
-	from { opacity: 0; }
-}
-
-@keyframes slide-down {
-	from { transform: translateY(-50%); }
-	to { transform: translateY(0); }
-}
