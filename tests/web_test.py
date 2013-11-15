@@ -648,7 +648,7 @@ def fx_xml_for_update(xmls, request):
         <link type="text/html" rel="alternate" href="http://feedtwo.com" />
         <entry>
             <title>Feed Two: Entry Two</title>
-            <id>http://feedtwo.com/feed/atom/1/</id>
+            <id>http://feedtwo.com/feed/atom/2/</id>
             <updated>2013-11-20T07:49:20+07:00</updated>
             <published>2013-11-20T07:49:20+07:00</published>
             <content>This is content of Entry Two in Feed Two</content>
@@ -670,7 +670,7 @@ def fx_xml_for_update(xmls, request):
         <link type="text/html" rel="alternate" href="http://feedthree.com" />
         <entry>
             <title>Feed Three: Entry Two</title>
-            <id>http://feedthree.com/feed/atom/1/</id>
+            <id>http://feedthree.com/feed/atom/2/</id>
             <updated>2013-11-21T07:49:20+07:00</updated>
             <published>2013-11-21T07:49:20+07:00</published>
             <content>This is content of Entry Two in Feed Three</content>
