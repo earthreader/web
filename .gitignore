@@ -40,3 +40,6 @@ nosetests.xml
 # OS databases
 .DS_Store
 desktop.ini
+
+# IntelliJ/PyCharm
+.idea
