@@ -244,7 +244,7 @@ def xmls(request, fx_test_stage):
     feed_urls = get_feed_urls(subscriptions)
     generator = crawl(feed_urls, 4)
     for result in generator:
-        feed_data = result[1][0]
+        feed_data = result[1]
         feed_id = get_hash(feed_data.id)
         stage.feeds[feed_id] = feed_data
     stage.subscriptions = subscriptions
@@ -882,7 +882,7 @@ def fx_non_exist_opml(fx_test_stage):
     feed_urls = ['http://feedone.com/feed/atom/']
     generator = crawl(feed_urls, 1)
     for result in generator:
-        feed_data = result[1][0]
+        feed_data = result[1]
         feed_url = result[0]
         feed_id = get_hash(feed_url)
         stage.feeds[feed_id] = feed_data

@@ -498,7 +498,7 @@ def update_entries(category_id, feed_id=None):
     it = iter(crawl(urls, 4))
     while True:
         try:
-            feed_url, (feed_data, crawler_hints) = next(it)
+            feed_url, feed_data, crawler_hints = next(it)
         except CrawlError as e:
             failed.append(e.message)
             continue
