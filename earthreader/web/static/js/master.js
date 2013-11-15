@@ -573,6 +573,13 @@ function keyboardShortcut(event) {
 			if (read_on_web) {
 				window.open(read_on_web.attr('href'));
 			}
+			break;
+		case 83: //s
+			toggleStarCurrent();
+			break;
+		case 85: //u
+			unreadCurrent();
+			break;
 	}
 }
 
