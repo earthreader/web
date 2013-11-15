@@ -341,7 +341,10 @@ function appendEntry(entry) {
 
 function getEntries(feed_url, filter) {
 	var main = $('[role=main]');
-	var requestUrl = feed_url + '?' + filter;
+	var requestUrl = feed_url;
+	if (filter) {
+		requestUrl += '?' + filter;
+	}
 
 	$.get(requestUrl, function(obj) {
 		var feed_title = obj.title;
