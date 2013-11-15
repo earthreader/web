@@ -97,6 +97,7 @@ Vim-like keyboard shortcuts are available in earthreader web
 - o : open entry in new tab
 - u : mark as unread
 - s : star/unstar
+- ? : this help message
 
 
 Links
