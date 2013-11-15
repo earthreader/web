@@ -7,6 +7,7 @@ html, body {
 
 body {
 	line-height: 1.2;
+	min-height: 100%;
 
 	animation-name: small;
 	animation-duration: .001s;
@@ -344,5 +345,42 @@ input:not([type=button]):not([type=submit]):focus, textarea:focus {
 
 	.feed .handle:before {
 		content: '::';
+	}
+
+	#manual {
+		position: fixed;
+		top: 0;
+		left: 0;
+		margin: 5% 10%;
+		width: 80%;
+		height: 80%;
+		padding: 5vmax;
+		box-sizing: border-box;
+		border-radius: 5px;
+
+		background: rgba(0,0,0,.8);
+		color: white;
+		font-size: 1.4em;
+
+		display: none;
+		z-index: 10;
+	}
+
+	#manual > header {
+		text-align: center;
+		font-size: 1.4em;
+	}
+
+	#manual .shortcuts {
+		margin-top: 1em;
+		column-count: 2;
+		column-gap: 20px;
+	}
+
+	#manual kbd {
+		background: white;
+		color: rgb(120,120,120);
+		border-radius: 4px;
+		padding: .5em .8em;
 	}
 }
