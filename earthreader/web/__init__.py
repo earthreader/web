@@ -30,6 +30,10 @@ app.config.update(dict(
 ))
 
 
+class IteratorNotFound(ValueError):
+    """Rise when the iterator does not exist"""
+
+
 class InvalidCategoryPath(ValueError):
     """Rise when the category path is not valid"""
 
@@ -402,9 +406,30 @@ def delete_feed(category_id, feed_id):
     return feeds(category_id)
 
 
+def get_iterator(url_token):
+    pair = iterators.get(url_token)
+    if pair:
+        it = pair[0]
+        return it
+    else:
+        raise IteratorNotFound('The iterator does not exist')
+
+
+def get_permalink(data):
+    permalink = None
+    for link in data.links:
+        if link.relation == 'alternate' and \
+                link.mimetype == 'text/html':
+            permalink = link.uri
+        if not permalink:
+            permalink = data.id
+    return permalink
+
+
 @app.route('/feeds/<feed_id>/entries/', defaults={'category_id': '/'})
 @app.route('/<path:category_id>/feeds/<feed_id>/entries/')
 def feed_entries(category_id, feed_id):
+    stage = get_stage()
     try:
         check_path_valid(category_id)
     except InvalidCategoryPath:
@@ -414,10 +439,71 @@ def feed_entries(category_id, feed_id):
         )
         r.status_code = 404
         return r
+    try:
+        feed = stage.feeds[feed_id]
+    except KeyError:
+        r = jsonify(
+            error='feed-not-found',
+            message='Given feed does not exist'
+        )
+        r.status_code = 404
+        return r
+    url_token = request.args.get('url_token')
+    it = None
+    if url_token:
+        try:
+            it = get_iterator(url_token)
+        except IteratorNotFound:
+            pass
+    else:
+        url_token = str(now())
+    if not it:
+        entry_after = request.args.get('entry_after')
+        it = iter(feed.entries)
+    iterators[url_token] = it, now()
+    entry_after = request.args.get('entry_after')
+    if entry_after:
+        next_key = Rfc3339().decode(entry_after.replace(' ', 'T'))
+    else:
+        next_key = None
+    entries = []
     read = request.args.get('read')
     starred = request.args.get('starred')
-    feed_title, entries, url_token = get_entries([feed_id], category_id,
-                                                 read, starred)
+    feed_permalink = get_permalink(feed)
+    while len(entries) < 20:
+        try:
+            entry = next(it)
+        except StopIteration:
+            iterators.pop(url_token)
+            break
+        if next_key and entry.updated_at >= next_key:
+            continue
+        entry_permalink = get_permalink(entry)
+        if (read is None or to_bool(read) == bool(entry.read)) and \
+                (starred is None or to_bool(starred) == bool(entry.starred)):
+            entries.append({
+                'title': entry.title,
+                'entry_url': url_for(
+                    'feed_entry',
+                    category_id=category_id,
+                    feed_id=feed_id,
+                    entry_id=get_hash(entry.id),
+                    _external=True,
+                ),
+                'permalink': entry_permalink or None,
+                'updated': entry.updated_at.__str__(),
+                'read': bool(entry.read) if entry.read else False,
+                'starred': bool(entry.starred) if entry.starred else False,
+                'feed': {
+                    'title': feed.title,
+                    'entries_url': url_for(
+                        'feed_entries',
+                        feed_id=feed_id
+                    ),
+                    'permalink': feed_permalink or None
+                }
+            })
+    tidy_iterators_up()
     if len(entries) < 20:
         next_url = None
     else:
@@ -429,7 +515,7 @@ def feed_entries(category_id, feed_id):
             entry_after=entries[-1]['updated'] if entries else None
         )
     return jsonify(
-        title=feed_title,
+        title=feed.title,
         entries=entries,
         next_url=next_url
     )
