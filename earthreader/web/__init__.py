@@ -459,14 +459,13 @@ def feed_entries(category_id, feed_id):
     else:
         url_token = str(now())
     if not it:
-        entry_after = request.args.get('entry_after')
         it = iter(feed.entries)
+        entry_after = request.args.get('entry_after')
+        if entry_after:
+            entry = next(it)
+            while str(entry.updated_at) + get_hash(entry.id) == entry_after:
+                entry = next(it)
     iterators[url_token] = it, now()
-    entry_after = request.args.get('entry_after')
-    if entry_after:
-        next_key = Rfc3339().decode(entry_after.replace(' ', 'T'))
-    else:
-        next_key = None
     entries = []
     read = request.args.get('read')
     starred = request.args.get('starred')
@@ -477,8 +476,6 @@ def feed_entries(category_id, feed_id):
         except StopIteration:
             iterators.pop(url_token)
             break
-        if next_key and entry.updated_at >= next_key:
-            continue
         entry_permalink = get_permalink(entry)
         if (read is None or to_bool(read) == bool(entry.read)) and \
                 (starred is None or to_bool(starred) == bool(entry.starred)):
@@ -491,6 +488,7 @@ def feed_entries(category_id, feed_id):
                     entry_id=get_hash(entry.id),
                     _external=True,
                 ),
+                'entry_id': get_hash(entry.id),
                 'permalink': entry_permalink or None,
                 'updated': entry.updated_at.__str__(),
                 'read': bool(entry.read) if entry.read else False,
@@ -513,7 +511,7 @@ def feed_entries(category_id, feed_id):
             category_id=category_id,
             feed_id=feed_id,
             url_token=url_token,
-            entry_after=entries[-1]['updated'] if entries else None
+            entry_after=entries[-1]['updated'] + entries[-1]['entry_id']
         )
     return jsonify(
         title=feed.title,
