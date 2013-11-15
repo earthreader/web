@@ -30,7 +30,7 @@ def crawl_command(args):
                in opml.recursive_subscriptions]
     generator = crawl(urllist, args.threads)
     try:
-        for feed_url, (feed_data, crawler_hints) in generator:
+        for feed_url, feed_data, crawler_hints in generator:
             feed_id = hashlib.sha1(feed_url).hexdigest()
             stage.feeds[feed_id] = feed_data
     except CrawlError as e:
