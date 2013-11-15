@@ -60,7 +60,7 @@ function removeCurrentSelected() {
 			}
 		}
 
-		if (confirm('remove ' + current.text() + '\nAre you sure?') == true){
+		if (confirm('remove ' + current.text() + '\nAre you sure?') === true){
 			$.ajax({
 				'url': url,
 				'type': 'delete',
@@ -173,7 +173,6 @@ function processForm(event) {
 			} else {
 				var fold = current.next();
 				fold.html("");
-				//makeCategory(fold, res);
 				makeFeedList(res, fold);
 			}
 			target.each(function(){
@@ -213,7 +212,7 @@ var makeCategory = function(parentObj, obj) {
 		container.attr('data-remove-category-url', obj.remove_category_url);
 	}
 
-	header.text(obj.title);
+	header.html(obj.title.link(obj.entries_url));
 
 	var toggle = $('<span>');
 	toggle.addClass('toggle');
@@ -248,7 +247,7 @@ var makeFeed = function(parentObj, obj) {
 	elem.attr('data-entries', obj.entries_url);
 	elem.attr('data-remove-feed-url', obj.remove_feed_url);
 	elem.attr('role', 'link');
-	elem.text(obj.title);
+	elem.html(obj.title.link(obj.entries_url));
 
 	var handle = $('<span>');
 	handle.addClass('handle');
@@ -340,18 +339,27 @@ function appendEntry(entry) {
 	main.append(article);
 }
 
-function getEntries(feed_url) {
+function getEntries(feed_url, filter) {
 	var main = $('[role=main]');
-	$.get(feed_url, function(obj) {
-		main.html(null);
+	var requestUrl = feed_url + '?' + filter;
 
+	$.get(requestUrl, function(obj) {
 		var feed_title = obj.title;
 		var entries = obj.entries;
-
 		var header = $('<header>');
 		var h2 = $('<h2>');
-		header.append(h2);
+		var refresh = $('<a>');
+
+		main.html(null);
+
 		h2.text(feed_title);
+		header.append(h2);
+
+		refresh.addClass('refresh');
+		refresh.attr('role', 'button');
+		refresh.attr('href', feed_url);
+		refresh.text('refresh');
+		header.append(refresh);
 
 		main.append(header);
 
@@ -430,11 +438,7 @@ function reloadEntries() {
 	var filter = currentFilter.attr('data-filter');
 	var url = currentFeed.attr('data-entries') || currentFeed.parent().attr('data-entries') || URLS.entries;
 
-	//crawl newer feed
-	$.ajax(url, {
-		'type': 'PUT',
-	});
-	getEntries(url + filter);
+	getEntries(url, filter);
 }
 
 function clickFeed(event) {
@@ -532,10 +536,20 @@ function clickEntry(event) {
 	});
 }
 
+function refreshFeed(event) {
+	var target = $(event.target);
+	var url = target.attr('href');
+	$.ajax(url, {'type': 'PUT'})
+		.done(reloadEntries);
+}
+
 function clickLink(event) {
 	var target = event.target;
 
-	if (target.host != location.host) {
+	if (target.host === location.host) {
+		//FIXME: ajax request
+		event.preventDefault();
+	} else {
 		window.open(target.href);
 		event.preventDefault();
 	}
@@ -623,6 +637,7 @@ $(function () {
 	var main = $('[role=main]');
 	main.on('click', '.entry-title', clickEntry);
 	main.on('click', '.nextPage', loadNextPage);
+	main.on('click', '.refresh', refreshFeed);
 
 	var side = $('[role=complementary]');
 	side.on('click', '[data-action]', clickComplementaryMenu);

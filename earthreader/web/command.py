@@ -18,7 +18,7 @@ from libearth.stage import Stage
 __all__ = 'crawl', 'main', 'server'
 
 
-def crawl(args):
+def crawl_command(args):
     repo = FileSystemRepository(args.repository)
     session = Session()
     stage = Stage(session, repo)
@@ -30,14 +30,14 @@ def crawl(args):
                in opml.recursive_subscriptions]
     generator = crawl(urllist, args.threads)
     try:
-        for feed_url, (feed_data, crawler_hints) in generator:
+        for feed_url, feed_data, crawler_hints in generator:
             feed_id = hashlib.sha1(feed_url).hexdigest()
             stage.feeds[feed_id] = feed_data
     except CrawlError as e:
         print(e, file=sys.stderr)
 
 
-def server(args):
+def server_command(args):
     repository = args.repository
     if not os.path.isdir(repository):
         os.mkdir(repository)
@@ -54,7 +54,7 @@ subparsers = parser.add_subparsers(dest='command', help='command-help')
 
 server_parser = subparsers.add_parser('server',
                                       help='run a server for Earth Reader')
-server_parser.set_defaults(function=server)
+server_parser.set_defaults(function=server_command)
 server_parser.add_argument('-H', '--host',
                            default='0.0.0.0',
                            help="host to listen. [default: %(default)s]")
@@ -70,7 +70,7 @@ server_parser.add_argument('-d', '--debug',
 server_parser.add_argument('repository', help='repository for Earth Reader')
 
 crawl_parser = subparsers.add_parser('crawl', help='crawl feeds in the opml')
-crawl_parser.set_defaults(function=crawl)
+crawl_parser.set_defaults(function=crawl_command)
 crawl_parser.add_argument('-n', '--threads',
                           type=int,
                           help='the number of workers')
