@@ -551,6 +551,7 @@ function clickEntry(event) {
 function refreshFeed(event) {
 	var target = $(event.target);
 	var url = target.attr('href');
+	target.remove();
 	$.ajax(url, {'type': 'PUT'})
 		.done(reloadEntries);
 }
