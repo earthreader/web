@@ -553,7 +553,7 @@ def category_entries(category_id):
 def update_entries(category_id, feed_id=None):
     stage = get_stage()
     try:
-        subscription_list, cursor, target = check_path_valid(category_id)
+        subscription_list, cursor, _ = check_path_valid(category_id)
     except InvalidCategoryPath:
         r = jsonify(
             error='category-path-invalid',
