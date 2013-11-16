@@ -285,6 +285,10 @@ input:not([type=button]):not([type=submit]):focus, textarea:focus {
 	font-size: 1.6em;
 }
 
+#manual {
+	display: none;
+}
+
 @media all and (min-width: 800px) {
 	body {
 		animation-name: big;
