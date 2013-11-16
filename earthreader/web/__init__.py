@@ -200,18 +200,9 @@ def add_feed(category_id):
         return r
     feed_url = feed_links[0].url
     feed_url, feed, hints = next(iter(crawl([feed_url], 1)))
-    feed_id = get_hash(feed.id)
-    subscription = Subscription(type='atom', label=feed.title.value,
-                                _title=feed.title.value,
-                                feed_uri=feed_url,
-                                feed_id=feed_id)
-    for link in feed.links:
-            if link.relation == 'alternate' and \
-                    link.mimetype == 'text/html':
-                subscription.alternate_uri = link.uri
-    cursor.add(subscription)
+    sub = cursor.subscribe(feed)
     stage.subscriptions = subscriptions
-    stage.feeds[feed_id] = feed
+    stage.feeds[sub.feed_id] = feed
     return feeds(category_id)
 
 
