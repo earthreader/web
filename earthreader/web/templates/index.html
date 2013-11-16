@@ -26,10 +26,10 @@
 		<div class="wrapper">
 			<nav role="navigation">
 				<ul class="persistent">
-					<li role="button" data-filter="" class="all">All</li>
-					<li role="button" data-filter="starred=true" class="starred">Starred</li>
-					<li role="button" data-filter="read=false" class="unread">Unread</li>
-					<li role="button" class="header closed">Add Feed/Category</li>
+					<li data-filter="" class="all"><span role="button">All</span></li>
+					<li data-filter="starred=true" class="starred"><span role="button">Starred</span></li>
+					<li data-filter="read=false" class="unread"><span role="button">Unread</span></li>
+					<li class="header closed">Add Feed/Category</li>
 					<li class="fold">
 						<div class="form">
 							<h2>Add Feed</h2>
@@ -57,16 +57,16 @@
 			<section role="main">
 				<h1>Loading...</h1>
 			</section>
-			<section role="complementary">
+			<aside role="complementary">
 				<ul>
 					<li>Setting</li>
-					<li role="button" data-action="remove-this">Remove</li>
-					<li role="button" data-action="toggle-star">Star</li>
-					<li role="button" data-action="mark-unread">Mark as unread</li>
-					<li role="button" data-action="change-theme" data-theme-name="dark">Dark theme</li>
-					<li role="button" data-action="change-theme" data-theme-name="bright">Bright theme</li>
+					<li data-action="remove-this"><span role="button">Remove</span></li>
+					<li data-action="toggle-star"><span role="button">Star</span></li>
+					<li data-action="mark-unread"><span role="button">Mark as unread</span></li>
+					<li data-action="change-theme" data-theme-name="dark"><span role="button">Dark theme</span></li>
+					<li data-action="change-theme" data-theme-name="bright"><span role="button">Bright theme</span></li>
 				</ul>
-			</section>
+			</aside>
 		</div>
 		<div id="manual">
 			<header>Keyboard shortcuts</header>
