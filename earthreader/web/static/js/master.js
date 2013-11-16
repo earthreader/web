@@ -14,6 +14,15 @@ function resizer(event) {
 	}
 }
 
+function printError(xhr, statusText, error) {
+	try {
+		var json = JSON.parse(xhr.responseText);
+		alert(json.error + '\n' + json.message);
+	} catch (err) {
+		alert(statusText + error);
+	}
+}
+
 function changeFilter(event) {
 	var target = $(event.target);
 	var filter = target.attr('data-filter');
@@ -387,7 +396,7 @@ function getEntries(feed_url, filter) {
 			main.append(nextLoader);
 		}
 		$(window).scrollTop(0);
-	});
+	}).fail(printError);
 }
 
 function loadNextPage() {
@@ -536,7 +545,7 @@ function clickEntry(event) {
 		});
 
 		$(window).scrollTop(entry.position().top);
-	});
+	}).fail(printError);
 }
 
 function refreshFeed(event) {
