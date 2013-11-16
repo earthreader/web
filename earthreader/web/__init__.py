@@ -216,13 +216,7 @@ def add_feed(category_id):
         r.status_code = 400
         return r
     feed_url = feed_links[0].url
-    if not feed_url == url:
-        xml = get_url_content(feed_url)
-    else:
-        xml = document
-    format = get_format(xml)
-    result = format(xml, feed_url)
-    feed = result[0]
+    feed_url, feed, hints = next(iter(crawl([feed_url], 1)))
     feed_id = get_hash(feed.id)
     subscription = Subscription(type='atom', label=feed.title.value,
                                 _title=feed.title.value,
