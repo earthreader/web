@@ -59,14 +59,6 @@ def get_hash(name):
     return hashlib.sha1(binary(name)).hexdigest()
 
 
-def feedlist_exists():
-    stage = get_stage()
-    if stage.subscriptions:
-        return True
-    else:
-        return False
-
-
 def get_all_feeds(category, path=None):
     feeds = []
     categories = []
