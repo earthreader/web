@@ -10,7 +10,6 @@ from libearth.codecs import Rfc3339
 from libearth.compat import binary
 from libearth.crawler import CrawlError, crawl
 from libearth.parser.autodiscovery import autodiscovery, FeedUrlNotFoundError
-from libearth.parser.heuristic import get_format
 from libearth.repository import FileSystemRepository
 from libearth.session import Session
 from libearth.stage import Stage
@@ -58,14 +57,6 @@ def get_stage():
 
 def get_hash(name):
     return hashlib.sha1(binary(name)).hexdigest()
-
-
-def feedlist_exists():
-    stage = get_stage()
-    if stage.subscriptions:
-        return True
-    else:
-        return False
 
 
 def get_all_feeds(category, path=None):
@@ -173,16 +164,6 @@ def feeds(category_id):
     return jsonify(feeds=feeds, categories=categories)
 
 
-def get_url_content(url):
-    try:
-        f = urllib2.urlopen(url)
-        document = f.read()
-        f.close()
-    except Exception:
-        raise UnreachableUrl('The given url is not reachable')
-    return document
-
-
 @app.route('/feeds/', methods=['POST'], defaults={'category_id': '/'})
 @app.route('/<path:category_id>/feeds/', methods=['POST'])
 def add_feed(category_id):
@@ -198,8 +179,10 @@ def add_feed(category_id):
         return r
     url = request.form['url']
     try:
-        document = get_url_content(url)
-    except UnreachableUrl:
+        f = urllib2.urlopen(url)
+        document = f.read()
+        f.close()
+    except Exception:
         r = jsonify(
             error='unreachable-url',
             message='Cannot connect to given url'
@@ -217,18 +200,9 @@ def add_feed(category_id):
         return r
     feed_url = feed_links[0].url
     feed_url, feed, hints = next(iter(crawl([feed_url], 1)))
-    feed_id = get_hash(feed.id)
-    subscription = Subscription(type='atom', label=feed.title.value,
-                                _title=feed.title.value,
-                                feed_uri=feed_url,
-                                feed_id=feed_id)
-    for link in feed.links:
-            if link.relation == 'alternate' and \
-                    link.mimetype == 'text/html':
-                subscription.alternate_uri = link.uri
-    cursor.add(subscription)
+    sub = cursor.subscribe(feed)
     stage.subscriptions = subscriptions
-    stage.feeds[feed_id] = feed
+    stage.feeds[sub.feed_id] = feed
     return feeds(category_id)
 
 
@@ -562,7 +536,7 @@ def category_entries(category_id):
 def update_entries(category_id, feed_id=None):
     stage = get_stage()
     try:
-        subscription_list, cursor, target = check_path_valid(category_id)
+        subscription_list, cursor, _ = check_path_valid(category_id)
     except InvalidCategoryPath:
         r = jsonify(
             error='category-path-invalid',
@@ -571,13 +545,15 @@ def update_entries(category_id, feed_id=None):
         r.status_code = 404
         return r
     failed = []
+    ids = {}
     if feed_id:
-        urls = [sub.feed_uri for sub in cursor.subscriptions
-                if sub.feed_id == feed_id]
+        for sub in cursor.recursive_subscriptions:
+            if sub.feed_id == feed_id:
+                ids[sub.feed_uri] = sub.feed_id
     else:
-        urls = [subscription.feed_uri for subscription
-                in cursor.recursive_subscriptions]
-    it = iter(crawl(urls, 4))
+        for sub in cursor.recursive_subscriptions:
+            ids[sub.feed_uri] = sub.feed_id
+    it = iter(crawl(ids.keys(), 4))
     while True:
         try:
             feed_url, feed_data, crawler_hints = next(it)
@@ -586,8 +562,7 @@ def update_entries(category_id, feed_id=None):
             continue
         except StopIteration:
             break
-        feed_id = get_hash(feed_data.id)
-        stage.feeds[feed_id] = feed_data
+        stage.feeds[ids[feed_url]] = feed_data
     r = jsonify(failed=failed)
     r.status_code = 202
     return r

@@ -4,7 +4,10 @@ except ImportError:
     from io import StringIO
 import datetime
 import hashlib
-import re
+try:
+    import httplib
+except ImportError:
+    from http import client as httplib
 import traceback
 try:
     import urllib2
@@ -185,42 +188,29 @@ def get_feed_urls(category, urls=[]):
     return urls
 
 
-def mock_response(req):
-    if req.get_full_url() == 'http://feedone.com/feed/atom/':
-        resp = urllib2.addinfourl(StringIO(feed_one), 'mock message',
-                                  req.get_full_url())
-        resp.code = 200
-        resp.msg = "OK"
-        return resp
-    if req.get_full_url() == 'http://feedtwo.com/feed/atom/':
-        resp = urllib2.addinfourl(StringIO(feed_two), 'mock message',
-                                  req.get_full_url())
-        resp.code = 200
-        resp.msg = "OK"
-        return resp
-    if req.get_full_url() == 'http://feedthree.com/feed/atom/':
-        resp = urllib2.addinfourl(StringIO(feed_three), 'mock message',
-                                  req.get_full_url())
-        resp.code = 200
-        resp.msg = "OK"
-        return resp
-    if req.get_full_url() == 'http://feedfour.com/feed/atom/':
-        resp = urllib2.addinfourl(StringIO(feed_four), 'mock message',
-                                  req.get_full_url())
-        resp.code = 200
-        resp.msg = "OK"
-        return resp
-    if req.get_full_url() == 'http://feedfive.com/feed/atom/':
-        resp = urllib2.addinfourl(StringIO(feed_to_add), 'mock message',
-                                  req.get_full_url())
-        resp.code = 200
-        resp.msg = "OK"
-        return resp
+mock_urls = {
+    'http://feedone.com/feed/atom/': (200, 'application+xml', feed_one),
+    'http://feedtwo.com/feed/atom/': (200, 'application+xml', feed_two),
+    'http://feedthree.com/feed/atom/': (200, 'application+xml', feed_three),
+    'http://feedfour.com/feed/atom/': (200, 'application+xml', feed_four),
+    'http://feedfive.com/feed/atom/': (200, 'application+xml', feed_to_add),
+}
 
 
 class TestHTTPHandler(urllib2.HTTPHandler):
+
     def http_open(self, req):
-        return mock_response(req)
+        url = req.get_full_url()
+        try:
+            status_code, mimetype, content = mock_urls[url]
+        except KeyError:
+            return urllib2.HTTPHandler.http_open(self, req)
+        resp = urllib2.addinfourl(StringIO(content),
+                                  {'content-type': mimetype},
+                                  url)
+        resp.code = status_code
+        resp.msg = httplib.responses[status_code]
+        return resp
 
 
 my_opener = urllib2.build_opener(TestHTTPHandler)
@@ -408,7 +398,7 @@ def test_all_feeds(xmls):
         three_categories = three_result['categories']
         assert three_feeds[0]['title'] == 'Feed Four'
         assert len(three_categories) == 0
-        # /categorythree/feedone
+        # /categorythree/feedfour
         feed_url = three_feeds[0]['entries_url']
         feed_id = get_hash('http://feedfour.com/feed/atom/')
         assert feed_url == \
@@ -685,43 +675,30 @@ def fx_xml_for_update(xmls, request):
     </feed>
     '''
 
-    def mock_response2(req):
-        if req.get_full_url() == 'http://feedone.com/feed/atom/':
-            resp = urllib2.addinfourl(StringIO(feed_one), 'mock message',
-                                      req.get_full_url())
-            resp.code = 200
-            resp.msg = "OK"
-            return resp
-        if req.get_full_url() == 'http://feedtwo.com/feed/atom/':
-            resp = urllib2.addinfourl(StringIO(updated_feed_two),
-                                      'mock message',
-                                      req.get_full_url())
-            resp.code = 200
-            resp.msg = "OK"
-            return resp
-        if req.get_full_url() == 'http://feedthree.com/feed/atom/':
-            resp = urllib2.addinfourl(StringIO(updated_feed_three),
-                                      'mock message',
-                                      req.get_full_url())
-            resp.code = 200
-            resp.msg = "OK"
-            return resp
-        if req.get_full_url() == 'http://feedfour.com/feed/atom/':
-            resp = urllib2.addinfourl(StringIO(feed_four), 'mock message',
-                                      req.get_full_url())
-            resp.code = 200
-            resp.msg = "OK"
-            return resp
-        if req.get_full_url() == 'http://feedfive.com/feed/atom/':
-            resp = urllib2.addinfourl(StringIO(feed_to_add), 'mock message',
-                                      req.get_full_url())
-            resp.code = 200
-            resp.msg = "OK"
-            return resp
+    mock_urls = {
+        'http://feedone.com/feed/atom/': (200, 'application+xml', feed_one),
+        'http://feedtwo.com/feed/atom/': (200, 'application+xml',
+                                          updated_feed_two),
+        'http://feedthree.com/feed/atom/': (200, 'application+xml',
+                                            updated_feed_three),
+        'http://feedfour.com/feed/atom/': (200, 'application+xml', feed_four),
+        'http://feedfive.com/feed/atom/': (200, 'application+xml', feed_to_add),
+    }
 
     class TestHTTPHandler2(urllib2.HTTPHandler):
+
         def http_open(self, req):
-            return mock_response2(req)
+            url = req.get_full_url()
+            try:
+                status_code, mimetype, content = mock_urls[url]
+            except KeyError:
+                return urllib2.HTTPHandler.http_open(self, req)
+            resp = urllib2.addinfourl(StringIO(content),
+                                      {'content-type': mimetype},
+                                      url)
+            resp.code = status_code
+            resp.msg = httplib.responses[status_code]
+            return resp
 
     my_opener2 = urllib2.build_opener(TestHTTPHandler2)
     urllib2.install_opener(my_opener2)
