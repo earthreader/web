@@ -405,7 +405,9 @@ def feed_entries(category_id, feed_id):
             category_id=category_id,
             feed_id=feed_id,
             url_token=url_token,
-            entry_after=entries[-1]['entry_id']
+            entry_after=entries[-1]['entry_id'],
+            read=read,
+            starred=starred
         )
     return jsonify(
         title=feed.title,

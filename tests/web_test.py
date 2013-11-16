@@ -884,6 +884,8 @@ def xmls_for_next(request, fx_test_stage):
         </outline>
         <outline type="atom" text="Feed Three" title="Feed Three"
         xmlUrl="http://feedthree.com/" />
+        <outline type="atom" text="Feed Four" title="Feed Three"
+        xmlUrl="http://feedthree.com/" />
       </body>
     </opml>
     '''
@@ -900,6 +902,10 @@ def xmls_for_next(request, fx_test_stage):
                       title=Text(value='Feed Three'),
                       updated_at=datetime.datetime(2013, 10, 30, 21, 55, 30,
                                                    tzinfo=utc))
+    feed_four = Feed(id='http://feedfour.com/', authors=authors,
+                     title=Text(value='Feed Four'),
+                     updated_at=datetime.datetime(2013, 10, 30, 21, 55, 30,
+                                                  tzinfo=utc))
     for i in range(25):
         feed_one.entries.append(
             Entry(id='http://feedone.com/' + str(24 - i),
@@ -926,14 +932,26 @@ def xmls_for_next(request, fx_test_stage):
                                                tzinfo=utc) +
                   datetime.timedelta(days=-1)*i)
         )
+    for i in range(50):
+        feed_four.entries.append(
+            Entry(id='http://feedfour.com/' + str(49 - i),
+                  authors=authors,
+                  title=Text(value='Feed Four: Entry ' + str(49 - i)),
+                  updated_at=datetime.datetime(2013, 10, 30, 20, 55, 30,
+                                               tzinfo=utc) +
+                  datetime.timedelta(days=-1)*i)
+        )
     for i in range(5):
         feed_two.entries[i].read = True
         feed_two.entries[i+15].read = True
+    for i in range(20, 50):
+        feed_four.entries[i].read = True
     subscriptions = read(SubscriptionList, opml)
     stage.subscriptions = subscriptions
     stage.feeds[get_hash('http://feedone.com/')] = feed_one
     stage.feeds[get_hash('http://feedtwo.com/')] = feed_two
     stage.feeds[get_hash('http://feedthree.com/')] = feed_three
+    stage.feeds[get_hash('http://feedfour.com/')] = feed_four
 
 
 def test_feed_entries_next(xmls_for_next):
@@ -981,6 +999,20 @@ def test_category_entries_next(xmls_for_next):
         result = json.loads(r.data)
         assert len(result['entries']) == 10
         assert result['entries'][-1]['title'] == 'Feed Two: Entry 0'
+
+
+def test_feed_entries_filtering(xmls_for_next):
+    with app.test_client() as client:
+        feed_id = get_hash('http://feedfour.com/')
+        r = client.get('/feeds/' + feed_id + '/entries/?read=False')
+        assert r.status_code == 200
+        result = json.loads(r.data)
+        for entry in result['entries']:
+            assert entry['read'] is False
+        r = client.get(result['next_url'])
+        result = json.loads(r.data)
+        for entry in result['entries']:
+            assert entry['read'] is False
 
 
 def test_category_entries_filtering(xmls_for_next):
