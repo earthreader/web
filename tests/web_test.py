@@ -398,7 +398,7 @@ def test_all_feeds(xmls):
         three_categories = three_result['categories']
         assert three_feeds[0]['title'] == 'Feed Four'
         assert len(three_categories) == 0
-        # /categorythree/feedone
+        # /categorythree/feedfour
         feed_url = three_feeds[0]['entries_url']
         feed_id = get_hash('http://feedfour.com/feed/atom/')
         assert feed_url == \
