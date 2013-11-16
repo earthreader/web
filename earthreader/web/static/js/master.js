@@ -548,8 +548,8 @@ function clickEntry(event) {
 	}).fail(printError);
 }
 
-function refreshFeed(event) {
-	var target = $(event.target);
+function refreshFeed() {
+	var target = $('[role=main] .refresh');
 	var url = target.attr('href');
 	target.remove();
 	$.ajax(url, {'type': 'PUT'})
@@ -606,6 +606,9 @@ function keyboardShortcut(event) {
 			if (read_on_web) {
 				window.open(read_on_web.attr('href'));
 			}
+			break;
+		case 82: //r
+			refreshFeed();
 			break;
 		case 83: //s
 			toggleStarCurrent();
