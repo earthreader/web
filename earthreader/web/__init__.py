@@ -223,16 +223,17 @@ def add_feed(category_id):
     format = get_format(xml)
     result = format(xml, feed_url)
     feed = result[0]
+    feed_id = get_hash(feed.id)
     subscription = Subscription(type='atom', label=feed.title.value,
                                 _title=feed.title.value,
-                                feed_uri=feed_url)
+                                feed_uri=feed_url,
+                                feed_id=feed_id)
     for link in feed.links:
             if link.relation == 'alternate' and \
                     link.mimetype == 'text/html':
                 subscription.alternate_uri = link.uri
     cursor.add(subscription)
     stage.subscriptions = subscriptions
-    feed_id = get_hash(feed.id)
     stage.feeds[feed_id] = feed
     return feeds(category_id)
 
