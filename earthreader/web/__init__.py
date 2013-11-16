@@ -46,6 +46,10 @@ class EntryNotFound(ValueError):
     """Rise when the entry is not reachable"""
 
 
+class UnreachableUrl(ValueError):
+    """Rise when the url is not reachable"""
+
+
 def get_stage():
     session = Session(app.config['SESSION_NAME'])
     repo = FileSystemRepository(app.config['REPOSITORY'])
@@ -169,6 +173,16 @@ def feeds(category_id):
     return jsonify(feeds=feeds, categories=categories)
 
 
+def get_url_content(url):
+    try:
+        f = urllib2.urlopen(url)
+        document = f.read()
+        f.close()
+    except Exception:
+        raise UnreachableUrl('The given url is not reachable')
+    return document
+
+
 @app.route('/feeds/', methods=['POST'], defaults={'category_id': '/'})
 @app.route('/<path:category_id>/feeds/', methods=['POST'])
 def add_feed(category_id):
@@ -182,11 +196,10 @@ def add_feed(category_id):
         )
         r.status_code = 404
         return r
+    url = request.form['url']
     try:
-        url = request.form['url']
-        f = urllib2.urlopen(url)
-        document = f.read()
-    except ValueError:
+        document = get_url_content(url)
+    except UnreachableUrl:
         r = jsonify(
             error='unreachable-url',
             message='Cannot connect to given url'
@@ -203,25 +216,18 @@ def add_feed(category_id):
         r.status_code = 400
         return r
     feed_url = feed_links[0].url
-    if not feed_url == url:
-        f.close()
-        f = urllib2.urlopen(feed_url)
-        xml = f.read()
-    else:
-        xml = document
-    format = get_format(xml)
-    result = format(xml, feed_url)
-    feed = result[0]
+    feed_url, feed, hints = next(iter(crawl([feed_url], 1)))
+    feed_id = get_hash(feed.id)
     subscription = Subscription(type='atom', label=feed.title.value,
                                 _title=feed.title.value,
-                                feed_uri=feed_url)
+                                feed_uri=feed_url,
+                                feed_id=feed_id)
     for link in feed.links:
             if link.relation == 'alternate' and \
                     link.mimetype == 'text/html':
                 subscription.alternate_uri = link.uri
     cursor.add(subscription)
     stage.subscriptions = subscriptions
-    feed_id = get_hash(feed.id)
     stage.feeds[feed_id] = feed
     return feeds(category_id)
 
