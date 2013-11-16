@@ -10,7 +10,6 @@ from libearth.codecs import Rfc3339
 from libearth.compat import binary
 from libearth.crawler import CrawlError, crawl
 from libearth.parser.autodiscovery import autodiscovery, FeedUrlNotFoundError
-from libearth.parser.heuristic import get_format
 from libearth.repository import FileSystemRepository
 from libearth.session import Session
 from libearth.stage import Stage
