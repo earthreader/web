@@ -164,16 +164,6 @@ def feeds(category_id):
     return jsonify(feeds=feeds, categories=categories)
 
 
-def get_url_content(url):
-    try:
-        f = urllib2.urlopen(url)
-        document = f.read()
-        f.close()
-    except Exception:
-        raise UnreachableUrl('The given url is not reachable')
-    return document
-
-
 @app.route('/feeds/', methods=['POST'], defaults={'category_id': '/'})
 @app.route('/<path:category_id>/feeds/', methods=['POST'])
 def add_feed(category_id):
@@ -189,8 +179,10 @@ def add_feed(category_id):
         return r
     url = request.form['url']
     try:
-        document = get_url_content(url)
-    except UnreachableUrl:
+        f = urllib2.urlopen(url)
+        document = f.read()
+        f.close()
+    except Exception:
         r = jsonify(
             error='unreachable-url',
             message='Cannot connect to given url'
