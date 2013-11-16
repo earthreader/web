@@ -545,13 +545,15 @@ def update_entries(category_id, feed_id=None):
         r.status_code = 404
         return r
     failed = []
+    ids = {}
     if feed_id:
-        urls = [sub.feed_uri for sub in cursor.subscriptions
-                if sub.feed_id == feed_id]
+        for sub in cursor.recursive_subscriptions:
+            if sub.feed_id == feed_id:
+                ids[sub.feed_uri] = sub.feed_id
     else:
-        urls = [subscription.feed_uri for subscription
-                in cursor.recursive_subscriptions]
-    it = iter(crawl(urls, 4))
+        for sub in cursor.recursive_subscriptions:
+            ids[sub.feed_uri] = sub.feed_id
+    it = iter(crawl(ids.keys(), 4))
     while True:
         try:
             feed_url, feed_data, crawler_hints = next(it)
@@ -560,8 +562,7 @@ def update_entries(category_id, feed_id=None):
             continue
         except StopIteration:
             break
-        feed_id = get_hash(feed_data.id)
-        stage.feeds[feed_id] = feed_data
+        stage.feeds[ids[feed_url]] = feed_data
     r = jsonify(failed=failed)
     r.status_code = 202
     return r
