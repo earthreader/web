@@ -63,31 +63,6 @@ def get_url(endpoint, **values):
         return url_for(endpoint, **values)
 
 
-opml = '''
-<opml version="1.0">
-  <head>
-    <title>test opml</title>
-  </head>
-  <body>
-    <outline text="categoryone" title="categoryone">
-        <outline type="atom" text="Feed One" title="Feed One"
-        xmlUrl="http://feedone.com/feed/atom/" />
-        <outline text="categorytwo" title="categorytwo">
-            <outline type="atom" text="Feed Two" title="Feed Two"
-            xmlUrl="http://feedtwo.com/feed/atom/" />
-        </outline>
-    </outline>
-    <outline type="atom" text="Feed Three" title="Feed Three"
-    xmlUrl="http://feedthree.com/feed/atom/" />
-    <outline text="categorythree" title="categorythree">
-        <outline type="atom" text="Feed Four" title="Feed Four"
-        xmlUrl="http://feedfour.com/feed/atom/" />
-    </outline>
-  </body>
-</opml>
-'''
-
-
 feed_one = '''
 <feed xmlns="http://www.w3.org/2005/Atom">
     <title type="text">Feed One</title>
@@ -230,13 +205,23 @@ def fx_test_stage(tmpdir):
 @fixture
 def xmls(request, fx_test_stage):
     stage = fx_test_stage
-    subscriptions = read(SubscriptionList, opml)
-    feed_urls = get_feed_urls(subscriptions)
-    generator = crawl(feed_urls, 4)
-    for result in generator:
-        feed_data = result[1]
-        feed_id = get_hash(feed_data.id)
-        stage.feeds[feed_id] = feed_data
+    subscriptions = SubscriptionList()
+    categoryone = Category(label='categoryone', _title='categoryone')
+    categorytwo = Category(label='categorytwo', _title='categorytwo')
+    categorythree = Category(label='categorythree', _title='categorythree')
+    subscriptions.add(categoryone)
+    subscriptions.add(categorythree)
+    categoryone.add(categorytwo)
+    pair = {
+        'http://feedone.com/feed/atom/': categoryone,
+        'http://feedtwo.com/feed/atom/': categorytwo,
+        'http://feedthree.com/feed/atom/': subscriptions,
+        'http://feedfour.com/feed/atom/': categorythree
+    }
+    generator = crawl(pair.keys(), 4)
+    for feed_url, feed, hints in generator:
+        sub = pair[feed_url].subscribe(feed)
+        stage.feeds[sub.feed_id] = feed
     stage.subscriptions = subscriptions
 
 
