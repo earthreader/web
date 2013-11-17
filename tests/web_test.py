@@ -544,11 +544,11 @@ def test_delete_non_exists_feed(xmls):
 
 def test_delete_category_in_root(xmls):
     with app.test_client() as client:
-        r = client.delete('/categoryone/')
+        r = client.delete('/-categoryone/')
         assert r.status_code == 200
         result = json.loads(r.data)
         assert result == json.loads(client.get('/feeds/').data)
-        for child in result['feeds']:
+        for child in result['categories']:
             assert not child['title'] == 'categoryone'
 
 
