@@ -87,6 +87,32 @@ class Cursor():
         return '-' + append
 
 
+def add_urls(data, keys, category_id, feed_id=None, entry_id=None):
+    APIS = {
+        'entries_url': 'feed_entries' if feed_id else 'category_entries',
+        'entry_url': 'feed_entry',
+        'remove_feed_url': 'delete_feed',
+        'feeds_url': 'feeds',
+        'add_feed_url': 'add_feed',
+        'add_category_url': 'add_category',
+        'remove_category_url': 'delete_category',
+        'read_url': 'read_entry',
+        'unread_url': 'unread_entry',
+        'star_url': 'star_entry',
+        'unstar_url': 'unstar_entry'
+    }
+    urls = {}
+    for key in keys:
+        urls[key] = url_for(
+            APIS[key],
+            category_id=category_id,
+            feed_id=feed_id,
+            entry_id=entry_id,
+            _external=True
+        )
+    data.update(urls)
+
+
 def get_stage():
     session = Session(app.config['SESSION_NAME'])
     repo = FileSystemRepository(app.config['REPOSITORY'])
@@ -97,55 +123,20 @@ def get_hash(name):
     return hashlib.sha1(binary(name)).hexdigest()
 
 
-def get_all_feeds(cursor, path=None):
+def get_all_feeds(cursor):
     feeds = []
     categories = []
     for child in cursor:
+        data = {'title': child._title}
         if isinstance(child, Subscription):
-            feeds.append({
-                'title': child._title,
-                'entries_url': url_for(
-                    'feed_entries',
-                    category_id=cursor.category_id,
-                    feed_id=child.feed_id,
-                    _external=True
-                ),
-                'remove_feed_url': url_for(
-                    'delete_feed',
-                    category_id=cursor.category_id,
-                    feed_id=child.feed_id,
-                    _external=True
-                )
-            })
+            url_keys = ['entries_url', 'remove_feed_url']
+            add_urls(data, url_keys, cursor.category_id, child.feed_id)
+            feeds.append(data)
         elif isinstance(child, Category):
-            categories.append({
-                'title': child._title,
-                'feeds_url': url_for(
-                    'feeds',
-                    category_id=cursor.join_id(child._title),
-                    _external=True
-                ),
-                'entries_url': url_for(
-                    'category_entries',
-                    category_id=cursor.join_id(child._title),
-                    _external=True
-                ),
-                'add_feed_url': url_for(
-                    'add_feed',
-                    category_id=cursor.join_id(child._title),
-                    _external=True
-                ),
-                'add_category_url': url_for(
-                    'add_category',
-                    category_id=cursor.join_id(child._title),
-                    _external=True
-                ),
-                'remove_category_url': url_for(
-                    'delete_category',
-                    category_id=cursor.join_id(child._title),
-                    _external=True
-                ),
-            })
+            url_keys = ['feeds_url', 'entries_url', 'add_feed_url',
+                        'add_category_url', 'remove_category_url']
+            add_urls(data, url_keys, cursor.join_id(child._title))
+            categories.append(data)
     return feeds, categories
 
 
@@ -166,7 +157,7 @@ def feeds(category_id):
         )
         r.status_code = 404
         return r
-    feeds, categories = get_all_feeds(cursor, category_id)
+    feeds, categories = get_all_feeds(cursor)
     return jsonify(feeds=feeds, categories=categories)
 
 
@@ -324,6 +315,19 @@ def get_permalink(data):
     return permalink
 
 
+def make_next_url(category_id, url_token, entry_after, read, starred,
+                  feed_id=None):
+    return url_for(
+        'feed_entries' if feed_id else 'category_entries',
+        category_id=category_id,
+        feed_id=feed_id,
+        url_token=url_token,
+        entry_after=entry_after,
+        read=read,
+        starred=starred
+    )
+
+
 @app.route('/feeds/<feed_id>/entries/', defaults={'category_id': ''})
 @app.route('/<path:category_id>/feeds/<feed_id>/entries/')
 def feed_entries(category_id, feed_id):
@@ -376,41 +380,34 @@ def feed_entries(category_id, feed_id):
         entry_permalink = get_permalink(entry)
         if (read is None or to_bool(read) == bool(entry.read)) and \
                 (starred is None or to_bool(starred) == bool(entry.starred)):
-            entries.append({
+            entry_data = {
                 'title': entry.title,
-                'entry_url': url_for(
-                    'feed_entry',
-                    category_id=category_id,
-                    feed_id=feed_id,
-                    entry_id=get_hash(entry.id),
-                    _external=True,
-                ),
                 'entry_id': get_hash(entry.id),
                 'permalink': entry_permalink or None,
                 'updated': entry.updated_at.__str__(),
                 'read': bool(entry.read) if entry.read else False,
                 'starred': bool(entry.starred) if entry.starred else False,
-                'feed': {
-                    'title': feed.title,
-                    'entries_url': url_for(
-                        'feed_entries',
-                        feed_id=feed_id
-                    ),
-                    'permalink': feed_permalink or None
-                }
-            })
+            }
+            feed_data = {
+                'title': feed.title,
+                'permalink': feed_permalink or None
+            }
+            add_urls(entry_data, ['entry_url'], category_id, feed_id,
+                     get_hash(entry.id))
+            add_urls(feed_data, ['entries_url'], category_id, feed_id)
+            entry_data['feed'] = feed_data
+            entries.append(entry_data)
     tidy_iterators_up()
     if len(entries) < 20:
         next_url = None
     else:
-        next_url = url_for(
-            'feed_entries',
-            category_id=category_id,
-            feed_id=feed_id,
-            url_token=url_token,
-            entry_after=entries[-1]['entry_id'],
-            read=read,
-            starred=starred
+        next_url = make_next_url(
+            category_id,
+            url_token,
+            entries[-1]['entry_id'],
+            read,
+            starred,
+            feed_id
         )
     return jsonify(
         title=feed.title,
@@ -477,29 +474,23 @@ def category_entries(category_id):
             sorted(iters, key=lambda item: item[4].updated_at, reverse=True)
         feed_title, feed_id, feed_permalink, it, entry = iters[0]
         entry_permalink = get_permalink(entry)
-        entries.append({
+        entry_data = {
             'title': entry.title,
-            'entry_url': url_for(
-                'feed_entry',
-                category_id=category_id,
-                feed_id=feed_id,
-                entry_id=get_hash(entry.id),
-                _external=True,
-            ),
             'entry_id': get_hash(entry.id),
             'permalink': entry_permalink or None,
             'updated': entry.updated_at.__str__(),
             'read': bool(entry.read) if entry.read else False,
             'starred': bool(entry.starred) if entry.starred else False,
-            'feed': {
-                'title': feed_title,
-                'entries_url': url_for(
-                    'feed_entries',
-                    feed_id=feed_id
-                ),
-                'permalink': feed_permalink or None
-            }
-        })
+        }
+        feed_data = {
+            'title': feed_title,
+            'permalink': feed_permalink or None
+        }
+        add_urls(entry_data, ['entry_url'], category_id, feed_id,
+                 get_hash(entry.id))
+        add_urls(feed_data, ['entries_url'], category_id, feed_id)
+        entry_data['feed'] = feed_data
+        entries.append(entry_data)
         while True:
             try:
                 entry = next(it)
@@ -518,10 +509,9 @@ def category_entries(category_id):
     if len(entries) < 20:
         next_url = None
     else:
-        next_url = url_for(
-            'category_entries',
-            category_id=category_id,
-            url_token=url_token,
+        next_url = make_next_url(
+            category_id,
+            url_token,
             entry_after=entries[-1]['updated'] + '@' + entries[-1]['entry_id'],
             read=read,
             starred=starred
@@ -619,49 +609,31 @@ def feed_entry(category_id, feed_id, entry_id):
     if content is not None:
         content = content.sanitized_html
 
-    return jsonify(
-        title=entry.title,
-        content=content,
-        updated=entry.updated_at.__str__(),
-        permalink=entry_permalink or None,
-        read_url=url_for(
-            'read_entry',
-            category_id=category_id,
-            feed_id=feed_id,
-            entry_id=entry_id,
-            _external=True
-        ),
-        unread_url=url_for(
-            'unread_entry',
-            category_id=category_id,
-            feed_id=feed_id,
-            entry_id=entry_id,
-            _external=True
-        ),
-        star_url=url_for(
-            'star_entry',
-            category_id=category_id,
-            feed_id=feed_id,
-            entry_id=entry_id,
-            _external=True
-        ),
-        unstar_url=url_for(
-            'unstar_entry',
-            category_id=category_id,
-            feed_id=feed_id,
-            entry_id=entry_id,
-            _external=True
-        ),
-        feed={
-            'title': feed.title,
-            'entries_url': url_for(
-                'feed_entries',
-                feed_id=feed_id,
-                _external=True
-            ),
-            'permalink': feed_permalink or None
-        }
+    entry_data = {
+        'title': entry.title,
+        'content': content,
+        'updated': entry.updated_at.__str__(),
+        'permalink': entry_permalink or None,
+    }
+    feed_data = {
+        'title': feed.title,
+        'permalink': feed_permalink or None
+    }
+    add_urls(
+        entry_data,
+        ['read_url', 'unread_url', 'star_url', 'unstar_url'],
+        category_id,
+        feed_id,
+        entry_id
     )
+    add_urls(
+        feed_data,
+        ['entries_url'],
+        category_id,
+        feed_id
+    )
+    entry_data['feed'] = feed_data
+    return jsonify(entry_data)
 
 
 @app.route('/feeds/<feed_id>/entries/<entry_id>/read/',

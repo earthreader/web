@@ -588,6 +588,7 @@ def test_category_all_entries(xmls):
         assert two_result['feed']['entries_url'] == \
             url_for(
                 'feed_entries',
+                category_id='-categoryone',
                 feed_id=feed_id,
                 _external=True
             )
