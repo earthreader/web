@@ -93,11 +93,12 @@ Shortcuts
 
 Vim-like keyboard shortcuts are available in earthreader web
 
-- j/k : Go to older/newer entry
-- o : open entry in new tab
-- u : mark as unread
-- s : star/unstar
-- ? : this help message
+- j/k : Go to older/newer entry.
+- o : Open entry in new tab.
+- r : Refresh current feed.
+- s : Star/Unstar.
+- u : Mark as unread.
+- ? : This help message.
 
 
 Links
