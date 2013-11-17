@@ -3,6 +3,7 @@
 	<head>
 		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1"/>
+		<link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon_32.ico')}}"/>
 		<script>
 			URLS = {{ {'feeds': url_for('feeds', _external=True), 'entries': url_for('category_entries', _external=True)}|tojson|safe }};
 			THEMES = {{ {'bright': url_for('static', filename='css/theme_bright.css'), 'dark': url_for('static', filename='css/theme_dark.css')}|tojson|safe }};
