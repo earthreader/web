@@ -17,7 +17,7 @@ from libearth.subscribe import Category, Subscription, SubscriptionList
 from libearth.tz import now
 
 from .wsgi import MethodRewriteMiddleware
-
+from werkzeug.exceptions import HTTPException
 
 app = Flask(__name__)
 app.wsgi_app = MethodRewriteMiddleware(app.wsgi_app)
@@ -33,20 +33,43 @@ class IteratorNotFound(ValueError):
     """Rise when the iterator does not exist"""
 
 
-class InvalidCategoryID(ValueError):
+def make_json_error_response(error, message):
+    r = jsonify(
+        error=error,
+        message=message
+    )
+    r.status_code = 404
+    return r
+
+
+class InvalidCategoryID(ValueError, HTTPException):
     """Rise when the category ID is not valid"""
 
+    def get_response(self, environ):
+        return make_json_error_response(
+            'category-path-invalid',
+            'Given category path is not valid'
+        )
 
-class FeedNotFound(ValueError):
+
+class FeedNotFound(ValueError, HTTPException):
     """Rise when the feed is not reachable"""
 
+    def get_response(self, environ):
+        return make_json_error_response(
+            'feed-not-found',
+            'The feed you request does not exsist'
+        )
 
-class EntryNotFound(ValueError):
+
+class EntryNotFound(ValueError, HTTPException):
     """Rise when the entry is not reachable"""
 
-
-class UnreachableUrl(ValueError):
-    """Rise when the url is not reachable"""
+    def get_response(self, environ):
+        return make_json_error_response(
+            'entry-not-found',
+            'The entry you request does not exist'
+        )
 
 
 class Cursor():
@@ -72,7 +95,7 @@ class Cursor():
                     self.value = self.value.categories[key]
                 if target_name:
                     self.target_child = self.value.categories[target_name]
-        except:
+        except Exception:
             raise InvalidCategoryID('The given category ID is not valid')
 
     def __getattr__(self, attr):
@@ -123,7 +146,15 @@ def get_hash(name):
     return hashlib.sha1(binary(name)).hexdigest()
 
 
-def get_all_feeds(cursor):
+@app.route('/', methods=['GET'])
+def index():
+    return render_template('index.html')
+
+
+@app.route('/feeds/', defaults={'category_id': ''})
+@app.route('/<path:category_id>/feeds/')
+def feeds(category_id):
+    cursor = Cursor(category_id)
     feeds = []
     categories = []
     for child in cursor:
@@ -137,27 +168,6 @@ def get_all_feeds(cursor):
                         'add_category_url', 'remove_category_url']
             add_urls(data, url_keys, cursor.join_id(child._title))
             categories.append(data)
-    return feeds, categories
-
-
-@app.route('/', methods=['GET'])
-def index():
-    return render_template('index.html')
-
-
-@app.route('/feeds/', defaults={'category_id': ''})
-@app.route('/<path:category_id>/feeds/')
-def feeds(category_id):
-    try:
-        cursor = Cursor(category_id)
-    except InvalidCategoryID:
-        r = jsonify(
-            error='category-path-invalid',
-            message='Given category path is not valid'
-        )
-        r.status_code = 404
-        return r
-    feeds, categories = get_all_feeds(cursor)
     return jsonify(feeds=feeds, categories=categories)
 
 
@@ -165,15 +175,7 @@ def feeds(category_id):
 @app.route('/<path:category_id>/feeds/', methods=['POST'])
 def add_feed(category_id):
     stage = get_stage()
-    try:
-        cursor = Cursor(category_id)
-    except InvalidCategoryID:
-        r = jsonify(
-            error='category-path-invalid',
-            message='Given category path is not valid'
-        )
-        r.status_code = 404
-        return r
+    cursor = Cursor(category_id)
     url = request.form['url']
     try:
         f = urllib2.urlopen(url)
@@ -207,15 +209,7 @@ def add_feed(category_id):
 @app.route('/<path:category_id>/', methods=['POST'])
 def add_category(category_id):
     stage = get_stage()
-    try:
-        cursor = Cursor(category_id)
-    except InvalidCategoryID:
-        r = jsonify(
-            error='category-path-invalid',
-            message='Given category path is not valid'
-        )
-        r.status_code = 404
-        return r
+    cursor = Cursor(category_id)
     title = request.form['title']
     outline = Category(label=title, _title=title)
     cursor.add(outline)
@@ -226,15 +220,7 @@ def add_category(category_id):
 @app.route('/<path:category_id>/', methods=['DELETE'])
 def delete_category(category_id):
     stage = get_stage()
-    try:
-        cursor = Cursor(category_id, True)
-    except InvalidCategoryID:
-        r = jsonify(
-            error='category-path-invalid',
-            message='Given category path is not valid'
-        )
-        r.status_code = 404
-        return r
+    cursor = Cursor(category_id, True)
     cursor.remove(cursor.target_child)
     stage.subscriptions = cursor.subscriptionlist
     index = category_id.rfind('/')
@@ -249,15 +235,7 @@ def delete_category(category_id):
 @app.route('/<path:category_id>/feeds/<feed_id>/', methods=['DELETE'])
 def delete_feed(category_id, feed_id):
     stage = get_stage()
-    try:
-        cursor = Cursor(category_id)
-    except InvalidCategoryID:
-        r = jsonify(
-            error='category-path-invalid',
-            message='Given category path is not valid'
-        )
-        r.status_code = 404
-        return r
+    cursor = Cursor(category_id)
     target = None
     for subscription in cursor:
         if isinstance(subscription, Subscription):
@@ -332,15 +310,7 @@ def make_next_url(category_id, url_token, entry_after, read, starred,
 @app.route('/<path:category_id>/feeds/<feed_id>/entries/')
 def feed_entries(category_id, feed_id):
     stage = get_stage()
-    try:
-        Cursor(category_id)
-    except InvalidCategoryID:
-        r = jsonify(
-            error='category-path-invalid',
-            message='Given category path is not valid'
-        )
-        r.status_code = 404
-        return r
+    Cursor(category_id)
     try:
         feed = stage.feeds[feed_id]
     except KeyError:
@@ -420,15 +390,7 @@ def feed_entries(category_id, feed_id):
 @app.route('/<path:category_id>/entries/')
 def category_entries(category_id):
     stage = get_stage()
-    try:
-        cursor = Cursor(category_id)
-    except InvalidCategoryID:
-        r = jsonify(
-            error='category-path-invalid',
-            message='Given category was not found'
-        )
-        r.status_code = 404
-        return r
+    cursor = Cursor(category_id)
     url_token = request.args.get('url_token')
     iters = []
     if url_token:
@@ -530,15 +492,7 @@ def category_entries(category_id):
 @app.route('/<path:category_id>/entries/', methods=['PUT'])
 def update_entries(category_id, feed_id=None):
     stage = get_stage()
-    try:
-        cursor = Cursor(category_id)
-    except InvalidCategoryID:
-        r = jsonify(
-            error='category-path-invalid',
-            message='Given category path is not valid'
-        )
-        r.status_code = 404
-        return r
+    cursor = Cursor(category_id)
     failed = []
     ids = {}
     if feed_id:
@@ -594,17 +548,8 @@ def find_feed_and_entry(category_id, feed_id, entry_id):
            defaults={'category_id': ''})
 @app.route('/<path:category_id>/feeds/<feed_id>/entries/<entry_id>/')
 def feed_entry(category_id, feed_id, entry_id):
-    try:
-        feed, feed_permalink, entry, entry_permalink = \
-            find_feed_and_entry(category_id, feed_id, entry_id)
-    except (InvalidCategoryID, FeedNotFound, EntryNotFound):
-        r = jsonify(
-            error='entry-not-found',
-            message='Given entry does not exist'
-        )
-        r.status_code = 404
-        return r
-
+    feed, feed_permalink, entry, entry_permalink = \
+        find_feed_and_entry(category_id, feed_id, entry_id)
     content = entry.content or entry.summary
     if content is not None:
         content = content.sanitized_html
@@ -642,15 +587,7 @@ def feed_entry(category_id, feed_id, entry_id):
            methods=['PUT'])
 def read_entry(category_id, feed_id, entry_id):
     stage = get_stage()
-    try:
-        feed, _, entry, _ = find_feed_and_entry(category_id, feed_id, entry_id)
-    except (InvalidCategoryID, FeedNotFound, EntryNotFound):
-        r = jsonify(
-            error='entry-not-found',
-            message='Given entry does not exist'
-        )
-        r.status_code = 404
-        return r
+    feed, _, entry, _ = find_feed_and_entry(category_id, feed_id, entry_id)
     entry.read = True
     stage.feeds[feed_id] = feed
     return jsonify()
@@ -662,15 +599,7 @@ def read_entry(category_id, feed_id, entry_id):
            methods=['DELETE'])
 def unread_entry(category_id, feed_id, entry_id):
     stage = get_stage()
-    try:
-        feed, _, entry, _ = find_feed_and_entry(category_id, feed_id, entry_id)
-    except (InvalidCategoryID, FeedNotFound, EntryNotFound):
-        r = jsonify(
-            error='entry-not-found',
-            message='Given entry does not exist'
-        )
-        r.status_code = 404
-        return r
+    feed, _, entry, _ = find_feed_and_entry(category_id, feed_id, entry_id)
     entry.read = False
     stage.feeds[feed_id] = feed
     return jsonify()
@@ -682,15 +611,7 @@ def unread_entry(category_id, feed_id, entry_id):
            methods=['PUT'])
 def star_entry(category_id, feed_id, entry_id):
     stage = get_stage()
-    try:
-        feed, _, entry, _ = find_feed_and_entry(category_id, feed_id, entry_id)
-    except (InvalidCategoryID, FeedNotFound, EntryNotFound):
-        r = jsonify(
-            error='entry-not-found',
-            message='Given entry does not exist'
-        )
-        r.status_code = 404
-        return r
+    feed, _, entry, _ = find_feed_and_entry(category_id, feed_id, entry_id)
     entry.starred = True
     stage.feeds[feed_id] = feed
     return jsonify()
@@ -702,15 +623,7 @@ def star_entry(category_id, feed_id, entry_id):
            methods=['DELETE'])
 def unstar_entry(category_id, feed_id, entry_id):
     stage = get_stage()
-    try:
-        feed, _, entry, _ = find_feed_and_entry(category_id, feed_id, entry_id)
-    except (InvalidCategoryID, FeedNotFound, EntryNotFound):
-        r = jsonify(
-            error='entry-not-found',
-            message='Given entry does not exist'
-        )
-        r.status_code = 404
-        return r
+    feed, _, entry, _ = find_feed_and_entry(category_id, feed_id, entry_id)
     entry.starred = False
     stage.feeds[feed_id] = feed
     return jsonify()
