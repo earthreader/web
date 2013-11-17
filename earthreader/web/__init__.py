@@ -355,8 +355,8 @@ def feed_entries(category_id, feed_id):
                 'entry_id': get_hash(entry.id),
                 'permalink': entry_permalink or None,
                 'updated': entry.updated_at.__str__(),
-                'read': bool(entry.read) if entry.read else False,
-                'starred': bool(entry.starred) if entry.starred else False,
+                'read': bool(entry.read),
+                'starred': bool(entry.starred),
             }
             feed_data = {
                 'title': feed.title,
@@ -441,8 +441,8 @@ def category_entries(category_id):
             'entry_id': get_hash(entry.id),
             'permalink': entry_permalink or None,
             'updated': entry.updated_at.__str__(),
-            'read': bool(entry.read) if entry.read else False,
-            'starred': bool(entry.starred) if entry.starred else False,
+            'read': bool(entry.read),
+            'starred': bool(entry.starred),
         }
         feed_data = {
             'title': feed_title,
