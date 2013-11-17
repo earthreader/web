@@ -36,6 +36,9 @@ function changeFilter(event) {
 
 function clickComplementaryMenu(event) {
 	var target = $(event.target);
+	while (target.attr('data-action') == null) {
+		target = target.parent();
+	}
 
 	var action = target.attr('data-action');
 	closeSide();
