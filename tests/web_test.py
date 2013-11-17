@@ -219,10 +219,11 @@ def xmls(request, fx_test_stage):
         'http://feedfour.com/feed/atom/': categorythree
     }
     generator = crawl(pair.keys(), 4)
-    for feed_url, feed, hints in generator:
-        sub = pair[feed_url].subscribe(feed)
-        stage.feeds[sub.feed_id] = feed
-    stage.subscriptions = subscriptions
+    with stage:
+        for feed_url, feed, hints in generator:
+            sub = pair[feed_url].subscribe(feed)
+            stage.feeds[sub.feed_id] = feed
+        stage.subscriptions = subscriptions
 
 
 def test_all_feeds(xmls):
@@ -433,8 +434,8 @@ def test_add_feed(xmls, fx_test_stage):
         assert r.status_code == 200
         result = json.loads(r.data)
         assert result['feeds'][1]['title'] == 'Feed Five'
-        stage = fx_test_stage
-        opml = stage.subscriptions
+        with fx_test_stage as stage:
+            opml = stage.subscriptions
         assert opml.children[3]._title == 'Feed Five'
 
 
@@ -450,8 +451,8 @@ def test_add_feed_in_category(xmls, fx_test_stage):
         result = json.loads(r.data)
         assert result['feeds'][0]['title'] == 'Feed Two'
         assert result['feeds'][1]['title'] == 'Feed Five'
-        stage = fx_test_stage
-        subscriptions = stage.subscriptions
+        with fx_test_stage as stage:
+            subscriptions = stage.subscriptions
         categoryone = subscriptions.categories['categoryone']
         categorytwo = categoryone.categories['categorytwo']
         assert len(categorytwo.subscriptions) == 2
@@ -464,8 +465,8 @@ def test_add_category(xmls, fx_test_stage):
         assert r.status_code == 200
         result = json.loads(r.data)
         assert result['categories'][2]['title'] == 'addedcategory'
-        stage = fx_test_stage
-        subscriptions = stage.subscriptions
+        with fx_test_stage as stage:
+            subscriptions = stage.subscriptions
         assert subscriptions.categories['addedcategory'] is not None
 
 
@@ -480,8 +481,8 @@ def test_add_category_in_category(xmls, fx_test_stage):
         assert r.status_code == 200
         result = json.loads(r.data)
         assert result['categories'][1]['title'] == 'addedcategory'
-        stage = fx_test_stage
-        subscriptions = stage.subscriptions
+        with fx_test_stage as stage:
+            subscriptions = stage.subscriptions
         categoryone = subscriptions.categories['categoryone']
         assert categoryone.categories['addedcategory'] is not None
 
@@ -493,8 +494,8 @@ def test_add_category_without_opml(fx_test_stage):
         assert r.status_code == 200
         result = json.loads(r.data)
         assert result['categories'][0]['title'] == 'testcategory'
-        stage = fx_test_stage
-        subscriptions = stage.subscriptions
+        with fx_test_stage as stage:
+            subscriptions = stage.subscriptions
         assert subscriptions.categories['testcategory'] is not None
 
 
@@ -505,8 +506,8 @@ def test_add_feed_without_opml(fx_test_stage):
         assert r.status_code == 200
         result = json.loads(r.data)
         assert result['feeds'][0]['title'] == 'Feed One'
-        stage = fx_test_stage
-        subscriptions = stage.subscriptions
+        with fx_test_stage as stage:
+            subscriptions = stage.subscriptions
         assert len(subscriptions.subscriptions) == 1
 
 
@@ -697,9 +698,9 @@ def fx_xml_for_update(xmls, request):
 
 def test_update_feed_entries(fx_xml_for_update, fx_test_stage):
     with app.test_client() as client:
-        stage = fx_test_stage
         feed_two_id = get_hash('http://feedtwo.com/feed/atom/')
-        assert len(stage.feeds[feed_two_id].entries) == 1
+        with fx_test_stage as stage:
+            assert len(stage.feeds[feed_two_id].entries) == 1
         r = client.put(
             get_url(
                 'update_entries',
@@ -708,55 +709,61 @@ def test_update_feed_entries(fx_xml_for_update, fx_test_stage):
             )
         )
         assert r.status_code == 202
-        assert len(stage.feeds[feed_two_id].entries) == 2
+        with fx_test_stage as stage:
+            assert len(stage.feeds[feed_two_id].entries) == 2
 
 
 def test_update_category_entries(fx_xml_for_update, fx_test_stage):
     with app.test_client() as client:
-        stage = fx_test_stage
         feed_two_id = get_hash('http://feedtwo.com/feed/atom/')
         feed_three_id = get_hash('http://feedthree.com/feed/atom/')
-        assert len(stage.feeds[feed_two_id].entries) == 1
-        assert len(stage.feeds[feed_three_id].entries) == 1
+        with fx_test_stage as stage:
+            assert len(stage.feeds[feed_two_id].entries) == 1
+            assert len(stage.feeds[feed_three_id].entries) == 1
         r = client.put('/entries/')
         assert r.status_code == 202
-        assert len(stage.feeds[feed_two_id].entries) == 2
+        with fx_test_stage as stage:
+            assert len(stage.feeds[feed_two_id].entries) == 2
 
 
 def test_entry_read_unread(xmls, fx_test_stage):
-    stage = fx_test_stage
     with app.test_client() as client:
         feed_three_id = get_hash('http://feedthree.com/feed/atom/')
         test_entry_id = get_hash('http://feedthree.com/feed/atom/1/')
-        assert not stage.feeds[feed_three_id].entries[0].read
+        with fx_test_stage as stage:
+            assert not stage.feeds[feed_three_id].entries[0].read
         r = client.get('/feeds/' + feed_three_id + '/entries/' +
                        test_entry_id + '/')
         assert r.status_code == 200
         result = json.loads(r.data)
         r = client.put(result['read_url'])
         assert r.status_code == 200
-        assert stage.feeds[feed_three_id].entries[0].read
+        with fx_test_stage as stage:
+            assert stage.feeds[feed_three_id].entries[0].read
         r = client.delete(result['unread_url'])
         assert r.status_code == 200
-        assert not stage.feeds[feed_three_id].entries[0].read
+        with fx_test_stage as stage:
+            assert not stage.feeds[feed_three_id].entries[0].read
 
 
 def test_entry_star_unstar(xmls, fx_test_stage):
-    stage = fx_test_stage
     with app.test_client() as client:
         feed_three_id = get_hash('http://feedthree.com/feed/atom/')
         test_entry_id = get_hash('http://feedthree.com/feed/atom/1/')
-        assert not stage.feeds[feed_three_id].entries[0].read
+        with fx_test_stage as stage:
+            assert not stage.feeds[feed_three_id].entries[0].read
         r = client.get('/feeds/' + feed_three_id + '/entries/' +
                        test_entry_id + '/')
         assert r.status_code == 200
         result = json.loads(r.data)
         r = client.put(result['star_url'])
         assert r.status_code == 200
-        assert stage.feeds[feed_three_id].entries[0].starred
-        r = client.delete(result['unstar_url'])
+        with fx_test_stage as stage:
+            assert stage.feeds[feed_three_id].entries[0].starred
+            r = client.delete(result['unstar_url'])
         assert r.status_code == 200
-        assert not stage.feeds[feed_three_id].entries[0].starred
+        with fx_test_stage as stage:
+            assert not stage.feeds[feed_three_id].entries[0].starred
 
 
 opml_for_filtering = '''
@@ -774,7 +781,6 @@ opml_for_filtering = '''
 
 @fixture
 def fx_filtering_entries(fx_test_stage):
-    stage = fx_test_stage
     authors = [Person(name='vio')]
     now = datetime.datetime(2013, 10, 30, 20, 55, 30, tzinfo=utc)
     feed = Feed(id='http://feedone.com/feed/atom/', authors=authors,
@@ -791,8 +797,9 @@ def fx_filtering_entries(fx_test_stage):
         feed.entries[i].read = Mark(marked=True, updated_at=now)
     for i in range(3, 7):
         feed.entries[i].starred = Mark(marked=True, updated_at=now)
-    stage.feeds[get_hash('http://feedone.com/feed/atom/')] = feed
-    stage.subscriptions = read(SubscriptionList, opml_for_filtering)
+    with fx_test_stage as stage:
+        stage.feeds[get_hash('http://feedone.com/feed/atom/')] = feed
+        stage.subscriptions = read(SubscriptionList, opml_for_filtering)
 
 
 @mark.parametrize(('read', 'starred', 'expected_entries'), [
@@ -841,15 +848,16 @@ opml_with_non_exist_feed = '''
 
 @fixture
 def fx_non_exist_opml(fx_test_stage):
-    stage = fx_test_stage
     feed_urls = ['http://feedone.com/feed/atom/']
     generator = crawl(feed_urls, 1)
     for result in generator:
         feed_data = result[1]
         feed_url = result[0]
         feed_id = get_hash(feed_url)
-        stage.feeds[feed_id] = feed_data
-    stage.subscriptions = read(SubscriptionList, opml_with_non_exist_feed)
+        with fx_test_stage as stage:
+            stage.feeds[feed_id] = feed_data
+    with fx_test_stage as stage:
+        stage.subscriptions = read(SubscriptionList, opml_with_non_exist_feed)
 
 
 def test_non_exist_feed(fx_non_exist_opml):
@@ -870,7 +878,6 @@ def test_non_exist_feed(fx_non_exist_opml):
 
 @fixture
 def xmls_for_next(request, fx_test_stage):
-    stage = fx_test_stage
     opml = '''
     <opml version="1.0">
       <head>
@@ -948,11 +955,12 @@ def xmls_for_next(request, fx_test_stage):
     for i in range(20, 50):
         feed_four.entries[i].read = True
     subscriptions = read(SubscriptionList, opml)
-    stage.subscriptions = subscriptions
-    stage.feeds[get_hash('http://feedone.com/')] = feed_one
-    stage.feeds[get_hash('http://feedtwo.com/')] = feed_two
-    stage.feeds[get_hash('http://feedthree.com/')] = feed_three
-    stage.feeds[get_hash('http://feedfour.com/')] = feed_four
+    with fx_test_stage as stage:
+        stage.subscriptions = subscriptions
+        stage.feeds[get_hash('http://feedone.com/')] = feed_one
+        stage.feeds[get_hash('http://feedtwo.com/')] = feed_two
+        stage.feeds[get_hash('http://feedthree.com/')] = feed_three
+        stage.feeds[get_hash('http://feedfour.com/')] = feed_four
 
 
 def test_feed_entries_next(xmls_for_next):
