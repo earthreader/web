@@ -30,6 +30,10 @@ body {
 	background: rgb(245, 245, 255);
 }
 
+[role=navigation] a {
+	color: black;
+}
+
 [role=main] article .entry-title {
 	background: rgb(253, 253, 253);
 }
