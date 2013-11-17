@@ -51,7 +51,7 @@ class UnreachableUrl(ValueError):
 
 class Cursor():
 
-    def __init__(self, category_id=None, return_parent=False):
+    def __init__(self, category_id, return_parent=False):
         stage = get_stage()
         self.subscriptionlist = (stage.subscriptions if stage.subscriptions
                                  else SubscriptionList())
