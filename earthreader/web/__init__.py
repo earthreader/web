@@ -146,7 +146,15 @@ def get_hash(name):
     return hashlib.sha1(binary(name)).hexdigest()
 
 
-def get_all_feeds(cursor):
+@app.route('/', methods=['GET'])
+def index():
+    return render_template('index.html')
+
+
+@app.route('/feeds/', defaults={'category_id': ''})
+@app.route('/<path:category_id>/feeds/')
+def feeds(category_id):
+    cursor = Cursor(category_id)
     feeds = []
     categories = []
     for child in cursor:
@@ -160,19 +168,6 @@ def get_all_feeds(cursor):
                         'add_category_url', 'remove_category_url']
             add_urls(data, url_keys, cursor.join_id(child._title))
             categories.append(data)
-    return feeds, categories
-
-
-@app.route('/', methods=['GET'])
-def index():
-    return render_template('index.html')
-
-
-@app.route('/feeds/', defaults={'category_id': ''})
-@app.route('/<path:category_id>/feeds/')
-def feeds(category_id):
-    cursor = Cursor(category_id)
-    feeds, categories = get_all_feeds(cursor)
     return jsonify(feeds=feeds, categories=categories)
 
 
