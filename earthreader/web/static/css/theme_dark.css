@@ -32,6 +32,10 @@ body {
 	background: rgb(245, 245, 255);
 }
 
+[role=navigation] a {
+	color: white;
+}
+
 [role=navigation] .current {
 	background: rgb(43, 73, 63);
 }
