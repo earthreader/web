@@ -36,7 +36,7 @@ function changeFilter(event) {
 
 function clickComplementaryMenu(event) {
 	var target = $(event.target);
-	while (target.attr('data-action') == null) {
+	while (target.attr('data-action') === null) {
 		target = target.parent();
 	}
 
