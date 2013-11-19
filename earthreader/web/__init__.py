@@ -497,7 +497,7 @@ def category_entries(category_id):
     if not iters:
         subscriptions = cursor.recursive_subscriptions
         if entry_after:
-            time_after, _id = entry_after.split('@')
+            time_after = entry_after.split('@')[0]
             time_after = Rfc3339().decode(time_after)
         else:
             for subscription in subscriptions:
