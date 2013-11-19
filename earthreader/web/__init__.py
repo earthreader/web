@@ -493,7 +493,8 @@ def category_entries(category_id):
                     print(entry.title)
                 it = iter(feed.entries)
                 iters = [
-                    (feed.title, get_hash(feed.id), get_permalink(feed), it, entry)
+                    (feed.title, get_hash(feed.id), get_permalink(feed),
+                     it, entry)
                     for entry in feed.entries
                     if (read is None or read == bool(entry.read)) and
                     (starred is None or starred == bool(entry.read)) and
