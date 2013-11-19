@@ -390,7 +390,7 @@ class FeedEntryGenerator():
             'title': self.entry.title,
             'entry_id': get_hash(self.entry.id),
             'permalink': entry_permalink or None,
-            'updated': self.entry.updated_at.__str__(),
+            'updated': Rfc3339().encode(self.entry.updated_at),
             'read': bool(self.entry.read),
             'starred': bool(self.entry.starred)
         }
