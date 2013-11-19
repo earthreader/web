@@ -507,6 +507,8 @@ def category_entries(category_id):
                 except KeyError:
                     continue
                 it = iter(feed.entries)
+                for entry in feed.entries:
+                    print entry.title
                 iters += [
                     (feed.title, get_hash(feed.id), get_permalink(feed),
                      it, entry)
@@ -514,11 +516,10 @@ def category_entries(category_id):
                     if (read is None or read == bool(entry.read)) and
                     (starred is None or starred == bool(entry.starred))
                 ]
+    iters = sorted(iters, key=lambda item: item[4].updated_at, reverse=True)
     entries = []
     while len(entries) < 20 and iters:
-        iters = \
-            sorted(iters, key=lambda item: item[4].updated_at, reverse=True)
-        feed_title, feed_id, feed_permalink, it, entry = iters[0]
+        feed_title, feed_id, feed_permalink, it, entry = iters.pop(0)
         entry_permalink = get_permalink(entry)
         entry_data = {
             'title': entry.title,
@@ -537,19 +538,6 @@ def category_entries(category_id):
         add_urls(feed_data, ['entries_url'], category_id, feed_id)
         entry_data['feed'] = feed_data
         entries.append(entry_data)
-        while True:
-            try:
-                entry = next(it)
-            except StopIteration:
-                iters.pop(0)
-                break
-            if ((read is None or read == bool(entry.read)) and
-                (starred is None or
-                 starred == bool(entry.starred))):
-                item = (feed_title, feed_id, feed_permalink, it,
-                        entry)
-                iters[0] = item
-                break
     entry_generators[url_token] = iters, now()
     tidy_generators_up()
     if len(entries) < 20:
