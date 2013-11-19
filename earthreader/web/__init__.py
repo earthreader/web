@@ -33,43 +33,36 @@ class IteratorNotFound(ValueError):
     """Rise when the iterator does not exist"""
 
 
-def make_json_error_response(error, message):
-    r = jsonify(
-        error=error,
-        message=message
-    )
-    r.status_code = 404
-    return r
+class JsonException(HTTPException):
+    """Base exception to return json response when raised.
+    Exceptions inherit this class must declare `error` and `message`.
 
-
-class InvalidCategoryID(ValueError, HTTPException):
-    """Rise when the category ID is not valid"""
-
+    """
     def get_response(self, environ):
-        return make_json_error_response(
-            'category-path-invalid',
-            'Given category path is not valid'
-        )
+        r = jsonify(error=self.error, message=self.message)
+        r.status_code = 404
+        return r
 
 
-class FeedNotFound(ValueError, HTTPException):
-    """Rise when the feed is not reachable"""
+class InvalidCategoryID(ValueError, JsonException):
+    """Rise when the category ID is not valid."""
 
-    def get_response(self, environ):
-        return make_json_error_response(
-            'feed-not-found',
-            'The feed you request does not exsist'
-        )
+    error = 'category-id-invalid'
+    message = 'Given category id is not valid'
 
 
-class EntryNotFound(ValueError, HTTPException):
-    """Rise when the entry is not reachable"""
+class FeedNotFound(ValueError, JsonException):
+    """Rise when the feed is not reachable."""
 
-    def get_response(self, environ):
-        return make_json_error_response(
-            'entry-not-found',
-            'The entry you request does not exist'
-        )
+    error = 'feed-not-found'
+    message = 'The feed you request does not exsist'
+
+
+class EntryNotFound(ValueError, JsonException):
+    """Rise when the entry is not reachable."""
+
+    error = 'entry-not-found'
+    message = 'The entry you request does not exist'
 
 
 class Cursor():
