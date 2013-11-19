@@ -5,7 +5,7 @@ try:
 except ImportError:
     import urllib.request as urllib2
 
-from flask import Flask, jsonify, render_template, request, url_for
+from flask import Flask, g, jsonify, render_template, request, url_for
 from libearth.codecs import Rfc3339
 from libearth.compat import binary
 from libearth.crawler import CrawlError, crawl
@@ -15,9 +15,9 @@ from libearth.session import Session
 from libearth.stage import Stage
 from libearth.subscribe import Category, Subscription, SubscriptionList
 from libearth.tz import now
+from werkzeug.exceptions import HTTPException
 
 from .wsgi import MethodRewriteMiddleware
-from werkzeug.exceptions import HTTPException
 
 app = Flask(__name__)
 app.wsgi_app = MethodRewriteMiddleware(app.wsgi_app)
@@ -68,9 +68,9 @@ class EntryNotFound(ValueError, JsonException):
 class Cursor():
 
     def __init__(self, category_id, return_parent=False):
-        stage = get_stage()
-        self.subscriptionlist = (stage.subscriptions if stage.subscriptions
-                                 else SubscriptionList())
+        with get_stage() as stage:
+            self.subscriptionlist = (stage.subscriptions if stage.subscriptions
+                                     else SubscriptionList())
         self.value = self.subscriptionlist
         self.path = ['/']
         self.category_id = None
@@ -192,30 +192,31 @@ def add_feed(category_id):
         return r
     feed_url = feed_links[0].url
     feed_url, feed, hints = next(iter(crawl([feed_url], 1)))
-    sub = cursor.subscribe(feed)
-    stage.subscriptions = cursor.subscriptionlist
-    stage.feeds[sub.feed_id] = feed
+    with stage:
+        sub = cursor.subscribe(feed)
+        stage.subscriptions = cursor.subscriptionlist
+        stage.feeds[sub.feed_id] = feed
     return feeds(category_id)
 
 
 @app.route('/', methods=['POST'], defaults={'category_id': ''})
 @app.route('/<path:category_id>/', methods=['POST'])
 def add_category(category_id):
-    stage = get_stage()
     cursor = Cursor(category_id)
     title = request.form['title']
     outline = Category(label=title, _title=title)
     cursor.add(outline)
-    stage.subscriptions = cursor.subscriptionlist
+    with get_stage() as stage:
+        stage.subscriptions = cursor.subscriptionlist
     return feeds(category_id)
 
 
 @app.route('/<path:category_id>/', methods=['DELETE'])
 def delete_category(category_id):
-    stage = get_stage()
     cursor = Cursor(category_id, True)
     cursor.remove(cursor.target_child)
-    stage.subscriptions = cursor.subscriptionlist
+    with get_stage() as stage:
+        stage.subscriptions = cursor.subscriptionlist
     index = category_id.rfind('/')
     if index == -1:
         return feeds('')
@@ -227,7 +228,6 @@ def delete_category(category_id):
            defaults={'category_id': ''})
 @app.route('/<path:category_id>/feeds/<feed_id>/', methods=['DELETE'])
 def delete_feed(category_id, feed_id):
-    stage = get_stage()
     cursor = Cursor(category_id)
     target = None
     for subscription in cursor:
@@ -244,7 +244,8 @@ def delete_feed(category_id, feed_id):
         )
         r.status_code = 400
         return r
-    stage.subscriptions = cursor.subscriptionlist
+    with get_stage() as stage:
+        stage.subscriptions = cursor.subscriptionlist
     return feeds(category_id)
 
 
@@ -305,7 +306,8 @@ def feed_entries(category_id, feed_id):
     stage = get_stage()
     Cursor(category_id)
     try:
-        feed = stage.feeds[feed_id]
+        with stage:
+            feed = stage.feeds[feed_id]
     except KeyError:
         r = jsonify(
             error='feed-not-found',
@@ -348,8 +350,8 @@ def feed_entries(category_id, feed_id):
                 'entry_id': get_hash(entry.id),
                 'permalink': entry_permalink or None,
                 'updated': entry.updated_at.__str__(),
-                'read': bool(entry.read) if entry.read else False,
-                'starred': bool(entry.starred) if entry.starred else False,
+                'read': bool(entry.read),
+                'starred': bool(entry.starred),
             }
             feed_data = {
                 'title': feed.title,
@@ -382,7 +384,6 @@ def feed_entries(category_id, feed_id):
 @app.route('/entries/', defaults={'category_id': ''})
 @app.route('/<path:category_id>/entries/')
 def category_entries(category_id):
-    stage = get_stage()
     cursor = Cursor(category_id)
     url_token = request.args.get('url_token')
     iters = []
@@ -405,7 +406,8 @@ def category_entries(category_id):
             time_after, _id = None, None
             for subscription in subscriptions:
                 try:
-                    feed = stage.feeds[subscription.feed_id]
+                    with get_stage() as stage:
+                        feed = stage.feeds[subscription.feed_id]
                 except KeyError:
                     continue
                 it = iter(feed.entries)
@@ -434,8 +436,8 @@ def category_entries(category_id):
             'entry_id': get_hash(entry.id),
             'permalink': entry_permalink or None,
             'updated': entry.updated_at.__str__(),
-            'read': bool(entry.read) if entry.read else False,
-            'starred': bool(entry.starred) if entry.starred else False,
+            'read': bool(entry.read),
+            'starred': bool(entry.starred),
         }
         feed_data = {
             'title': feed_title,
@@ -484,7 +486,6 @@ def category_entries(category_id):
 @app.route('/entries/', defaults={'category_id': ''}, methods=['PUT'])
 @app.route('/<path:category_id>/entries/', methods=['PUT'])
 def update_entries(category_id, feed_id=None):
-    stage = get_stage()
     cursor = Cursor(category_id)
     failed = []
     ids = {}
@@ -504,7 +505,8 @@ def update_entries(category_id, feed_id=None):
             continue
         except StopIteration:
             break
-        stage.feeds[ids[feed_url]] = feed_data
+        with get_stage() as stage:
+            stage.feeds[ids[feed_url]] = feed_data
     r = jsonify(failed=failed)
     r.status_code = 202
     return r
@@ -514,7 +516,8 @@ def find_feed_and_entry(category_id, feed_id, entry_id):
     stage = get_stage()
     Cursor(category_id)
     try:
-        feed = stage.feeds[feed_id]
+        with stage:
+            feed = stage.feeds[feed_id]
     except KeyError:
         raise FeedNotFound('The feed is not reachable')
     feed_permalink = None
@@ -579,10 +582,10 @@ def feed_entry(category_id, feed_id, entry_id):
 @app.route('/<path:category_id>/feeds/<feed_id>/entries/<entry_id>/read/',
            methods=['PUT'])
 def read_entry(category_id, feed_id, entry_id):
-    stage = get_stage()
     feed, _, entry, _ = find_feed_and_entry(category_id, feed_id, entry_id)
     entry.read = True
-    stage.feeds[feed_id] = feed
+    with get_stage() as stage:
+        stage.feeds[feed_id] = feed
     return jsonify()
 
 
@@ -591,10 +594,10 @@ def read_entry(category_id, feed_id, entry_id):
 @app.route('/<path:category_id>/feeds/<feed_id>/entries/<entry_id>/read/',
            methods=['DELETE'])
 def unread_entry(category_id, feed_id, entry_id):
-    stage = get_stage()
     feed, _, entry, _ = find_feed_and_entry(category_id, feed_id, entry_id)
     entry.read = False
-    stage.feeds[feed_id] = feed
+    with get_stage() as stage:
+        stage.feeds[feed_id] = feed
     return jsonify()
 
 
@@ -603,10 +606,10 @@ def unread_entry(category_id, feed_id, entry_id):
 @app.route('/<path:category_id>/feeds/<feed_id>/entries/<entry_id>/star/',
            methods=['PUT'])
 def star_entry(category_id, feed_id, entry_id):
-    stage = get_stage()
     feed, _, entry, _ = find_feed_and_entry(category_id, feed_id, entry_id)
     entry.starred = True
-    stage.feeds[feed_id] = feed
+    with get_stage() as stage:
+        stage.feeds[feed_id] = feed
     return jsonify()
 
 
@@ -615,8 +618,8 @@ def star_entry(category_id, feed_id, entry_id):
 @app.route('/<path:category_id>/feeds/<feed_id>/entries/<entry_id>/star/',
            methods=['DELETE'])
 def unstar_entry(category_id, feed_id, entry_id):
-    stage = get_stage()
     feed, _, entry, _ = find_feed_and_entry(category_id, feed_id, entry_id)
     entry.starred = False
-    stage.feeds[feed_id] = feed
+    with get_stage() as stage:
+        stage.feeds[feed_id] = feed
     return jsonify()
