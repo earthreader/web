@@ -22,8 +22,6 @@ from .wsgi import MethodRewriteMiddleware
 app = Flask(__name__)
 app.wsgi_app = MethodRewriteMiddleware(app.wsgi_app)
 
-stage = None
-
 
 app.config.update(
     ALLFEED='All Feeds',
