@@ -1,5 +1,6 @@
 import datetime
 import hashlib
+import os
 try:
     import urllib2
 except ImportError:
@@ -133,9 +134,23 @@ def get_stage():
     try:
         return app.config['STAGE']
     except KeyError:
+        session_id = app.config['SESSION_ID']
+        if request.environ['wsgi.multiprocess']:
+            # Stage doesn't offer safe synchronization between multiprocess.
+            # Unique session identifiers are actually needed to distinguish
+            # different "installations" which technically means "processes,"
+            # hence we append pid to the session identifier configured by
+            # the user to make them unique.
+            # Note that it probably causes N times more disk usage
+            # where N = the number of processes.  So we should discourage
+            # using web servers of prefork/worker model in the docs.
+            session_id = '{0}.{1}'.format(session_id, os.getpid())
         stage = Stage(
-            Session(app.config['SESSION_ID']),
-            FileSystemRepository(app.config['REPOSITORY'])
+            Session(session_id),
+            FileSystemRepository(
+                app.config['REPOSITORY'],
+                atomic=request.environ['wsgi.multithread']
+            )
         )
         app.config['STAGE'] = stage
         return stage
