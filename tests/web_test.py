@@ -32,13 +32,13 @@ from earthreader.web import app, get_hash
 
 @app.errorhandler(400)
 def bad_request_handler_for_testing(exception):
-    '''Custom error handler of :http:statuscode:`400` for unit testing
+    """Custom error handler of :http:statuscode:`400` for unit testing
     to know how it's going in the application.
 
-    '''
-    traceback.print_exc(exception)
+    """
+    traceback.print_exc()
     return (
-        traceback.format_exc(exception),
+        traceback.format_exc(),
         400,
         {'Content-Type': 'text/plain; charset=utf-8'}
     )
@@ -46,13 +46,13 @@ def bad_request_handler_for_testing(exception):
 
 @app.errorhandler(500)
 def server_error_handler_for_testing(exception):
-    '''Custom error handler of :http:statuscode:`500` for unit testing
+    """Custom error handler of :http:statuscode:`500` for unit testing
     to know how it's going in the application.
 
-    '''
-    traceback.print_exc(exception)
+    """
+    traceback.print_exc()
     return (
-        traceback.format_exc(exception),
+        traceback.format_exc(),
         500,
         {'Content-Type': 'text/plain; charset=utf-8'}
     )
@@ -759,7 +759,7 @@ def test_entry_star_unstar(xmls, fx_test_stage):
         assert r.status_code == 200
         with fx_test_stage as stage:
             assert stage.feeds[feed_three_id].entries[0].starred
-            r = client.delete(result['unstar_url'])
+        r = client.delete(result['unstar_url'])
         assert r.status_code == 200
         with fx_test_stage as stage:
             assert not stage.feeds[feed_three_id].entries[0].starred
