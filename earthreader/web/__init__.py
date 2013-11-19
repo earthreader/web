@@ -506,21 +506,19 @@ def category_entries(category_id):
                         feed = stage.feeds[subscription.feed_id]
                 except KeyError:
                     continue
-                it = iter(feed.entries)
                 for entry in feed.entries:
                     print entry.title
                 iters += [
-                    (feed.title, get_hash(feed.id), get_permalink(feed),
-                     it, entry)
+                    (feed.title, get_hash(feed.id), get_permalink(feed), entry)
                     for entry in feed.entries
                     if (read is None or read == bool(entry.read)) and
                     (starred is None or starred == bool(entry.starred))
                 ]
-    iters = sorted(iters, key=lambda item: item[4].updated_at, reverse=True)
+    iters = sorted(iters, key=lambda item: item[3].updated_at, reverse=True)
     currentPage, nextPage = iters[:20], iters[20:]
     entries = []
     for data in currentPage:
-        feed_title, feed_id, feed_permalink, it, entry = data
+        feed_title, feed_id, feed_permalink, entry = data
         entry_permalink = get_permalink(entry)
         entry_data = {
             'title': entry.title,
