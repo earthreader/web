@@ -542,8 +542,9 @@ def category_entries(category_id):
     tidy_generators_up()
     if len(entries) < pageSize:
         next_url = None
+        remove_entry_generator(url_token)
     else:
-        entry_generators[url_token] = nextPage, now()
+        save_entry_generators(url_token, nextPage)
         next_url = make_next_url(
             category_id,
             url_token,
