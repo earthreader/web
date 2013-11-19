@@ -517,9 +517,10 @@ def category_entries(category_id):
                     (starred is None or starred == bool(entry.starred))
                 ]
     iters = sorted(iters, key=lambda item: item[4].updated_at, reverse=True)
+    currentPage, nextPage = iters[:20], iters[20:]
     entries = []
-    while len(entries) < 20 and iters:
-        feed_title, feed_id, feed_permalink, it, entry = iters.pop(0)
+    for data in currentPage:
+        feed_title, feed_id, feed_permalink, it, entry = data
         entry_permalink = get_permalink(entry)
         entry_data = {
             'title': entry.title,
@@ -538,7 +539,7 @@ def category_entries(category_id):
         add_urls(feed_data, ['entries_url'], category_id, feed_id)
         entry_data['feed'] = feed_data
         entries.append(entry_data)
-    entry_generators[url_token] = iters, now()
+    entry_generators[url_token] = nextPage, now()
     tidy_generators_up()
     if len(entries) < 20:
         next_url = None
