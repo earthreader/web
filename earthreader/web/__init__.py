@@ -526,14 +526,14 @@ def category_entries(category_id):
         entry_data = {
             'title': entry.title,
             'entry_id': get_hash(entry.id),
-            'permalink': entry_permalink or None,
+            'permalink': entry_permalink,
             'updated': Rfc3339().encode(entry.updated_at),
             'read': bool(entry.read) if entry.read else False,
             'starred': bool(entry.starred) if entry.starred else False,
         }
         feed_data = {
             'title': feed_title,
-            'permalink': feed_permalink or None
+            'permalink': feed_permalink
         }
         add_urls(entry_data, ['entry_url'], category_id, feed_id,
                  get_hash(entry.id))
