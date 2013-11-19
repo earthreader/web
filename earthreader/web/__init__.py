@@ -25,7 +25,7 @@ app.wsgi_app = MethodRewriteMiddleware(app.wsgi_app)
 
 app.config.update(
     ALLFEED='All Feeds',
-    SESSION_NAME=None,
+    SESSION_ID=None,
 )
 
 
@@ -134,7 +134,7 @@ def get_stage():
         return app.config['STAGE']
     except KeyError:
         stage = Stage(
-            Session(app.config['SESSION_NAME']),
+            Session(app.config['SESSION_ID']),
             FileSystemRepository(app.config['REPOSITORY'])
         )
         app.config['STAGE'] = stage
