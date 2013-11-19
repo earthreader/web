@@ -22,6 +22,8 @@ from .wsgi import MethodRewriteMiddleware
 app = Flask(__name__)
 app.wsgi_app = MethodRewriteMiddleware(app.wsgi_app)
 
+stage = None
+
 
 app.config.update(dict(
     ALLFEED='All Feeds',
@@ -137,9 +139,12 @@ def add_urls(data, keys, category_id, feed_id=None, entry_id=None):
 
 
 def get_stage():
-    session = Session(app.config['SESSION_NAME'])
-    repo = FileSystemRepository(app.config['REPOSITORY'])
-    return Stage(session, repo)
+    if not hasattr(get_stage, 'stage'):
+        get_stage.stage = Stage(
+            Session(app.config['SESSION_NAME']),
+            FileSystemRepository(app.config['REPOSITORY'])
+        )
+    return get_stage.stage
 
 
 def get_hash(name):
