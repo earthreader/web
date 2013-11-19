@@ -549,7 +549,7 @@ def category_entries(category_id):
                 break
             if ((read is None or read == bool(entry.read)) and
                 (starred is None or
-                 to_bool(starred) == bool(entry.starred))):
+                 starred == bool(entry.starred))):
                 item = (feed_title, feed_id, feed_permalink, it,
                         entry)
                 iters[0] = item
