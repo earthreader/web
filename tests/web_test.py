@@ -257,7 +257,7 @@ def test_all_feeds(xmls):
                 entry_id=get_hash('http://feedthree.com/feed/atom/1/'),
                 _external=True,
             )
-        assert entries[0]['updated'] == '2013-08-21 07:49:20+07:00'
+        assert entries[0]['updated'] == '2013-08-21T07:49:20+07:00'
         r = client.get(entries[0]['entry_url'])
         assert r.status_code == 200
         result = json.loads(r.data)
