@@ -529,7 +529,7 @@ def category_entries(category_id):
             except StopIteration:
                 iters.pop(0)
                 break
-            if ((read is None or to_bool(read) == bool(entry.read)) and
+            if ((read is None or read == bool(entry.read)) and
                 (starred is None or
                  to_bool(starred) == bool(entry.starred))):
                 item = (feed_title, feed_id, feed_permalink, it,
