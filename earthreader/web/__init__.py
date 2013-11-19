@@ -485,21 +485,16 @@ def category_entries(category_id):
                         feed = stage.feeds[subscription.feed_id]
                 except KeyError:
                     continue
+                for entry in feed.entries:
+                    print(entry.title)
                 it = iter(feed.entries)
-                while True:
-                    try:
-                        entry = next(it)
-                    except StopIteration:
-                        break
-                    if ((time_after is None or entry.updated_at <= time_after)
-                        and (_id is None or get_hash(entry.id) != _id) and
-                        (read is None or to_bool(read) == bool(entry.read)) and
-                        (starred is None or
-                         to_bool(starred) == bool(entry.starred))):
-                        item = (feed.title, get_hash(feed.id),
-                                get_permalink(feed), it, entry)
-                        iters.append(item)
-                        break
+                iters = [
+                    (feed.title, get_hash(feed.id), get_permalink(feed), it, entry)
+                    for entry in feed.entries
+                    if (read is None or to_bool(read) == bool(entry.read)) and
+                    (starred is None or to_bool(starred) == bool(entry.read)) and
+                    (time_after is None or entry.updated_at <= time_after)
+                ]
     entries = []
     while len(entries) < 20 and iters:
         iters = \
