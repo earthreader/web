@@ -463,7 +463,7 @@ def feed_entries(category_id, feed_id):
 @app.route('/<path:category_id>/entries/')
 def category_entries(category_id):
     cursor = Cursor(category_id)
-    url_token = request.args.get('url_token')
+    url_token, entry_after, read, starred = get_optional_args()
     iters = []
     if url_token:
         try:
@@ -472,11 +472,8 @@ def category_entries(category_id):
             pass
     else:
         url_token = str(now())
-    read = request.args.get('read')
-    starred = request.args.get('starred')
     if not iters:
         subscriptions = cursor.recursive_subscriptions
-        entry_after = request.args.get('entry_after')
         if entry_after:
             time_after, _id = entry_after.split('@')
             time_after = Rfc3339().decode(time_after)
