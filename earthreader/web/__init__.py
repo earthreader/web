@@ -539,11 +539,11 @@ def category_entries(category_id):
         add_urls(feed_data, ['entries_url'], category_id, feed_id)
         entry_data['feed'] = feed_data
         entries.append(entry_data)
-    entry_generators[url_token] = nextPage, now()
     tidy_generators_up()
     if len(entries) < 20:
         next_url = None
     else:
+        entry_generators[url_token] = nextPage, now()
         next_url = make_next_url(
             category_id,
             url_token,
