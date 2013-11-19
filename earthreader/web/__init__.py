@@ -23,10 +23,10 @@ app = Flask(__name__)
 app.wsgi_app = MethodRewriteMiddleware(app.wsgi_app)
 
 
-app.config.update(dict(
+app.config.update(
     ALLFEED='All Feeds',
     SESSION_NAME=None,
-))
+)
 
 
 class IteratorNotFound(ValueError):
