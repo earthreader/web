@@ -130,12 +130,15 @@ def add_urls(data, keys, category_id, feed_id=None, entry_id=None):
 
 
 def get_stage():
-    if not hasattr(get_stage, 'stage'):
-        get_stage.stage = Stage(
+    try:
+        return app.config['STAGE']
+    except KeyError:
+        stage = Stage(
             Session(app.config['SESSION_NAME']),
             FileSystemRepository(app.config['REPOSITORY'])
         )
-    return get_stage.stage
+        app.config['STAGE'] = stage
+        return stage
 
 
 def get_hash(name):

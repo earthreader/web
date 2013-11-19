@@ -194,12 +194,11 @@ urllib2.install_opener(my_opener)
 
 @fixture
 def fx_test_stage(tmpdir):
-    app.config.update(dict(
-        REPOSITORY=str(tmpdir),
-    ))
     session = Session()
     repo = FileSystemRepository(str(tmpdir))
-    return Stage(session, repo)
+    stage = Stage(session, repo)
+    app.config['STAGE'] = stage
+    return stage
 
 
 @fixture
