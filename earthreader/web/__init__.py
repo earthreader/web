@@ -500,7 +500,6 @@ def category_entries(category_id):
             time_after, _id = entry_after.split('@')
             time_after = Rfc3339().decode(time_after)
         else:
-            time_after, _id = None, None
             for subscription in subscriptions:
                 try:
                     with get_stage() as stage:
@@ -513,8 +512,7 @@ def category_entries(category_id):
                      it, entry)
                     for entry in feed.entries
                     if (read is None or read == bool(entry.read)) and
-                    (starred is None or starred == bool(entry.read)) and
-                    (time_after is None or entry.updated_at <= time_after)
+                    (starred is None or starred == bool(entry.read))
                 ]
     entries = []
     while len(entries) < 20 and iters:
