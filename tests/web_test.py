@@ -423,7 +423,7 @@ def test_invalid_path(xmls):
         r = client.get('/non-exist-category/feeds/' + feed_id + '/entries/')
         result = json.loads(r.data)
         assert r.status_code == 404
-        assert result['error'] == 'category-path-invalid'
+        assert result['error'] == 'category-id-invalid'
 
 
 def test_add_feed(xmls, fx_test_stage):
