@@ -507,8 +507,6 @@ def category_entries(category_id):
                         feed = stage.feeds[subscription.feed_id]
                 except KeyError:
                     continue
-                for entry in feed.entries:
-                    print(entry.title)
                 it = iter(feed.entries)
                 iters = [
                     (feed.title, get_hash(feed.id), get_permalink(feed),
