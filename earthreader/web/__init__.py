@@ -27,6 +27,7 @@ app.wsgi_app = MethodRewriteMiddleware(app.wsgi_app)
 app.config.update(
     ALLFEED='All Feeds',
     SESSION_ID=None,
+    PAGE_SIZE=20,
 )
 
 
@@ -406,7 +407,7 @@ class FeedEntryGenerator():
 
     def get_entries(self, read, starred):
         entries = []
-        while len(entries) < 20:
+        while len(entries) < app.config['PAGE_SIZE']:
             try:
                 entry = self.get_entry_data()
                 entries.append(entry)
@@ -457,7 +458,7 @@ def feed_entries(category_id, feed_id):
             )
     save_entry_generators(url_token, generator)
     entries = generator.get_entries(read, starred)
-    if len(entries) < 20:
+    if len(entries) < app.config['PAGE_SIZE']:
         next_url = None
         if not entries:
             remove_entry_generator(url_token)
@@ -480,6 +481,7 @@ def feed_entries(category_id, feed_id):
 @app.route('/entries/', defaults={'category_id': ''})
 @app.route('/<path:category_id>/entries/')
 def category_entries(category_id):
+    pageSize = app.config['PAGE_SIZE']
     cursor = Cursor(category_id)
     url_token, entry_after, read, starred = get_optional_args()
     if read is not None:
@@ -515,7 +517,7 @@ def category_entries(category_id):
                     (starred is None or starred == bool(entry.starred))
                 ]
     iters = sorted(iters, key=lambda item: item[3].updated_at, reverse=True)
-    currentPage, nextPage = iters[:20], iters[20:]
+    currentPage, nextPage = iters[:pageSize], iters[pageSize:]
     entries = []
     for data in currentPage:
         feed_title, feed_id, feed_permalink, entry = data
@@ -538,7 +540,7 @@ def category_entries(category_id):
         entry_data['feed'] = feed_data
         entries.append(entry_data)
     tidy_generators_up()
-    if len(entries) < 20:
+    if len(entries) < pageSize:
         next_url = None
     else:
         entry_generators[url_token] = nextPage, now()
