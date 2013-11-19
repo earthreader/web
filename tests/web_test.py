@@ -759,7 +759,7 @@ def test_entry_star_unstar(xmls, fx_test_stage):
         assert r.status_code == 200
         with fx_test_stage as stage:
             assert stage.feeds[feed_three_id].entries[0].starred
-            r = client.delete(result['unstar_url'])
+        r = client.delete(result['unstar_url'])
         assert r.status_code == 200
         with fx_test_stage as stage:
             assert not stage.feeds[feed_three_id].entries[0].starred
