@@ -311,7 +311,8 @@ def get_entry_generator(url_token):
 
 
 def remove_entry_generator(url_token):
-    entry_generators.pop(url_token)
+    if url_token in entry_generators:
+        entry_generators.pop(url_token)
 
 
 def get_permalink(data):
