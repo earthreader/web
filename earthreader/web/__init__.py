@@ -249,13 +249,13 @@ def delete_feed(category_id, feed_id):
     return feeds(category_id)
 
 
-iterators = {}
+entry_generators = {}
 
 
-def tidy_iterators_up():
+def tidy_generators_up():
     global iterators
     lists = []
-    for key, (it, time_saved) in iterators.items():
+    for key, (it, time_saved) in entry_generators.items():
         if time_saved >= now() - datetime.timedelta(minutes=30):
             lists.append((key, (it, time_saved)))
         if len(lists) >= 10:
@@ -267,13 +267,29 @@ def to_bool(str):
     return str.strip().lower() == 'true'
 
 
-def get_iterator(url_token):
-    pair = iterators.get(url_token)
+def get_optional_args():
+    url_token = request.args.get('url_token')
+    entry_after = request.args.get('entry_after')
+    read = request.args.get('read')
+    starred = request.args.get('starred')
+    return url_token, entry_after, read, starred
+
+
+def save_entry_generators(url_token, generator):
+    entry_generators[url_token] = generator, now()
+
+
+def get_entry_generator(url_token):
+    pair = entry_generators.get(url_token)
     if pair:
         it = pair[0]
         return it
     else:
         raise IteratorNotFound('The iterator does not exist')
+
+
+def remove_entry_generator(url_token):
+    entry_generators.pop(url_token)
 
 
 def get_permalink(data):
@@ -300,6 +316,86 @@ def make_next_url(category_id, url_token, entry_after, read, starred,
     )
 
 
+class FeedEntryGenerator():
+
+    def __init__(self, category_id, feed_id, feed_title, feed_permalink, it,
+                 time_used, read, starred):
+        self.category_id = category_id
+        self.feed_id = feed_id
+        self.feed_title = feed_title
+        self.feed_permalink = feed_permalink
+        self.it = it
+        self.time_used = time_used
+        self.entry = None
+
+        self.filters = 'read', 'starred'
+        self.read = read
+        self.starred = starred
+
+    def next(self):
+        return next(self.it)
+
+    def __next__(self):
+        return next(self.it)
+
+    def set_iterator(self, entry_after):
+        self.entry = next(self.it)
+        while self.skip_if_str(entry_after) or \
+                self.skip_if_filters():
+            self.entry = next(self.it)
+
+    def find_next_entry(self, read=None, starred=None):
+        self.entry = next(self.it)
+        while self.skip_if_filters():
+            self.entry = next(self.it)
+
+    def skip_if_str(self, entry_after=None):
+        if not entry_after or get_hash(self.entry.id) != entry_after:
+            return False
+        return True
+
+    def skip_if_filters(self):
+        for filter in self.filters:
+            arg = getattr(self, filter)
+            if arg and to_bool(arg) != bool(getattr(self.entry, filter)):
+                return True
+        return False
+
+    def get_entry_data(self):
+        if not self.entry:
+            raise StopIteration
+        entry_permalink = get_permalink(self.entry)
+        entry_data = {
+            'title': self.entry.title,
+            'entry_id': get_hash(self.entry.id),
+            'permalink': entry_permalink or None,
+            'updated': self.entry.updated_at.__str__(),
+            'read': bool(self.entry.read),
+            'starred': bool(self.entry.starred)
+        }
+        feed_data = {
+            'title': self.feed_title,
+            'permalink': self.feed_permalink or None
+        }
+        add_urls(entry_data, ['entry_url'], self.category_id, self.feed_id,
+                 get_hash(self.entry.id))
+        add_urls(feed_data, ['entries_url'], self.category_id, self.feed_id)
+        entry_data['feed'] = feed_data
+        return entry_data
+
+    def get_entries(self, read, starred):
+        entries = []
+        while len(entries) < 20:
+            try:
+                entry = self.get_entry_data()
+                entries.append(entry)
+                self.find_next_entry(read, starred)
+            except StopIteration:
+                self.entry = None
+                return entries
+        return entries
+
+
 @app.route('/feeds/<feed_id>/entries/', defaults={'category_id': ''})
 @app.route('/<path:category_id>/feeds/<feed_id>/entries/')
 def feed_entries(category_id, feed_id):
@@ -315,56 +411,35 @@ def feed_entries(category_id, feed_id):
         )
         r.status_code = 404
         return r
-    url_token = request.args.get('url_token')
-    it = []
+    url_token, entry_after, read, starred = get_optional_args()
+    generator = None
     if url_token:
         try:
-            it = get_iterator(url_token)
+            generator = get_entry_generator(url_token)
         except IteratorNotFound:
             pass
     else:
         url_token = str(now())
-    if not it:
+    if not generator:
         it = iter(feed.entries)
-        entry_after = request.args.get('entry_after')
-        if entry_after:
-            entry = next(it)
-            while get_hash(entry.id) == entry_after:
-                entry = next(it)
-    iterators[url_token] = it, now()
-    entries = []
-    read = request.args.get('read')
-    starred = request.args.get('starred')
-    feed_permalink = get_permalink(feed)
-    while len(entries) < 20:
+        feed_title = feed.title
+        feed_permalink = get_permalink(feed)
+        generator = FeedEntryGenerator(category_id, feed_id, feed_title,
+                                       feed_permalink, it, now(), read, starred)
         try:
-            entry = next(it)
+            generator.set_iterator(entry_after)
         except StopIteration:
-            iterators.pop(url_token)
-            break
-        entry_permalink = get_permalink(entry)
-        if (read is None or to_bool(read) == bool(entry.read)) and \
-                (starred is None or to_bool(starred) == bool(entry.starred)):
-            entry_data = {
-                'title': entry.title,
-                'entry_id': get_hash(entry.id),
-                'permalink': entry_permalink or None,
-                'updated': entry.updated_at.__str__(),
-                'read': bool(entry.read),
-                'starred': bool(entry.starred),
-            }
-            feed_data = {
-                'title': feed.title,
-                'permalink': feed_permalink or None
-            }
-            add_urls(entry_data, ['entry_url'], category_id, feed_id,
-                     get_hash(entry.id))
-            add_urls(feed_data, ['entries_url'], category_id, feed_id)
-            entry_data['feed'] = feed_data
-            entries.append(entry_data)
-    tidy_iterators_up()
+            return jsonify(
+                title=generator.feed_title,
+                entries=[],
+                next_url=None
+            )
+    save_entry_generators(url_token, generator)
+    entries = generator.get_entries(read, starred)
     if len(entries) < 20:
         next_url = None
+        if not entries:
+            remove_entry_generator(url_token)
     else:
         next_url = make_next_url(
             category_id,
@@ -389,7 +464,7 @@ def category_entries(category_id):
     iters = []
     if url_token:
         try:
-            iters = get_iterator(url_token)
+            iters = get_entry_generator(url_token)
         except IteratorNotFound:
             pass
     else:
@@ -401,7 +476,7 @@ def category_entries(category_id):
         entry_after = request.args.get('entry_after')
         if entry_after:
             time_after, _id = entry_after.split('@')
-            time_after = Rfc3339().decode(time_after.replace(' ', 'T'))
+            time_after = Rfc3339().decode(time_after)
         else:
             time_after, _id = None, None
             for subscription in subscriptions:
@@ -435,9 +510,9 @@ def category_entries(category_id):
             'title': entry.title,
             'entry_id': get_hash(entry.id),
             'permalink': entry_permalink or None,
-            'updated': entry.updated_at.__str__(),
-            'read': bool(entry.read),
-            'starred': bool(entry.starred),
+            'updated': Rfc3339().encode(entry.updated_at),
+            'read': bool(entry.read) if entry.read else False,
+            'starred': bool(entry.starred) if entry.starred else False,
         }
         feed_data = {
             'title': feed_title,
@@ -461,8 +536,8 @@ def category_entries(category_id):
                         entry)
                 iters[0] = item
                 break
-    iterators[url_token] = iters, now()
-    tidy_iterators_up()
+    entry_generators[url_token] = iters, now()
+    tidy_generators_up()
     if len(entries) < 20:
         next_url = None
     else:
