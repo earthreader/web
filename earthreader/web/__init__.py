@@ -511,6 +511,8 @@ def category_entries(category_id):
                     continue
                 for entry in feed.entries:
                     print entry.title
+
+                #FIXME: Incremental sort
                 iters += [
                     (feed.title, get_hash(feed.id), get_permalink(feed), entry)
                     for entry in feed.entries
@@ -519,6 +521,8 @@ def category_entries(category_id):
                 ]
     iters = sorted(iters, key=lambda item: item[3].updated_at, reverse=True)
     currentPage, nextPage = iters[:pageSize], iters[pageSize:]
+
+    #FIXME: detach these statements.
     entries = []
     for data in currentPage:
         feed_title, feed_id, feed_permalink, entry = data
