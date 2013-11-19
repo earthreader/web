@@ -512,7 +512,7 @@ def category_entries(category_id):
                      it, entry)
                     for entry in feed.entries
                     if (read is None or read == bool(entry.read)) and
-                    (starred is None or starred == bool(entry.read))
+                    (starred is None or starred == bool(entry.starred))
                 ]
     entries = []
     while len(entries) < 20 and iters:
