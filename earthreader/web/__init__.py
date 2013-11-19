@@ -507,7 +507,7 @@ def category_entries(category_id):
                 except KeyError:
                     continue
                 it = iter(feed.entries)
-                iters = [
+                iters += [
                     (feed.title, get_hash(feed.id), get_permalink(feed),
                      it, entry)
                     for entry in feed.entries
