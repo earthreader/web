@@ -464,6 +464,10 @@ def feed_entries(category_id, feed_id):
 def category_entries(category_id):
     cursor = Cursor(category_id)
     url_token, entry_after, read, starred = get_optional_args()
+    if read is not None:
+        read = to_bool(read)
+    if starred is not None:
+        starred = to_bool(starred)
     iters = []
     if url_token:
         try:
@@ -491,8 +495,8 @@ def category_entries(category_id):
                 iters = [
                     (feed.title, get_hash(feed.id), get_permalink(feed), it, entry)
                     for entry in feed.entries
-                    if (read is None or to_bool(read) == bool(entry.read)) and
-                    (starred is None or to_bool(starred) == bool(entry.read)) and
+                    if (read is None or read == bool(entry.read)) and
+                    (starred is None or starred == bool(entry.read)) and
                     (time_after is None or entry.updated_at <= time_after)
                 ]
     entries = []
