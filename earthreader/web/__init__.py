@@ -35,6 +35,7 @@ app.config.update(
     ALLFEED='All Feeds',
     SESSION_ID=None,
     PAGE_SIZE=20,
+    CRAWLER_THREAD=4,
 )
 
 
@@ -66,7 +67,7 @@ def crawl_category():
         crawling_queue.task_done()
 
 
-threading.Thread(target=crawl_category)
+threading.Thread(target=crawl_category).start()
 
 
 class IteratorNotFound(ValueError):
