@@ -36,6 +36,7 @@ app.config.update(
     SESSION_ID=None,
     PAGE_SIZE=20,
     CRAWLER_THREAD=4,
+    WORKER_STATE='ON',
 )
 
 
@@ -67,7 +68,8 @@ def crawl_category():
         crawling_queue.task_done()
 
 
-threading.Thread(target=crawl_category).start()
+if app.config['WORKER_STATE'] == 'ON':
+    threading.Thread(target=crawl_category).start()
 
 
 class IteratorNotFound(ValueError):
