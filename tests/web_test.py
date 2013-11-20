@@ -27,7 +27,7 @@ from libearth.tz import utc
 from pytest import fixture, mark
 from werkzeug.urls import url_encode
 
-from earthreader.web import app, get_hash
+from earthreader.web import app, crawling_queue, get_hash
 
 
 @app.errorhandler(400)
@@ -708,6 +708,7 @@ def test_update_feed_entries(fx_xml_for_update, fx_test_stage):
             )
         )
         assert r.status_code == 202
+        crawling_queue.join()
         with fx_test_stage as stage:
             assert len(stage.feeds[feed_two_id].entries) == 2
 
@@ -721,6 +722,7 @@ def test_update_category_entries(fx_xml_for_update, fx_test_stage):
             assert len(stage.feeds[feed_three_id].entries) == 1
         r = client.put('/entries/')
         assert r.status_code == 202
+        crawling_queue.join()
         with fx_test_stage as stage:
             assert len(stage.feeds[feed_two_id].entries) == 2
 
