@@ -36,40 +36,51 @@ app.config.update(
     SESSION_ID=None,
     PAGE_SIZE=20,
     CRAWLER_THREAD=4,
-    WORKER_STATE='ON',
+    WORKER_RUN=True,
 )
 
 
 def crawl_category():
-    while True:
-        category_id, feed_id = crawling_queue.get()
-        ids = {}
-        cursor = Cursor(category_id)
+    running = True
+    while running:
+        priority, arguments = crawling_queue.get()
+        if priority == 0:
+            if arguments == 'terminate':
+                running = False
+        elif priority == 1:
+            category_id, feed_id = arguments
+            ids = {}
+            cursor = Cursor(category_id)
 
-        if not feed_id:
-            for sub in cursor.recursive_subscriptions:
-                ids[sub.feed_uri] = sub.feed_id
-        else:
-            for sub in cursor.recursive_subscriptions:
-                if sub.feed_id == feed_id:
+            if not feed_id:
+                for sub in cursor.recursive_subscriptions:
                     ids[sub.feed_uri] = sub.feed_id
+            else:
+                for sub in cursor.recursive_subscriptions:
+                    if sub.feed_id == feed_id:
+                        ids[sub.feed_uri] = sub.feed_id
+                        break
+
+            iterator = iter(crawl(ids.keys(), app.config['CRAWLER_THREAD']))
+            while True:
+                try:
+                    feed_url, feed_data, crawler_hints = next(iterator)
+                    with get_stage() as stage:
+                        stage.feeds[ids[feed_url]] = feed_data
+                except CrawlError:
+                    continue
+                except StopIteration:
                     break
-
-        iterator = iter(crawl(ids.keys(), app.config['CRAWLER_THREAD']))
-        while True:
-            try:
-                feed_url, feed_data, crawler_hints = next(iterator)
-                with get_stage() as stage:
-                    stage.feeds[ids[feed_url]] = feed_data
-            except CrawlError:
-                continue
-            except StopIteration:
-                break
-        crawling_queue.task_done()
+            crawling_queue.task_done()
 
 
-if app.config['WORKER_STATE'] == 'ON':
-    threading.Thread(target=crawl_category).start()
+def spawn_worker():
+    worker = threading.Thread(target=crawl_category)
+    worker.setDaemon(True)
+    worker.start()
+
+
+spawn_worker()
 
 
 class IteratorNotFound(ValueError):
@@ -609,7 +620,7 @@ def category_entries(category_id):
 @app.route('/entries/', defaults={'category_id': ''}, methods=['PUT'])
 @app.route('/<path:category_id>/entries/', methods=['PUT'])
 def update_entries(category_id, feed_id=None):
-    crawling_queue.put((category_id, feed_id))
+    crawling_queue.put((1, (category_id, feed_id)))
     r = jsonify()
     r.status_code = 202
     return r
