@@ -63,6 +63,7 @@ def crawl_category():
                 continue
             except StopIteration:
                 break
+        crawling_queue.task_done()
 
 
 threading.Thread(target=crawl_category)
