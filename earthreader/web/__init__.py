@@ -2,7 +2,10 @@ import datetime
 import hashlib
 import os
 import threading
-import Queue
+try:
+    import Queue
+except ImportError:
+    import queue as Queue
 try:
     import urllib2
 except ImportError:
