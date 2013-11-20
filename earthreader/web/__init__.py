@@ -1,6 +1,8 @@
 import datetime
 import hashlib
 import os
+import threading
+import Queue
 try:
     import urllib2
 except ImportError:
@@ -23,12 +25,44 @@ from .wsgi import MethodRewriteMiddleware
 app = Flask(__name__)
 app.wsgi_app = MethodRewriteMiddleware(app.wsgi_app)
 
+crawling_queue = Queue.Queue()
+
 
 app.config.update(
     ALLFEED='All Feeds',
     SESSION_ID=None,
     PAGE_SIZE=20,
 )
+
+
+def crawl_category():
+    while True:
+        category_id, feed_id = crawling_queue.get()
+        ids = {}
+        cursor = Cursor(category_id)
+
+        if not feed_id:
+            for sub in cursor.recursive_subscriptions:
+                ids[sub.feed_uri] = sub.feed_id
+        else:
+            for sub in cursor.recursive_subscriptions:
+                if sub.feed_id == feed_id:
+                    ids[sub.feed_uri] = sub.feed_id
+                    break
+
+        iterator = iter(crawl(ids.keys(), app.config['CRAWLER_THREAD']))
+        while True:
+            try:
+                feed_url, feed_data, crawler_hints = next(iterator)
+                with get_stage() as stage:
+                    stage.feeds[ids[feed_url]] = feed_data
+            except CrawlError:
+                continue
+            except StopIteration:
+                break
+
+
+threading.Thread(target=crawl_category)
 
 
 class IteratorNotFound(ValueError):
@@ -568,28 +602,8 @@ def category_entries(category_id):
 @app.route('/entries/', defaults={'category_id': ''}, methods=['PUT'])
 @app.route('/<path:category_id>/entries/', methods=['PUT'])
 def update_entries(category_id, feed_id=None):
-    cursor = Cursor(category_id)
-    failed = []
-    ids = {}
-    if feed_id:
-        for sub in cursor.recursive_subscriptions:
-            if sub.feed_id == feed_id:
-                ids[sub.feed_uri] = sub.feed_id
-    else:
-        for sub in cursor.recursive_subscriptions:
-            ids[sub.feed_uri] = sub.feed_id
-    it = iter(crawl(ids.keys(), 4))
-    while True:
-        try:
-            feed_url, feed_data, crawler_hints = next(it)
-        except CrawlError as e:
-            failed.append(e.message)
-            continue
-        except StopIteration:
-            break
-        with get_stage() as stage:
-            stage.feeds[ids[feed_url]] = feed_data
-    r = jsonify(failed=failed)
+    crawling_queue.put((category_id, feed_id))
+    r = jsonify()
     r.status_code = 202
     return r
 
