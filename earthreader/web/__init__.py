@@ -471,6 +471,62 @@ class FeedEntryGenerator():
         return entries
 
 
+class CategoryEntryGenerator():
+
+    def __init__(self):
+        self.generators = []
+
+    def add(self, feed_entry_generator):
+        if not isinstance(feed_entry_generator, FeedEntryGenerator):
+            raise TypeError(
+                'feed_entry_generator must be a subtype of'
+                '{0.__module__}.{0.__name__}, not {1!r}'.format(
+                    FeedEntryGenerator, feed_entry_generator)
+                )
+        self.generators.append(feed_entry_generator)
+
+    def sort_generators(self):
+        self.generators = sorted(self.generators, key=lambda generator:
+                                 generator.entry.updated_at, reverse=True)
+
+    def remove_if_iterator_ends(self, generator):
+        try:
+            generator.find_next_entry()
+        except StopIteration:
+            self.generators.remove(generator)
+
+    def set_generators(self, entry_after, time_after):
+        for generator in self.generators:
+            while (
+                not generator.entry or
+                (time_after and
+                 generator.entry.updated_at > Rfc3339().decode(time_after)) or
+                generator.skip_if_id(entry_after)
+            ):
+                self.remove_if_iterator_ends(generator)
+        self.sort_generators()
+
+    def find_next_generator(self):
+        while self.generators:
+            self.sort_generators()
+            latest = self.generators[0]
+            yield latest
+            self.remove_if_iterator_ends(latest)
+
+    def get_entries(self):
+        entries = []
+        generator_generator = self.find_next_generator()
+        while len(entries) < app.config['PAGE_SIZE']:
+            try:
+                generator = next(generator_generator)
+                entry_data = generator.get_entry_data()
+                entries.append(entry_data)
+            except StopIteration:
+                return entries
+        self.remove_if_iterator_ends(generator)
+        return entries
+
+
 @app.route('/feeds/<feed_id>/entries/', defaults={'category_id': ''})
 @app.route('/<path:category_id>/feeds/<feed_id>/entries/')
 def feed_entries(category_id, feed_id):
@@ -534,78 +590,53 @@ def feed_entries(category_id, feed_id):
 @app.route('/entries/', defaults={'category_id': ''})
 @app.route('/<path:category_id>/entries/')
 def category_entries(category_id):
-    pageSize = app.config['PAGE_SIZE']
     cursor = Cursor(category_id)
+    generator = None
     url_token, entry_after, read, starred = get_optional_args()
-    if read is not None:
-        read = to_bool(read)
-    if starred is not None:
-        starred = to_bool(starred)
-    iters = []
     if url_token:
         try:
-            iters = get_entry_generator(url_token)
+            generator = get_entry_generator(url_token)
         except IteratorNotFound:
             pass
     else:
         url_token = str(now())
-    if not iters:
+    if not generator:
         subscriptions = cursor.recursive_subscriptions
+        generator = CategoryEntryGenerator()
         if entry_after:
-            time_after = entry_after.split('@')[0]
-            time_after = Rfc3339().decode(time_after)
+            dump = entry_after.split('@')
+            time_after = dump[0]
+            id_after = dump[1]
         else:
-            for subscription in subscriptions:
-                try:
-                    with get_stage() as stage:
-                        feed = stage.feeds[subscription.feed_id]
-                except KeyError:
-                    continue
-
-                #FIXME: Incremental sort
-                iters += [
-                    (feed.title, get_hash(feed.id), get_permalink(feed), entry)
-                    for entry in feed.entries
-                    if (read is None or read == bool(entry.read)) and
-                    (starred is None or starred == bool(entry.starred))
-                ]
-    iters = sorted(iters, key=lambda item: item[3].updated_at, reverse=True)
-    currentPage, nextPage = iters[:pageSize], iters[pageSize:]
-
-    #FIXME: detach these statements.
-    entries = []
-    for data in currentPage:
-        feed_title, feed_id, feed_permalink, entry = data
-        entry_permalink = get_permalink(entry)
-        entry_data = {
-            'title': entry.title,
-            'entry_id': get_hash(entry.id),
-            'permalink': entry_permalink,
-            'updated': Rfc3339().encode(entry.updated_at),
-            'read': bool(entry.read) if entry.read else False,
-            'starred': bool(entry.starred) if entry.starred else False,
-        }
-        feed_data = {
-            'title': feed_title,
-            'permalink': feed_permalink
-        }
-        add_urls(entry_data, ['entry_url'], category_id, feed_id,
-                 get_hash(entry.id))
-        add_urls(feed_data, ['entries_url'], category_id, feed_id)
-        entry_data['feed'] = feed_data
-        entries.append(entry_data)
-    tidy_generators_up()
-    if len(entries) < pageSize:
+            time_after = None
+            id_after = None
+        for subscription in subscriptions:
+            try:
+                with get_stage() as stage:
+                    feed = stage.feeds[subscription.feed_id]
+            except KeyError:
+                continue
+            feed_id = get_hash(feed.id)
+            feed_title = feed.title
+            it = iter(feed.entries)
+            feed_permalink = get_permalink(feed)
+            child = FeedEntryGenerator(category_id, feed_id, feed_title,
+                                       feed_permalink, it, now(), read, starred)
+            generator.add(child)
+        generator.set_generators(id_after, time_after)
+    save_entry_generators(url_token, generator)
+    entries = generator.get_entries()
+    if not entries or len(entries) < app.config['PAGE_SIZE']:
         next_url = None
-        remove_entry_generator(url_token)
+        if not entries:
+            remove_entry_generator(url_token)
     else:
-        save_entry_generators(url_token, nextPage)
         next_url = make_next_url(
             category_id,
             url_token,
-            entry_after=entries[-1]['updated'] + '@' + entries[-1]['entry_id'],
-            read=read,
-            starred=starred
+            entries[-1]['updated'] + '@' + entries[-1]['entry_id'],
+            read,
+            starred
         )
     return jsonify(
         title=category_id.split('/')[-1][1:] or app.config['ALLFEED'],
