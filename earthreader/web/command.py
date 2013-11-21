@@ -22,7 +22,8 @@ def crawl_command(args):
     repo = FileSystemRepository(args.repository)
     session = Session()
     stage = Stage(session, repo)
-    opml = stage.subscriptions
+    with stage:
+        opml = stage.subscriptions
     if not opml:
         print('OPML does not exist in the repository', file=sys.stderr)
         return
@@ -31,8 +32,9 @@ def crawl_command(args):
     generator = crawl(urllist, args.threads)
     try:
         for feed_url, feed_data, crawler_hints in generator:
-            feed_id = hashlib.sha1(feed_url).hexdigest()
-            stage.feeds[feed_id] = feed_data
+            with stage:
+                feed_id = hashlib.sha1(feed_url).hexdigest()
+                stage.feeds[feed_id] = feed_data
     except CrawlError as e:
         print(e, file=sys.stderr)
 
