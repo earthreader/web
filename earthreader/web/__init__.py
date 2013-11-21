@@ -471,62 +471,6 @@ class FeedEntryGenerator():
         return entries
 
 
-class CategoryEntryGenerator():
-
-    def __init__(self):
-        self.generators = []
-
-    def add(self, feed_entry_generator):
-        if not isinstance(feed_entry_generator, FeedEntryGenerator):
-            raise TypeError(
-                'feed_entry_generator must be a subtype of'
-                '{0.__module__}.{0.__name__}, not {1!r}'.format(
-                    FeedEntryGenerator, feed_entry_generator)
-                )
-        self.generators.append(feed_entry_generator)
-
-    def sort_generators(self):
-        self.generators = sorted(self.generators, key=lambda generator:
-                                 generator.entry.updated_at, reverse=True)
-
-    def remove_if_iterator_ends(self, generator):
-        try:
-            generator.find_next_entry()
-        except StopIteration:
-            self.generators.remove(generator)
-
-    def set_generators(self, entry_after, time_after):
-        for generator in self.generators:
-            while (
-                not generator.entry or
-                (time_after and
-                 generator.entry.updated_at > Rfc3339().decode(time_after)) or
-                generator.skip_if_id(entry_after)
-            ):
-                self.remove_if_iterator_ends(generator)
-        self.sort_generators()
-
-    def find_next_generator(self):
-        while self.generators:
-            self.sort_generators()
-            latest = self.generators[0]
-            yield latest
-            self.remove_if_iterator_ends(latest)
-
-    def get_entries(self):
-        entries = []
-        generator_generator = self.find_next_generator()
-        while len(entries) < app.config['PAGE_SIZE']:
-            try:
-                generator = next(generator_generator)
-                entry_data = generator.get_entry_data()
-                entries.append(entry_data)
-            except StopIteration:
-                return entries
-        self.remove_if_iterator_ends(generator)
-        return entries
-
-
 @app.route('/feeds/<feed_id>/entries/', defaults={'category_id': ''})
 @app.route('/<path:category_id>/feeds/<feed_id>/entries/')
 def feed_entries(category_id, feed_id):
@@ -587,6 +531,70 @@ def feed_entries(category_id, feed_id):
     )
 
 
+class CategoryEntryGenerator():
+
+    def __init__(self):
+        self.generators = []
+
+    def add(self, feed_entry_generator):
+        if not isinstance(feed_entry_generator, FeedEntryGenerator):
+            raise TypeError(
+                'feed_entry_generator must be a subtype of'
+                '{0.__module__}.{0.__name__}, not {1!r}'.format(
+                    FeedEntryGenerator, feed_entry_generator)
+                )
+        self.generators.append(feed_entry_generator)
+
+    def sort_generators(self):
+        self.generators = sorted(self.generators, key=lambda generator:
+                                 generator.entry.updated_at, reverse=True)
+
+    def remove_if_iterator_ends(self, generator):
+        try:
+            generator.find_next_entry()
+        except StopIteration:
+            self.generators.remove(generator)
+
+    def set_generators(self, entry_after, time_after):
+        for generator in self.generators:
+            while (
+                not generator.entry or
+                (time_after and
+                 generator.entry.updated_at > Rfc3339().decode(time_after)) or
+                generator.skip_if_id(entry_after)
+            ):
+                self.remove_if_iterator_ends(generator)
+        self.sort_generators()
+
+    def find_next_generator(self):
+        while self.generators:
+            self.sort_generators()
+            latest = self.generators[0]
+            yield latest
+            self.remove_if_iterator_ends(latest)
+
+    def get_entries(self):
+        entries = []
+        generator_generator = self.find_next_generator()
+        while len(entries) < app.config['PAGE_SIZE']:
+            try:
+                generator = next(generator_generator)
+                entry_data = generator.get_entry_data()
+                entries.append(entry_data)
+            except StopIteration:
+                return entries
+        self.remove_if_iterator_ends(generator)
+        return entries
+
+
+def encode_entry_after(id_after, time_after):
+    return id_after + '@' + time_after
+
+
+def decode_entry_after(entry_after):
+    return entry_after.split('@')
+
+
 @app.route('/entries/', defaults={'category_id': ''})
 @app.route('/<path:category_id>/entries/')
 def category_entries(category_id):
@@ -604,9 +612,7 @@ def category_entries(category_id):
         subscriptions = cursor.recursive_subscriptions
         generator = CategoryEntryGenerator()
         if entry_after:
-            dump = entry_after.split('@')
-            time_after = dump[0]
-            id_after = dump[1]
+            id_after, time_after = decode_entry_after(entry_after)
         else:
             time_after = None
             id_after = None
@@ -634,7 +640,7 @@ def category_entries(category_id):
         next_url = make_next_url(
             category_id,
             url_token,
-            entries[-1]['updated'] + '@' + entries[-1]['entry_id'],
+            encode_entry_after(entries[-1]['entry_id'], entries[-1]['updated']),
             read,
             starred
         )
