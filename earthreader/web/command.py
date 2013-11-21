@@ -45,9 +45,9 @@ def server_command(args):
         os.mkdir(repository)
     app.config.update(REPOSITORY=repository)
     app.debug = args.debug
+    spawn_worker()
     if args.debug:
         app.run(host=args.host, port=args.port, debug=args.debug, threaded=True)
-        spawn_worker()
     else:
         serve(app, host=args.host, port=args.port)
 
