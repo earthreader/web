@@ -613,7 +613,7 @@ function keyboardShortcut(event) {
 			}
 			break;
 		case 82: //r
-			refreshFeed();
+			reloadEntries();
 			break;
 		case 83: //s
 			toggleStarCurrent();
