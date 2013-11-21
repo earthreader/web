@@ -7,7 +7,7 @@ import os.path
 import socket
 import sys
 
-from earthreader.web import app
+from earthreader.web import app, spawn_worker
 from waitress import serve
 
 from libearth.crawler import crawl, CrawlError
@@ -45,6 +45,7 @@ def server_command(args):
     app.debug = args.debug
     if args.debug:
         app.run(host=args.host, port=args.port, debug=args.debug, threaded=True)
+        spawn_worker()
     else:
         serve(app, host=args.host, port=args.port)
 
