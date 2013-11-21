@@ -709,7 +709,7 @@ def fx_xml_for_update(xmls, request):
     request.addfinalizer(finalizer)
 
 
-def test_update_feed_entries(fx_xml_for_update, fx_test_stage):
+def test_update_feed_entries(fx_xml_for_update, fx_test_stage, fx_stop_crawler):
     with app.test_client() as client:
         feed_two_id = get_hash('http://feedtwo.com/feed/atom/')
         with fx_test_stage as stage:
@@ -725,7 +725,8 @@ def test_update_feed_entries(fx_xml_for_update, fx_test_stage):
         assert crawling_queue.qsize() == 1
 
 
-def test_update_category_entries(fx_xml_for_update, fx_test_stage):
+def test_update_category_entries(fx_xml_for_update, fx_test_stage,
+                                 fx_stop_crawler):
     with app.test_client() as client:
         feed_two_id = get_hash('http://feedtwo.com/feed/atom/')
         feed_three_id = get_hash('http://feedthree.com/feed/atom/')
