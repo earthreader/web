@@ -27,7 +27,7 @@ from libearth.tz import utc
 from pytest import fixture, mark
 from werkzeug.urls import url_encode
 
-from earthreader.web import app, crawling_queue, get_hash
+from earthreader.web import app, crawling_queue, get_hash, spawn_worker
 
 
 @app.errorhandler(400)
@@ -223,6 +223,20 @@ def xmls(request, fx_test_stage):
             sub = pair[feed_url].subscribe(feed)
             stage.feeds[sub.feed_id] = feed
         stage.subscriptions = subscriptions
+
+
+@fixture
+def fx_stop_crawler(request):
+    with crawling_queue.mutex:
+        crawling_queue.queue.clear()
+
+    crawling_queue.put((0, 'terminate'))
+    crawling_queue.join()
+
+    def respawn():
+        spawn_worker()
+
+    request.addfinalizer(respawn)
 
 
 def test_all_feeds(xmls):
@@ -696,7 +710,6 @@ def fx_xml_for_update(xmls, request):
 
 
 def test_update_feed_entries(fx_xml_for_update, fx_test_stage):
-    app.config.update(WORKER_RUN=False)
     with app.test_client() as client:
         feed_two_id = get_hash('http://feedtwo.com/feed/atom/')
         with fx_test_stage as stage:
@@ -724,8 +737,7 @@ def test_update_category_entries(fx_xml_for_update, fx_test_stage):
         assert crawling_queue.qsize() == 1
 
 
-def skip_crawling_worker(fx_xml_for_update, fx_test_stage):
-    app.config.update(WORKER_RUN=True)
+def test_crawling_worker(fx_xml_for_update, fx_test_stage):
     feed_two_id = get_hash('http://feedtwo.com/feed/atom/')
 
     crawling_queue.put('/', None)
