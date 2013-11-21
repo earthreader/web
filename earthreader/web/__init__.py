@@ -410,8 +410,8 @@ class FeedEntryGenerator():
         return next(self.it)
 
     def set_iterator(self, entry_after=None):
-        while not self.entry or (entry_after and \
-                get_hash(self.entry.id) != entry_after):
+        while not self.entry or (entry_after and
+                                 get_hash(self.entry.id) != entry_after):
             self.entry = next(self.it)
         while self.skip_if(entry_after):
             self.entry = next(self.it)
