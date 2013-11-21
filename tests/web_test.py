@@ -225,18 +225,26 @@ def xmls(request, fx_test_stage):
         stage.subscriptions = subscriptions
 
 
-@fixture
-def fx_stop_crawler(request):
+def empty_queue():
     with crawling_queue.mutex:
         crawling_queue.queue.clear()
 
-    crawling_queue.put((0, 'terminate'))
-    crawling_queue.join()
 
-    def respawn():
-        spawn_worker()
+@fixture
+def fx_crawler(request):
+    empty_queue()
+    spawn_worker()
 
-    request.addfinalizer(respawn)
+    def terminate():
+        empty_queue()
+        crawling_queue.put((0, 'terminate'))
+
+    request.addfinalizer(terminate)
+
+
+@fixture
+def fx_crawling_queue(request):
+    request.addfinalizer(empty_queue)
 
 
 def test_all_feeds(xmls):
@@ -709,11 +717,14 @@ def fx_xml_for_update(xmls, request):
     request.addfinalizer(finalizer)
 
 
-def test_update_feed_entries(fx_xml_for_update, fx_test_stage, fx_stop_crawler):
+def test_update_feed_entries(fx_xml_for_update, fx_test_stage,
+                             fx_crawling_queue):
     with app.test_client() as client:
         feed_two_id = get_hash('http://feedtwo.com/feed/atom/')
         with fx_test_stage as stage:
             assert len(stage.feeds[feed_two_id].entries) == 1
+
+        assert crawling_queue.qsize() == 0
         r = client.put(
             get_url(
                 'update_entries',
@@ -726,7 +737,7 @@ def test_update_feed_entries(fx_xml_for_update, fx_test_stage, fx_stop_crawler):
 
 
 def test_update_category_entries(fx_xml_for_update, fx_test_stage,
-                                 fx_stop_crawler):
+                                 fx_crawling_queue):
     with app.test_client() as client:
         feed_two_id = get_hash('http://feedtwo.com/feed/atom/')
         feed_three_id = get_hash('http://feedthree.com/feed/atom/')
@@ -736,20 +747,6 @@ def test_update_category_entries(fx_xml_for_update, fx_test_stage,
         r = client.put('/entries/')
         assert r.status_code == 202
         assert crawling_queue.qsize() == 1
-
-
-def test_crawling_worker(fx_xml_for_update, fx_test_stage):
-    with app.test_client():
-        feed_two_id = get_hash('http://feedtwo.com/feed/atom/')
-
-        assert crawling_queue.qsize() == 0
-
-        cursor = Cursor('')
-        crawling_queue.put((1, (cursor, None)))
-        crawling_queue.join()
-
-        with fx_test_stage as stage:
-            assert len(stage.feeds[feed_two_id].entries) == 2
 
 
 def test_entry_read_unread(xmls, fx_test_stage):

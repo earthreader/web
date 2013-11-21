@@ -79,9 +79,6 @@ def spawn_worker():
     worker.start()
 
 
-spawn_worker()
-
-
 class IteratorNotFound(ValueError):
     """Rise when the iterator does not exist"""
 

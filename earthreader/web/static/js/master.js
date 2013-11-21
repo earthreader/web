@@ -373,7 +373,7 @@ function getEntries(feed_url, filter) {
 		refresh.addClass('refresh');
 		refresh.attr('role', 'button');
 		refresh.attr('href', feed_url);
-		refresh.text('refresh');
+		refresh.text('crawl now');
 		header.append(refresh);
 
 		main.append(header);
@@ -554,9 +554,11 @@ function clickEntry(event) {
 function refreshFeed() {
 	var target = $('[role=main] .refresh');
 	var url = target.attr('href');
-	target.remove();
+	target.text('requesting...');
 	$.ajax(url, {'type': 'PUT'})
-		.done(reloadEntries);
+		.done(function() {
+			target.remove();
+		});
 }
 
 function clickLink(event) {
