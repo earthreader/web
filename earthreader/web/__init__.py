@@ -36,7 +36,6 @@ app.config.update(
     SESSION_ID=None,
     PAGE_SIZE=20,
     CRAWLER_THREAD=4,
-    WORKER_RUN=True,
 )
 
 
@@ -47,6 +46,7 @@ def crawl_category():
         if priority == 0:
             if arguments == 'terminate':
                 running = False
+            crawling_queue.task_done()
         elif priority == 1:
             category_id, feed_id = arguments
             ids = {}
