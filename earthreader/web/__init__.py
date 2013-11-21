@@ -48,9 +48,8 @@ def crawl_category():
                 running = False
             crawling_queue.task_done()
         elif priority == 1:
-            category_id, feed_id = arguments
+            cursor, feed_id = arguments
             ids = {}
-            cursor = Cursor(category_id)
 
             if not feed_id:
                 for sub in cursor.recursive_subscriptions:
@@ -620,7 +619,8 @@ def category_entries(category_id):
 @app.route('/entries/', defaults={'category_id': ''}, methods=['PUT'])
 @app.route('/<path:category_id>/entries/', methods=['PUT'])
 def update_entries(category_id, feed_id=None):
-    crawling_queue.put((1, (category_id, feed_id)))
+    cursor = Cursor(category_id)
+    crawling_queue.put((1, (cursor, feed_id)))
     r = jsonify()
     r.status_code = 202
     return r

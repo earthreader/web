@@ -27,7 +27,7 @@ from libearth.tz import utc
 from pytest import fixture, mark
 from werkzeug.urls import url_encode
 
-from earthreader.web import app, crawling_queue, get_hash, spawn_worker
+from earthreader.web import app, crawling_queue, Cursor, get_hash, spawn_worker
 
 
 @app.errorhandler(400)
@@ -739,13 +739,17 @@ def test_update_category_entries(fx_xml_for_update, fx_test_stage,
 
 
 def test_crawling_worker(fx_xml_for_update, fx_test_stage):
-    feed_two_id = get_hash('http://feedtwo.com/feed/atom/')
+    with app.test_client():
+        feed_two_id = get_hash('http://feedtwo.com/feed/atom/')
 
-    crawling_queue.put('/', None)
-    crawling_queue.join()
+        assert crawling_queue.qsize() == 0
 
-    with fx_test_stage as stage:
-        assert len(stage.feeds[feed_two_id].entries) == 2
+        cursor = Cursor('')
+        crawling_queue.put((1, (cursor, None)))
+        crawling_queue.join()
+
+        with fx_test_stage as stage:
+            assert len(stage.feeds[feed_two_id].entries) == 2
 
 
 def test_entry_read_unread(xmls, fx_test_stage):
