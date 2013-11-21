@@ -415,7 +415,7 @@ class FeedEntryGenerator():
                 self.skip_if_filters():
             self.entry = next(self.it)
 
-    def find_next_entry(self, read=None, starred=None):
+    def find_next_entry(self):
         self.entry = next(self.it)
         while self.skip_if_filters():
             self.entry = next(self.it)
@@ -454,13 +454,13 @@ class FeedEntryGenerator():
         entry_data['feed'] = feed_data
         return entry_data
 
-    def get_entries(self, read, starred):
+    def get_entries(self):
         entries = []
         while len(entries) < app.config['PAGE_SIZE']:
             try:
                 entry = self.get_entry_data()
                 entries.append(entry)
-                self.find_next_entry(read, starred)
+                self.find_next_entry()
             except StopIteration:
                 self.entry = None
                 return entries
@@ -506,7 +506,7 @@ def feed_entries(category_id, feed_id):
                 next_url=None
             )
     save_entry_generators(url_token, generator)
-    entries = generator.get_entries(read, starred)
+    entries = generator.get_entries()
     if len(entries) < app.config['PAGE_SIZE']:
         next_url = None
         if not entries:
