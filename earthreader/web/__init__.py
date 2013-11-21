@@ -553,6 +553,7 @@ class CategoryEntryGenerator():
             self.generators.remove(generator)
 
     def set_generators(self, entry_after, time_after):
+        empty_generators = []
         for generator in self.generators:
             while (
                 not generator.entry or
@@ -560,7 +561,12 @@ class CategoryEntryGenerator():
                  generator.entry.updated_at > Rfc3339().decode(time_after)) or
                 generator.skip_if_id(entry_after)
             ):
-                self.remove_if_iterator_ends(generator)
+                try:
+                    generator.find_next_entry()
+                except StopIteration:
+                    empty_generators.append(generator)
+        for generator in empty_generators:
+            self.generators.remove(generator)
         self.sort_generators()
 
     def find_next_generator(self):
