@@ -27,7 +27,8 @@ from libearth.tz import utc
 from pytest import fixture, mark
 from werkzeug.urls import url_encode
 
-from earthreader.web import app, crawling_queue, Cursor, get_hash, spawn_worker
+from earthreader.web import (app, crawling_queue, get_hash, spawn_worker,
+                             entry_generators)
 
 
 @app.errorhandler(400)
@@ -986,7 +987,8 @@ def xmls_for_next(request, fx_test_stage):
         stage.feeds[get_hash('http://feedfour.com/')] = feed_four
 
 
-def test_feed_entries_next(xmls_for_next):
+@mark.parametrize('make_empty', [True, False])
+def test_feed_entries_next(make_empty, xmls_for_next):
     with app.test_client() as client:
         r = client.get('/-categoryone/feeds/' +
                        get_hash('http://feedone.com/') +
@@ -995,6 +997,8 @@ def test_feed_entries_next(xmls_for_next):
         result = json.loads(r.data)
         assert len(result['entries']) == 20
         assert result['entries'][-1]['title'] == 'Feed One: Entry 5'
+        if make_empty:
+            entry_generators.clear()
         r = client.get(result['next_url'])
         assert r.status_code == 200
         result = json.loads(r.data)
@@ -1003,12 +1007,15 @@ def test_feed_entries_next(xmls_for_next):
         assert not result['next_url']
 
 
-def test_feed_with_20_entries(xmls_for_next):
+@mark.parametrize('make_empty', [True, False])
+def test_feed_with_20_entries(make_empty, xmls_for_next):
     with app.test_client() as client:
         r = client.get('/feeds/' + get_hash('http://feedthree.com/') +
                        '/entries/')
         assert r.status_code == 200
         result = json.loads(r.data)
+        if make_empty:
+            entry_generators.clear()
         r = client.get(result['next_url'])
         assert r.status_code == 200
         result = json.loads(r.data)
@@ -1016,24 +1023,30 @@ def test_feed_with_20_entries(xmls_for_next):
         assert not result['next_url']
 
 
-def test_category_entries_next(xmls_for_next):
+@mark.parametrize('make_empty', [True, False])
+def test_category_entries_next(make_empty, xmls_for_next):
     with app.test_client() as client:
         r = client.get('/-categoryone/entries/')
         assert r.status_code == 200
         result = json.loads(r.data)
         assert len(result['entries']) == 20
         assert result['entries'][-1]['title'] == 'Feed Two: Entry 15'
+        if make_empty:
+            entry_generators.clear()
         r = client.get(result['next_url'])
         result = json.loads(r.data)
         assert len(result['entries']) == 20
         assert result['entries'][-1]['title'] == 'Feed Two: Entry 5'
+        if make_empty:
+            entry_generators.clear()
         r = client.get(result['next_url'])
         result = json.loads(r.data)
         assert len(result['entries']) == 10
         assert result['entries'][-1]['title'] == 'Feed Two: Entry 0'
 
 
-def test_feed_entries_filtering(xmls_for_next):
+@mark.parametrize('make_empty', [True, False])
+def test_feed_entries_filtering(make_empty, xmls_for_next):
     with app.test_client() as client:
         feed_id = get_hash('http://feedfour.com/')
         r = client.get('/feeds/' + feed_id + '/entries/?read=False')
@@ -1041,25 +1054,31 @@ def test_feed_entries_filtering(xmls_for_next):
         result = json.loads(r.data)
         for entry in result['entries']:
             assert entry['read'] is False
+        if make_empty:
+            entry_generators.clear()
         r = client.get(result['next_url'])
         result = json.loads(r.data)
         for entry in result['entries']:
             assert entry['read'] is False
 
 
-def test_category_entries_filtering(xmls_for_next):
+@mark.parametrize('make_empty', [True, False])
+def test_category_entries_filtering(make_empty, xmls_for_next):
     with app.test_client() as client:
         r = client.get('/-categoryone/entries/?read=False')
         result = json.loads(r.data)
         for entry in result['entries']:
             assert entry['read'] is False
+        if make_empty:
+            entry_generators.clear()
         r = client.get(result['next_url'])
         result = json.loads(r.data)
         for entry in result['entries']:
             assert entry['read'] is False
 
 
-def test_request_same_feed(xmls_for_next):
+@mark.parametrize('make_empty', [True, False])
+def test_request_same_feed(make_empty, xmls_for_next):
     with app.test_client() as client:
         r1 = client.get('/-categoryone/feeds/' +
                         get_hash('http://feedone.com/') +
@@ -1070,6 +1089,8 @@ def test_request_same_feed(xmls_for_next):
         r1_result = json.loads(r1.data)
         r2_result = json.loads(r2.data)
         r1_next = client.get(r1_result['next_url'])
+        if make_empty:
+            entry_generators.clear()
         r2_next = client.get(r2_result['next_url'])
         r1_result = json.loads(r1_next.data)
         r2_result = json.loads(r2_next.data)
