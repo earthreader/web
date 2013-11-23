@@ -741,4 +741,11 @@ $(function () {
 	$('[role=navigation] .feedlist .allfeed.header').addClass('current');
 	refreshFeedList();
 	reloadEntries();
+
+
+	//Chrome rendering bug
+	$('.off-canvas-side')
+		.hide()
+		.delay('slow')
+		.fadeIn('fast');
 });
