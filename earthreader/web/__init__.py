@@ -11,7 +11,7 @@ try:
 except ImportError:
     import urllib.request as urllib2
 
-from flask import Flask, g, jsonify, render_template, request, url_for
+from flask import Flask, jsonify, render_template, request, url_for
 from libearth.codecs import Rfc3339
 from libearth.compat import binary
 from libearth.crawler import CrawlError, crawl
@@ -323,14 +323,14 @@ entry_generators = {}
 
 
 def tidy_generators_up():
-    global iterators
-    lists = []
+    global entry_generators
+    generators = []
     for key, (it, time_saved) in entry_generators.items():
         if time_saved >= now() - datetime.timedelta(minutes=30):
-            lists.append((key, (it, time_saved)))
-        if len(lists) >= 10:
-            break
-    iterators = dict(lists)
+            generators.append((key, (it, time_saved)))
+    generators = sorted(generators, key=lambda generator: generator[1][1],
+                        reverse=True)
+    entry_generators = dict(generators[:10])
 
 
 def to_bool(str):
@@ -507,6 +507,7 @@ def feed_entries(category_id, feed_id):
                 next_url=None
             )
     save_entry_generators(url_token, generator)
+    tidy_generators_up()
     entries = generator.get_entries()
     if len(entries) < app.config['PAGE_SIZE']:
         next_url = None
@@ -634,6 +635,7 @@ def category_entries(category_id):
             generator.add(child)
         generator.set_generators(id_after, time_after)
     save_entry_generators(url_token, generator)
+    tidy_generators_up()
     entries = generator.get_entries()
     if not entries or len(entries) < app.config['PAGE_SIZE']:
         next_url = None
