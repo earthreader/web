@@ -1,6 +1,4 @@
-.. raw:: html
-
-   <img src="http://earthreader.org/earthreader.png" width="256" height="256" />
+.. image:: https://raw.github.com/earthreader/web/master/artwork/icon_256x256.png
 
 
 Earth Reader for Web
