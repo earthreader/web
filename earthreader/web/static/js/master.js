@@ -614,7 +614,7 @@ function keyboardShortcut(event) {
 			return;
 		}
 		feeds.each(function (index) {
-			if ($(this).hasClass('current')) {
+			if ($(this).hasClass('current') && (index + 1) < feeds.length) {
 				feeds[index + 1].click();
 				return false;
 			}
@@ -625,7 +625,7 @@ function keyboardShortcut(event) {
 		var feeds = feedlist.find('.feed');
 
 		if (feeds.first().hasClass('current')) {
-			feeds.find('.allfeeds.header').click();
+			feedlist.find('.allfeed.header').click();
 			return;
 		}
 
