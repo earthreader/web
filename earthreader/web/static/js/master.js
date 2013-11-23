@@ -579,38 +579,86 @@ function keyboardShortcut(event) {
 	}
 
 	var main = $('[role=main]');
-	var entry, next, prev, read_on_web;
+	var feedlist = $('[role=navigation] .feedlist');
+
+	var nextEntry = function nextEntry() {
+		var entry = main.find('.current').first();
+		if (entry.length === 0) {
+			main.find('.entry .entry-title').first().click();
+			return;
+		}
+		var next = entry.next().first();
+		if (next.length === 0) {
+			return;
+		}
+		next.find('.entry-title').click();
+	};
+
+	var prevEntry = function prevEntry() {
+		var entry = main.find('.current').first();
+		if (entry.length === 0) {
+			return;
+		}
+		var prev = entry.prev().last();
+		if (prev.length === 0 || prev.hasClass('entry')) {
+			//close current
+			entry.click();
+		}
+		prev.find('.entry-title').click();
+	};
+
+	var nextFeed = function nextFeed() {
+		var feeds = feedlist.find('.feed');
+		if (feeds.filter('.current').length === 0) {
+			feeds.first().click();
+			return;
+		}
+		feeds.each(function (index) {
+			if ($(this).hasClass('current')) {
+				feeds[index + 1].click();
+				return false;
+			}
+		});
+	};
+
+	var prevFeed = function prevFeed() {
+		var feeds = feedlist.find('.feed');
+
+		if (feeds.first().hasClass('current')) {
+			feeds.find('.allfeeds.header').click();
+			return;
+		}
+
+		feeds.each(function (index) {
+			if ($(this).hasClass('current')) {
+				feeds[index - 1].click();
+				return false;
+			}
+		});
+	};
+
+	var openInNewTab = function openInNewTab() {
+		var read_on_web = main.find('.read-on-web');
+		if (read_on_web) {
+			window.open(read_on_web.attr('href'));
+		}
+	};
 
 	switch (event.keyCode) {
 		case 74: //j
-			entry = main.find('.current').first();
-			if (entry.length === 0) {
-				main.find('.entry .entry-title').first().click();
-				return;
-			}
-			next = entry.next().first();
-			if (next.length === 0) {
-				return;
-			}
-			next.find('.entry-title').click();
+			nextEntry();
 			break;
 		case 75: //k
-			entry = main.find('.current').first();
-			if (entry.length === 0) {
-				return;
-			}
-			prev = entry.prev().last();
-			if (prev.length === 0 || prev.hasClass('entry')) {
-				//close current
-				entry.click();
-			}
-			prev.find('.entry-title').click();
+			prevEntry();
+			break;
+		case 78: //n
+			nextFeed();
 			break;
 		case 79: //o
-			read_on_web = main.find('.read-on-web');
-			if (read_on_web) {
-				window.open(read_on_web.attr('href'));
-			}
+			openInNewTab();
+			break;
+		case 80: //p
+			prevFeed();
 			break;
 		case 82: //r
 			reloadEntries();
@@ -622,6 +670,7 @@ function keyboardShortcut(event) {
 			unreadCurrent();
 			break;
 		case 191: // /
+			// ?
 			if (event.shiftKey) {
 				openManual();
 			}

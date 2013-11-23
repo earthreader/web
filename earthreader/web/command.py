@@ -43,7 +43,7 @@ def server_command(args):
     repository = args.repository
     if not os.path.isdir(repository):
         os.mkdir(repository)
-    app.config.update(REPOSITORY=repository, session_id=args.session_id)
+    app.config.update(REPOSITORY=repository, SESSION_ID=args.session_id)
     app.debug = args.debug
     spawn_worker()
     if args.debug:
