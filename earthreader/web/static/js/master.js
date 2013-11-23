@@ -609,7 +609,7 @@ function keyboardShortcut(event) {
 
 	var nextFeed = function nextFeed() {
 		var feeds = feedlist.find('.feed');
-		if (feeds.filter('.current').length == 0) {
+		if (feeds.filter('.current').length === 0) {
 			feeds.first().click();
 			return;
 		}
@@ -642,7 +642,7 @@ function keyboardShortcut(event) {
 		if (read_on_web) {
 			window.open(read_on_web.attr('href'));
 		}
-	}
+	};
 
 	switch (event.keyCode) {
 		case 74: //j
