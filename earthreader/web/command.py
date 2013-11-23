@@ -20,15 +20,15 @@ __all__ = 'crawl', 'main', 'server'
 
 def crawl_command(args):
     repo = FileSystemRepository(args.repository)
-    session = Session()
+    session = Session(args.session_id)
     stage = Stage(session, repo)
     with stage:
         opml = stage.subscriptions
     if not opml:
         print('OPML does not exist in the repository', file=sys.stderr)
         return
-    urllist = [subscription.feed_uri for subscription
-               in opml.recursive_subscriptions]
+    urllist = [subscription.feed_uri
+               for subscription in opml.recursive_subscriptions]
     generator = crawl(urllist, args.threads)
     try:
         for feed_url, feed_data, crawler_hints in generator:
@@ -43,7 +43,7 @@ def server_command(args):
     repository = args.repository
     if not os.path.isdir(repository):
         os.mkdir(repository)
-    app.config.update(REPOSITORY=repository)
+    app.config.update(REPOSITORY=repository, SESSION_ID=args.session_id)
     app.debug = args.debug
     spawn_worker()
     if args.debug:
@@ -70,6 +70,9 @@ server_parser.add_argument('-d', '--debug',
                            action='store_true',
                            help='debug mode. it makes the server possible to '
                                 'automatically restart when files touched.')
+server_parser.add_argument('-i', '--session-id',
+                           default=Session().identifier,
+                           help='session identifier.  [default: %(default)s]')
 server_parser.add_argument('repository', help='repository for Earth Reader')
 
 crawl_parser = subparsers.add_parser('crawl', help='crawl feeds in the opml')
@@ -77,6 +80,9 @@ crawl_parser.set_defaults(function=crawl_command)
 crawl_parser.add_argument('-n', '--threads',
                           type=int,
                           help='the number of workers')
+crawl_parser.add_argument('-i', '--session-id',
+                          default=Session().identifier,
+                          help='session identifier.  [default: %(default)s]')
 crawl_parser.add_argument('repository', help='repository which has the opml')
 
 

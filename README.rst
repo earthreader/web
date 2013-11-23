@@ -1,3 +1,6 @@
+.. image:: https://raw.github.com/earthreader/web/master/artwork/icon_256x256.png
+
+
 Earth Reader for Web
 ====================
 
@@ -11,13 +14,13 @@ __ http://www.gnu.org/licenses/agpl-3.0.html
 Install
 -------
 
-You can install earthreader by pip.
+You can install Earth Reader for Web using ``pip``:
 
 .. code-block:: console
 
-   $ pip install earthreader
+   $ pip install git+git://github.com/earthreader/web.git
 
-Then you can use command 'earthreader'.
+Then you can use command ``earthreader``.
 
 .. code-block:: console
 
@@ -37,7 +40,7 @@ Crawl
 Server
 ~~~~~~
 
-**<repository dir>** is a directory where feeds saved.
+``<repository dir>`` is a directory where all data are stored.
 
 .. code-block:: console
 
@@ -47,29 +50,33 @@ Server
    $ #with debug mode
    $ earthreader server -d <repository dir>
 
-And open **http://localhost:<port>/** with your browser.
+And open ``http://localhost:<port>/`` with your browser.
 
 WSGI
 ++++
 
-You can attach earthreader to apache with `mod_wsgi`__ like this:
+You can attach Earth Reader to Apache with `mod_wsgi`_ like this:
 
 .. code-block:: apache
 
-   WSGIDaemonProcess earthreader user=www-data group=www-data threads=1
-   WSGIScriptAlias /earthreader /var/wsgi/earthreader.wsgi
-   <Directory /var/wsgi/>
-      WSGIProcessGroup earthreader
-      WSGIApplicationGroup %{GLOBAL}
+   <VirtualHost *:80>
+     ServerName yourwebsite.com
+     WSGIDaemonProcess earthreader user=www-data group=www-data threads=1
+     WSGIScriptAlias / /var/wsgi/earthreader.wsgi
 
-      Order deny,allow
-      Allow from all
-      <!-- For security, We prefer use auth system. -->
-      AuthType Basic
-      AuthName "Private rss reader"
-      AuthUserFile /var/wsgi/earthreader.htpasswd
-      Require valid-user
-   </Directory>
+     <Directory /var/wsgi/>
+        WSGIProcessGroup earthreader
+        WSGIApplicationGroup %{GLOBAL}
+
+        Order deny,allow
+        Allow from all
+        <!-- For security, We prefer use auth system. -->
+        AuthType Basic
+        AuthName "Private rss reader"
+        AuthUserFile /var/wsgi/earthreader.htpasswd
+        Require valid-user
+     </Directory>
+   </VirtualHost>
 
 .. code-block:: python
 
@@ -83,28 +90,28 @@ You can attach earthreader to apache with `mod_wsgi`__ like this:
        REPOSITORY='<repository dir>'
        ))
 
-And open **http://your.website.domain/earthreader/** with your browser.
+And open ``http://yourwebsite.com/`` in your browser.
 
-__ http://flask.pocoo.org/docs/deploying/mod_wsgi/
+.. _mod_wsgi: http://code.google.com/p/modwsgi/
 
 
-Shortcuts
-=========
+Keyboard Shortcuts
+~~~~~~~~~~~~~~~~~~
 
-Vim-like keyboard shortcuts are available in earthreader web
+Vim-inspired keyboard shortcuts are also available:
 
-- j/k : Go to older/newer entry.
-- o : Open entry in new tab.
-- r : Refresh current feed.
-- s : Star/Unstar.
-- u : Mark as unread.
-- ? : This help message.
+- ``j``/``k``: Go to older/newer entry.
+- ``o``: Open entry in new tab.
+- ``r``: Refresh current feed.
+- ``s``: Star/Unstar.
+- ``u``: Mark as unread.
+- ``?``: This help message.
 
 
 Links
-=====
+-----
 
-earthreader
+Earth Reader
    http://earthreader.org/
 
 libearth
