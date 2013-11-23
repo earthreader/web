@@ -101,6 +101,7 @@ Keyboard Shortcuts
 Vim-inspired keyboard shortcuts are also available:
 
 - ``j``/``k``: Go to older/newer entry.
+- ``n``/``p``: Down/Up with feed list.
 - ``o``: Open entry in new tab.
 - ``r``: Refresh current feed.
 - ``s``: Star/Unstar.
