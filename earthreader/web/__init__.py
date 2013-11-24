@@ -20,7 +20,7 @@ from libearth.repository import FileSystemRepository
 from libearth.session import Session
 from libearth.stage import Stage
 from libearth.subscribe import Category, Subscription, SubscriptionList
-from libearth.tz import now
+from libearth.tz import now, utc
 from werkzeug.exceptions import HTTPException
 
 from .wsgi import MethodRewriteMiddleware
@@ -441,7 +441,7 @@ class FeedEntryGenerator():
             'title': self.entry.title,
             'entry_id': get_hash(self.entry.id),
             'permalink': entry_permalink or None,
-            'updated': Rfc3339().encode(self.entry.updated_at),
+            'updated': Rfc3339().encode(self.entry.updated_at.astimezone(utc)),
             'read': bool(self.entry.read),
             'starred': bool(self.entry.starred)
         }
