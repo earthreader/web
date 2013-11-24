@@ -696,6 +696,10 @@ function closeManual() {
 }
 
 $(function () {
+
+	//moment.js language
+	moment.lang(navigator.language.substr(0,2))
+
 	var navi = $('[role=navigation]');
 	var persistent = navi.find('.persistent');
 	var feedlist = navi.find('.allfeed.folder');
