@@ -280,7 +280,7 @@ def test_all_feeds(xmls):
                 entry_id=get_hash('http://feedthree.com/feed/atom/1/'),
                 _external=True,
             )
-        assert entries[0]['updated'] == '2013-08-21T07:49:20+07:00'
+        assert entries[0]['updated'] == '2013-08-21T00:49:20Z'
         r = client.get(entries[0]['entry_url'])
         assert r.status_code == 200
         result = json.loads(r.data)
@@ -326,7 +326,7 @@ def test_all_feeds(xmls):
                 entry_id=get_hash('http://feedone.com/feed/atom/2/'),
                 _external=True
             )
-        assert entries[0]['updated'] == '2013-10-19T07:49:20+07:00'
+        assert entries[0]['updated'] == '2013-10-19T00:49:20Z'
         assert entries[1]['title'] == 'Feed One: Entry One'
         assert entries[1]['entry_url'] == \
             url_for(
@@ -336,7 +336,7 @@ def test_all_feeds(xmls):
                 entry_id=get_hash('http://feedone.com/feed/atom/1/'),
                 _external=True
             )
-        assert entries[1]['updated'] == '2013-08-19T07:49:20+07:00'
+        assert entries[1]['updated'] == '2013-08-19T00:49:20Z'
         r = client.get(entries[0]['entry_url'])
         assert r.status_code == 200
         result = json.loads(r.data)
@@ -383,7 +383,7 @@ def test_all_feeds(xmls):
                 entry_id=get_hash('http://feedtwo.com/feed/atom/1/'),
                 _external=True
             )
-        assert entries[0]['updated'] == '2013-08-20T07:49:20+07:00'
+        assert entries[0]['updated'] == '2013-08-20T00:49:20Z'
         r = client.get(entries[0]['entry_url'])
         assert r.status_code == 200
         result = json.loads(r.data)
@@ -429,7 +429,7 @@ def test_all_feeds(xmls):
                 entry_id=get_hash('http://feedfour.com/feed/atom/1/'),
                 _external=True
             )
-        assert entries[0]['updated'] == '2013-08-22T07:49:20+07:00'
+        assert entries[0]['updated'] == '2013-08-22T00:49:20Z'
         r = client.get(entries[0]['entry_url'])
         assert r.status_code == 200
         result = json.loads(r.data)
