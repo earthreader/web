@@ -325,7 +325,7 @@ function appendEntry(entry) {
 		header.append(category);
 	}
 
-	time.text(entry.updated);
+	time.text(moment(entry.updated).fromNow());
 	header.append(time);
 
 	title.text(entry.title);
