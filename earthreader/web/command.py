@@ -2,9 +2,7 @@ from __future__ import print_function
 
 import argparse
 import hashlib
-import logging
 import os.path
-import socket
 import sys
 
 from earthreader.web import app, spawn_worker
