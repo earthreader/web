@@ -29,7 +29,7 @@ def crawl_command(args):
     urllist = [subscription.feed_uri
                for subscription in opml.recursive_subscriptions]
     threads_count = args.threads if args.threads is not None else cpu_count()
-    
+
     generator = crawl(urllist, threads_count)
     try:
         for feed_url, feed_data, crawler_hints in generator:
