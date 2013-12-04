@@ -10,6 +10,7 @@ import sys
 from earthreader.web import app, spawn_worker
 from waitress import serve
 
+from libearth.compat.parallel import cpu_count
 from libearth.crawler import crawl, CrawlError
 from libearth.repository import FileSystemRepository
 from libearth.session import Session
@@ -29,7 +30,9 @@ def crawl_command(args):
         return
     urllist = [subscription.feed_uri
                for subscription in opml.recursive_subscriptions]
-    generator = crawl(urllist, args.threads)
+    threads_count = args.threads if args.threads is not None else cpu_count()
+    
+    generator = crawl(urllist, threads_count)
     try:
         for feed_url, feed_data, crawler_hints in generator:
             with stage:
