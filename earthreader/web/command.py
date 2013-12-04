@@ -89,6 +89,9 @@ crawl_parser.add_argument('repository', help='repository which has the opml')
 
 def main():
     args = parser.parse_args()
+    if not args.command:
+        parser.print_help()
+        exit(1)
     args.function(args)
 
 
