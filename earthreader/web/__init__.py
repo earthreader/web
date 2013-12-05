@@ -17,6 +17,7 @@ from libearth.compat import binary
 from libearth.crawler import CrawlError, crawl
 from libearth.parser.autodiscovery import autodiscovery, FeedUrlNotFoundError
 from libearth.repository import FileSystemRepository
+from libearth.sanitizer import clean_html
 from libearth.session import Session
 from libearth.stage import Stage
 from libearth.subscribe import Category, Subscription, SubscriptionList
@@ -438,7 +439,7 @@ class FeedEntryGenerator():
             raise StopIteration
         entry_permalink = get_permalink(self.entry)
         entry_data = {
-            'title': self.entry.title,
+            'title': clean_html(self.entry.title.value),
             'entry_id': get_hash(self.entry.id),
             'permalink': entry_permalink or None,
             'updated': Rfc3339().encode(self.entry.updated_at.astimezone(utc)),
@@ -494,7 +495,7 @@ def feed_entries(category_id, feed_id):
         url_token = str(now())
     if not generator:
         it = iter(feed.entries)
-        feed_title = feed.title
+        feed_title = clean_html(feed.title.value)
         feed_permalink = get_permalink(feed)
         generator = FeedEntryGenerator(category_id, feed_id, feed_title,
                                        feed_permalink, it, now(), read, starred)
@@ -523,7 +524,7 @@ def feed_entries(category_id, feed_id):
             feed_id
         )
     return jsonify(
-        title=feed.title,
+        title=clean_html(feed.title.value),
         entries=entries,
         next_url=next_url
     )
@@ -627,7 +628,7 @@ def category_entries(category_id):
             except KeyError:
                 continue
             feed_id = get_hash(feed.id)
-            feed_title = feed.title
+            feed_title = clean_html(feed.title.value)
             it = iter(feed.entries)
             feed_permalink = get_permalink(feed)
             child = FeedEntryGenerator(category_id, feed_id, feed_title,
@@ -708,13 +709,13 @@ def feed_entry(category_id, feed_id, entry_id):
         content = content.sanitized_html
 
     entry_data = {
-        'title': entry.title,
+        'title': clean_html(entry.title.value),
         'content': content,
         'updated': entry.updated_at.__str__(),
         'permalink': entry_permalink or None,
     }
     feed_data = {
-        'title': feed.title,
+        'title': clean_html(feed.title.value),
         'permalink': feed_permalink or None
     }
     add_urls(
