@@ -163,6 +163,7 @@ body .wrapper {
 
 [role=main] .entry-title time {
 	font-size: .7em;
+	width: 5em;
 }
 
 [role=main] .entry-title .feed {
