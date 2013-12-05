@@ -326,6 +326,7 @@ function appendEntry(entry) {
 	}
 
 	time.text(moment(entry.updated).fromNow());
+	time.attr('title', entry.updated);
 	header.append(time);
 
 	title.text(entry.title);
