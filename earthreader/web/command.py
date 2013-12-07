@@ -9,7 +9,7 @@ from waitress import serve
 
 from libearth.compat.parallel import cpu_count
 from libearth.crawler import crawl, CrawlError
-from libearth.repository import FileSystemRepository
+from libearth.repository import from_url
 from libearth.session import Session
 from libearth.stage import Stage
 
@@ -17,7 +17,7 @@ __all__ = 'crawl', 'main', 'server'
 
 
 def crawl_command(args):
-    repo = FileSystemRepository(args.repository)
+    repo = from_url(args.repository)
     session = Session(args.session_id)
     stage = Stage(session, repo)
     with stage:
