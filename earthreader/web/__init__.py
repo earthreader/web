@@ -204,7 +204,7 @@ def get_stage():
         url = urlparse.urlparse(app.config['REPOSITORY'])
         if url.scheme == 'file':
             repository = FileSystemRepository(
-                app.config['REPOSITORY'],
+                url.path,
                 atomic=request.environ['wsgi.multithread']
             )
         else:
