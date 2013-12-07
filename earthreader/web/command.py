@@ -2,7 +2,6 @@ from __future__ import print_function
 
 import argparse
 import hashlib
-import os.path
 import sys
 
 from earthreader.web import app, spawn_worker
@@ -42,8 +41,6 @@ def crawl_command(args):
 
 def server_command(args):
     repository = args.repository
-    if not os.path.isdir(repository):
-        os.mkdir(repository)
     app.config.update(REPOSITORY=repository, SESSION_ID=args.session_id)
     app.debug = args.debug
     spawn_worker()
