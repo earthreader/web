@@ -451,7 +451,7 @@ class FeedEntryGenerator():
             raise StopIteration
         entry_permalink = get_permalink(self.entry)
         entry_data = {
-            'title': clean_html(self.entry.title.value),
+            'title': clean_html(str(self.entry.title)),
             'entry_id': get_hash(self.entry.id),
             'permalink': entry_permalink or None,
             'updated': Rfc3339().encode(self.entry.updated_at.astimezone(utc)),
@@ -507,7 +507,7 @@ def feed_entries(category_id, feed_id):
         url_token = str(now())
     if not generator:
         it = iter(feed.entries)
-        feed_title = clean_html(feed.title.value)
+        feed_title = clean_html(str(feed.title))
         feed_permalink = get_permalink(feed)
         generator = FeedEntryGenerator(category_id, feed_id, feed_title,
                                        feed_permalink, it, now(), read, starred)
@@ -536,7 +536,7 @@ def feed_entries(category_id, feed_id):
             feed_id
         )
     return jsonify(
-        title=clean_html(feed.title.value),
+        title=clean_html(str(feed.title)),
         entries=entries,
         next_url=next_url
     )
@@ -640,7 +640,7 @@ def category_entries(category_id):
             except KeyError:
                 continue
             feed_id = get_hash(feed.id)
-            feed_title = clean_html(feed.title.value)
+            feed_title = clean_html(str(feed.title))
             it = iter(feed.entries)
             feed_permalink = get_permalink(feed)
             child = FeedEntryGenerator(category_id, feed_id, feed_title,
@@ -721,13 +721,13 @@ def feed_entry(category_id, feed_id, entry_id):
         content = content.sanitized_html
 
     entry_data = {
-        'title': clean_html(entry.title.value),
+        'title': clean_html(str(entry.title)),
         'content': content,
         'updated': entry.updated_at.__str__(),
         'permalink': entry_permalink or None,
     }
     feed_data = {
-        'title': clean_html(feed.title.value),
+        'title': clean_html(str(feed.title)),
         'permalink': feed_permalink or None
     }
     add_urls(
