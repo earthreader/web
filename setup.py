@@ -81,6 +81,7 @@ setup(
         'Programming Language :: Python :: Implementation :: PyPy',
         'Programming Language :: Python :: Implementation :: Stackless',
         'Topic :: Communications',
+        'Topic :: Internet :: WWW/HTTP :: Dynamic Content :: News/Diary',
         'Topic :: Internet :: WWW/HTTP :: Indexing/Search',
         'Topic :: Internet :: WWW/HTTP :: WSGI :: Application',
         'Topic :: Text Processing :: Markup :: XML'
