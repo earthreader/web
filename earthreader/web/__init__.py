@@ -10,13 +10,17 @@ try:
     import urllib2
 except ImportError:
     import urllib.request as urllib2
+try:
+    from urllib import parse as urlparse
+except ImportError:
+    import urlparse
 
 from flask import Flask, jsonify, render_template, request, url_for
 from libearth.codecs import Rfc3339
 from libearth.compat import binary
 from libearth.crawler import CrawlError, crawl
 from libearth.parser.autodiscovery import autodiscovery, FeedUrlNotFoundError
-from libearth.repository import FileSystemRepository
+from libearth.repository import FileSystemRepository, from_url
 from libearth.sanitizer import clean_html
 from libearth.session import Session
 from libearth.stage import Stage
@@ -195,12 +199,20 @@ def get_stage():
             # where N = the number of processes.  So we should discourage
             # using web servers of prefork/worker model in the docs.
             session_id = '{0}.{1}'.format(session_id, os.getpid())
-        stage = Stage(
-            Session(session_id),
-            FileSystemRepository(
+
+        session = Session(session_id)
+        url = urlparse.urlparse(app.config['REPOSITORY'])
+        if url.scheme == 'file':
+            repository = FileSystemRepository(
                 app.config['REPOSITORY'],
                 atomic=request.environ['wsgi.multithread']
             )
+        else:
+            repository = from_url(app.config['REPOSITORY'])
+
+        stage = Stage(
+            session,
+            repository
         )
         app.config['STAGE'] = stage
         return stage
