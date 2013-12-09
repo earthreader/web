@@ -335,9 +335,6 @@ function appendEntry(entry) {
 
 	if (entry.read) {
 		header.addClass('read');
-		var readMark = $('<span>');
-		readMark.addClass('read');
-		marks.append(readMark);
 	}
 	if (entry.starred) {
 		header.addClass('starred');
@@ -539,12 +536,6 @@ function clickEntry(event) {
 			'type': 'put',
 			'url': obj.read_url,
 		}).done(function() {
-			var markRead = target.parent().find('.marks .read');
-			if (markRead.length === 0) {
-				markRead = $('<span>');
-				markRead.addClass('read');
-				target.parent().find('.marks').append(markRead);
-			}
 			target.addClass('read');
 		});
 
