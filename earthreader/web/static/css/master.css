@@ -156,18 +156,21 @@ body .wrapper {
 [role=main] .entry-title time,
 [role=main] .entry-title .feed,
 [role=main] .entry-title .title {
-	display: block;
 	margin: 0 1em;
 }
 
 
 [role=main] .entry-title time {
 	font-size: .7em;
-	width: 5em;
+	float: right;
 }
 
 [role=main] .entry-title .feed {
 	color: rgb(100, 100, 100);
+}
+
+[role=main] .entry-title .title {
+	display: block;
 }
 
 a, a:hover, a:active, a:link, a:visited {
