@@ -128,7 +128,7 @@ body .wrapper {
 }
 
 [role=main] .entry-title {
-	padding: .5em 2em;
+	padding: .5em 1em;
 	border-bottom: 1px solid rgb(238, 238, 238);
 	position: relative;
 }
