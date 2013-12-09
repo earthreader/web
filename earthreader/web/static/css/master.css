@@ -140,7 +140,7 @@ body .wrapper {
 [role=main] .entry-title .marks {
 	position: absolute;
 	top: 0;
-	right: 0;
+	left: 0;
 	padding: .2em .5em;
 	font-size: 1.4em;
 }
