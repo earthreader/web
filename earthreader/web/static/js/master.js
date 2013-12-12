@@ -190,6 +190,9 @@ function processForm(event) {
 			target.each(function(){
 				this.reset();
 			});
+		}).fail(function(xhr, status, err) {
+			var json = xhr.responseJSON;
+			alert(json.error + "\n" + json.message);
 		});
 	} else {
 		$.post(target.attr(action), data).done(function(res) {
