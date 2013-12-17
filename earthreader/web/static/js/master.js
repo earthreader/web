@@ -165,43 +165,35 @@ function processForm(event) {
 	var data = target.serialize();
 	var after = target.attr('data-after');
 	var action = target.attr('action');
-	if (after === "makeFeedList") {
-		try {
-			var current = $('[role=navigation] .feedlist .current');
-			if (target.attr('data-action') === 'addFeed') {
-				action = current.attr('data-add-feed-url') ||
-					current.parent().attr('data-add-feed-url') ||
-					target.attr('action');
-			} else if (target.attr('data-action') === 'addCategory') {
-				action = current.attr('data-add-category-url') ||
-					current.parent().attr('data-add-category-url') ||
-					target.attr('action');
-			}
-		} catch (err) {
+	try {
+		var current = $('[role=navigation] .feedlist .current');
+		if (target.hasClass('addFeed')) {
+			action = current.attr('data-add-feed-url') ||
+				current.parent().attr('data-add-feed-url') ||
+				target.attr('action');
+		} else if (target.hasClass('addCategory')) {
+			action = current.attr('data-add-category-url') ||
+				current.parent().attr('data-add-category-url') ||
+				target.attr('action');
 		}
-		$.post(action,data).done(function(res) {
-			if (current === null) {
-				makeFeedList(res);
-			} else {
-				var fold = current.next();
-				fold.html("");
-				makeFeedList(res, fold);
-			}
-			target.each(function(){
-				this.reset();
-			});
-		}).fail(function(xhr, status, err) {
-			var json = xhr.responseJSON;
-			alert(json.error + "\n" + json.message);
-		});
-	} else {
-		$.post(target.attr(action), data).done(function(res) {
-			alert(res);
-			target.each(function(){
-				this.reset();
-			});
-		});
+	} catch (err) {
 	}
+
+	$.post(action,data).done(function(res) {
+		if (current === null) {
+			makeFeedList(res);
+		} else {
+			var fold = current.next();
+			fold.html("");
+			makeFeedList(res, fold);
+		}
+		target.each(function(){
+			this.reset();
+		});
+	}).fail(function(xhr, status, err) {
+		var json = xhr.responseJSON;
+		alert(json.error + "\n" + json.message);
+	});
 }
 
 
@@ -715,7 +707,7 @@ $(function () {
 	$(document).on('click', '.off-canvas-side', toggleSide);
 	$(document).on('click', 'a', clickLink);
 
-	$(document).on('submit', 'form', processForm);
+	$(document).on('submit', 'form.addFeed, form.addCategory', processForm);
 	$(window).on('keydown', keyboardShortcut);
 	$(window).on('scroll', autoNextPager);
 
