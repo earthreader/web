@@ -218,6 +218,12 @@ var makeCategory = function(parentObj, obj) {
 	if (obj.remove_category_url) {
 		container.attr('data-remove-category-url', obj.remove_category_url);
 	}
+	if (obj.move_url) {
+		container.attr('data-move-url', obj.move_url);
+	}
+	if (obj.path){
+		container.attr('data-path', obj.path);
+	}
 
 	header.html(obj.title.link(obj.entries_url));
 
@@ -253,6 +259,7 @@ var makeFeed = function(parentObj, obj) {
 	elem.addClass('feed');
 	elem.attr('data-entries', obj.entries_url);
 	elem.attr('data-remove-feed-url', obj.remove_feed_url);
+	elem.attr('data-path', obj.path);
 	elem.attr('role', 'link');
 	elem.html(obj.title.link(obj.entries_url));
 
