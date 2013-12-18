@@ -246,6 +246,9 @@ var makeCategory = function(parentObj, obj) {
 		}
 	});
 	list.addClass('fold');
+	header.on('dragstart', dragStart);
+	header.on('dragover', dragOver);
+	header.on('drop', drop);
 
 	container.append(header);
 	container.append(list);
@@ -268,6 +271,7 @@ var makeFeed = function(parentObj, obj) {
 	elem.prepend(handle);
 
 	elem.attr('draggable', true);
+	elem.on('dragstart', dragStart);
 
 	parentObj.append(elem);
 };
@@ -295,6 +299,33 @@ function refreshFeedList() {
 	$.get(URLS.feeds, function(obj) {
 		makeFeedList(obj);
 	});
+}
+
+function dragStart(event) {
+	if (!$(event.target).is('li')) {
+		event.target = $(event.target).closest('li')
+	}
+	var target = $(event.target).attr('data-path')
+	event.originalEvent.dataTransfer.setData('data-path', target);
+}
+
+function dragOver(event) {
+	event.preventDefault();
+}
+
+function drop(event) {
+	var dataPath = event.originalEvent.dataTransfer.getData('data-path');
+	if (!$(event.target).hasClass('.feed.header')){
+	    event.target = $(event.target).closest('li');
+	}
+	move_url = $(event.target).attr('data-move-url') + '?from=' + dataPath
+	$.ajax({
+		url: move_url,
+		type: 'put'
+	}).done(function(){
+		refreshFeedList();
+	});
+	refreshFeedList();
 }
 
 function getAllEntries() {
