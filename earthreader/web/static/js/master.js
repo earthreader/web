@@ -318,14 +318,23 @@ function drop(event) {
 	if (!$(event.target).hasClass('.feed.header')){
 	    event.target = $(event.target).closest('li');
 	}
-	move_url = $(event.target).attr('data-move-url') + '?from=' + dataPath
+	moveUrl = $(event.target).attr('data-move-url') + '?from=' + dataPath
+	moveOutline(moveUrl)
+}
+
+function dropToHeader(event) {
+	var dataPath = event.originalEvent.dataTransfer.getData('data-path');
+	moveUrl = URLS.feeds + '?from=' + dataPath
+	moveOutline(moveUrl)
+}
+
+function moveOutline(url) {
 	$.ajax({
-		url: move_url,
+		url: url,
 		type: 'put'
 	}).done(function(){
 		refreshFeedList();
 	});
-	refreshFeedList();
 }
 
 function getAllEntries() {
@@ -727,8 +736,12 @@ $(function () {
 
 	var navi = $('[role=navigation]');
 	var persistent = navi.find('.persistent');
+	var feedlistHeader = navi.find('.allfeed.header');
 	var feedlist = navi.find('.allfeed.folder');
-	navi.on('click', '.allfeed.header', getAllEntries);
+	feedlistHeader.on('click', getAllEntries);
+	feedlistHeader.on('click', getAllEntries);
+	feedlistHeader.on('dragover', dragOver);
+	feedlistHeader.on('drop', dropToHeader);
 	feedlist.on('click', '.feed', clickFeed);
 	persistent.on('click', '[data-filter]', changeFilter);
 	persistent.on('click', '.header', toggleFolding);
