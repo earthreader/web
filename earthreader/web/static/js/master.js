@@ -303,9 +303,9 @@ function refreshFeedList() {
 
 function dragStart(event) {
 	if (!$(event.target).is('li')) {
-		event.target = $(event.target).closest('li')
+		event.target = $(event.target).closest('li');
 	}
-	var target = $(event.target).attr('data-path')
+	var target = $(event.target).attr('data-path');
 	event.originalEvent.dataTransfer.setData('data-path', target);
 }
 
@@ -316,16 +316,16 @@ function dragOver(event) {
 function drop(event) {
 	var dataPath = event.originalEvent.dataTransfer.getData('data-path');
 	if (!$(event.target).hasClass('.feed.header')){
-	    event.target = $(event.target).closest('li');
+		event.target = $(event.target).closest('li');
 	}
-	moveUrl = $(event.target).attr('data-move-url') + '?from=' + dataPath
-	moveOutline(moveUrl)
+	moveUrl = $(event.target).attr('data-move-url') + '?from=' + dataPath;
+	moveOutline(moveUrl);
 }
 
 function dropToHeader(event) {
 	var dataPath = event.originalEvent.dataTransfer.getData('data-path');
-	moveUrl = URLS.feeds + '?from=' + dataPath
-	moveOutline(moveUrl)
+	moveUrl = URLS.feeds + '?from=' + dataPath;
+	moveOutline(moveUrl);
 }
 
 function moveOutline(url) {
