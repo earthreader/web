@@ -167,6 +167,7 @@ def add_urls(data, keys, category_id, feed_id=None, entry_id=None):
         'add_feed_url': 'add_feed',
         'add_category_url': 'add_category',
         'remove_category_url': 'delete_category',
+        'move_url': 'move_outline',
         'read_url': 'read_entry',
         'unread_url': 'unread_entry',
         'star_url': 'star_entry',
@@ -251,7 +252,7 @@ def feeds(category_id):
             feeds.append(data)
         elif isinstance(child, Category):
             url_keys = ['feeds_url', 'entries_url', 'add_feed_url',
-                        'add_category_url', 'remove_category_url']
+                        'add_category_url', 'remove_category_url', 'move_url']
             add_urls(data, url_keys, cursor.join_id(child._title))
             add_path_data(data, cursor.join_id(child._title))
             categories.append(data)
@@ -343,9 +344,9 @@ def delete_feed(category_id, feed_id):
     return feeds(category_id)
 
 
-@app.route('/<path:dest_path>/feeds/', methods=['PUT'])
-@app.route('/feeds/', methods=['PUT'], defaults={'dest_path': ''})
-def move_outline(dest_path):
+@app.route('/<path:category_id>/feeds/', methods=['PUT'])
+@app.route('/feeds/', methods=['PUT'], defaults={'category_id': ''})
+def move_outline(category_id):
     source_path = request.args.get('from')
     if '/feeds/' in source_path:
         parent_category_id, feed_id = source_path.split('/feeds/')
@@ -360,7 +361,7 @@ def move_outline(dest_path):
     source.discard(target)
     with get_stage() as stage:
         stage.subscriptions = source.subscriptionlist
-    dest = Cursor(dest_path)
+    dest = Cursor(category_id)
     dest.add(target)
     with get_stage() as stage:
         stage.subscriptions = dest.subscriptionlist
