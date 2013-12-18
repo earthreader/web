@@ -184,6 +184,15 @@ def add_urls(data, keys, category_id, feed_id=None, entry_id=None):
     data.update(urls)
 
 
+def add_path_data(data, category_id, feed_id=''):
+    path = ''
+    if category_id:
+        path = category_id
+    if feed_id:
+        path = path + '/feeds/' + feed_id
+    data.update({'path': path})
+
+
 def get_stage():
     try:
         return app.config['STAGE']
@@ -238,11 +247,13 @@ def feeds(category_id):
         if isinstance(child, Subscription):
             url_keys = ['entries_url', 'remove_feed_url']
             add_urls(data, url_keys, cursor.category_id, child.feed_id)
+            add_path_data(data, cursor.category_id, child.feed_id)
             feeds.append(data)
         elif isinstance(child, Category):
             url_keys = ['feeds_url', 'entries_url', 'add_feed_url',
                         'add_category_url', 'remove_category_url']
             add_urls(data, url_keys, cursor.join_id(child._title))
+            add_path_data(data, cursor.join_id(child._title))
             categories.append(data)
     return jsonify(feeds=feeds, categories=categories)
 

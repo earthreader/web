@@ -250,6 +250,10 @@ def fx_crawling_queue(request):
 
 def test_all_feeds(xmls):
     with app.test_client() as client:
+        FEED_ONE_ID = get_hash('http://feedone.com/feed/atom/')
+        FEED_TWO_ID = get_hash('http://feedtwo.com/feed/atom/')
+        FEED_THREE_ID = get_hash('http://feedthree.com/feed/atom/')
+        FEED_FOUR_ID = get_hash('http://feedfour.com/feed/atom/')
         # /
         r = client.get('/feeds/')
         assert r.status_code == 200
@@ -257,15 +261,17 @@ def test_all_feeds(xmls):
         root_feeds = result['feeds']
         root_categories = result['categories']
         assert root_feeds[0]['title'] == 'Feed Three'
+        assert root_feeds[0]['path'] == '/feeds/' + FEED_THREE_ID
         assert root_categories[0]['title'] == 'categoryone'
+        assert root_categories[0]['path'] == '-categoryone'
         assert root_categories[1]['title'] == 'categorythree'
+        assert root_categories[1]['path'] == '-categorythree'
         # /feedthree
         feed_url = root_feeds[0]['entries_url']
-        feed_id = get_hash('http://feedthree.com/feed/atom/')
         assert feed_url == \
             url_for(
                 'feed_entries',
-                feed_id=feed_id,
+                feed_id=FEED_THREE_ID,
                 _external=True
             )
         r = client.get(feed_url)
@@ -276,7 +282,7 @@ def test_all_feeds(xmls):
         assert entries[0]['entry_url'] == \
             url_for(
                 'feed_entry',
-                feed_id=feed_id,
+                feed_id=FEED_THREE_ID,
                 entry_id=get_hash('http://feedthree.com/feed/atom/1/'),
                 _external=True,
             )
@@ -302,6 +308,7 @@ def test_all_feeds(xmls):
         one_feeds = one_result['feeds']
         one_categories = one_result['categories']
         assert one_feeds[0]['title'] == 'Feed One'
+        assert one_feeds[0]['path'] == '-categoryone/feeds/' + FEED_ONE_ID
         assert one_categories[0]['title'] == 'categorytwo'
         # /categoryone/feedone
         feed_url = one_feeds[0]['entries_url']
@@ -351,6 +358,8 @@ def test_all_feeds(xmls):
         two_feeds = two_result['feeds']
         two_categories = two_result['categories']
         assert two_feeds[0]['title'] == 'Feed Two'
+        assert two_feeds[0]['path'] == '-categoryone/-categorytwo/feeds/' + \
+            FEED_TWO_ID
         assert len(two_categories) == 0
         # /categoryone/categorytwo/feedtwo
         category_url = one_categories[0]['feeds_url']
@@ -405,6 +414,7 @@ def test_all_feeds(xmls):
         three_feeds = three_result['feeds']
         three_categories = three_result['categories']
         assert three_feeds[0]['title'] == 'Feed Four'
+        assert three_feeds[0]['path'] == '-categorythree/feeds/' + FEED_FOUR_ID
         assert len(three_categories) == 0
         # /categorythree/feedfour
         feed_url = three_feeds[0]['entries_url']
