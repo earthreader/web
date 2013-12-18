@@ -24,7 +24,7 @@ from libearth.session import Session
 from libearth.stage import Stage
 from libearth.subscribe import Category, Subscription, SubscriptionList
 from libearth.tz import utc
-from pytest import fixture, mark
+from pytest import fixture, mark, raises
 from werkzeug.urls import url_encode
 
 from earthreader.web import (app, crawling_queue, get_hash, spawn_worker,
@@ -1105,3 +1105,41 @@ def test_request_same_feed(make_empty, xmls_for_next):
         r1_result = json.loads(r1_next.data)
         r2_result = json.loads(r2_next.data)
         assert r1_result['entries'] == r2_result['entries']
+
+
+def test_move_feed(xmls, fx_test_stage):
+    with app.test_client() as client:
+        r = client.put('/-categoryone/feeds/?from=/feeds/' +
+                       get_hash('http://feedthree.com/feed/atom/'))
+        assert r.status_code == 200
+    with fx_test_stage as stage:
+        subscriptions = stage.subscriptions
+        for child in subscriptions.children:
+            assert child.label != 'Feed Three'
+        assert len(subscriptions.categories['categoryone'].children) == 3
+
+
+def test_move_category(xmls, fx_test_stage):
+    with app.test_client() as client:
+        r = client.put('/-categorythree/feeds/?from=-categoryone')
+        assert r.status_code == 200
+    with fx_test_stage as stage:
+        subscriptions = stage.subscriptions
+        with raises(KeyError):
+            subscriptions.categories['categoryone']
+        category_three = subscriptions.categories['categorythree']
+        assert len(category_three.children) == 2
+        category_one = category_three.categories['categoryone']
+        assert len(category_one.children) == 2
+
+
+def test_move_to_root(xmls, fx_test_stage):
+    with app.test_client() as client:
+        r = client.put('/feeds/?from=-categoryone/feeds/' +
+                       get_hash('http://feedone.com/feed/atom/'))
+        assert r.status_code == 200
+    with fx_test_stage as stage:
+        subscriptions = stage.subscriptions
+        for child in subscriptions.categories['categoryone'].children:
+            assert child.label != 'Feed One'
+        assert len(subscriptions.children) == 4

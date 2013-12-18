@@ -343,6 +343,30 @@ def delete_feed(category_id, feed_id):
     return feeds(category_id)
 
 
+@app.route('/<path:dest_path>/feeds/', methods=['PUT'])
+@app.route('/feeds/', methods=['PUT'], defaults={'dest_path': ''})
+def move_outline(dest_path):
+    source_path = request.args.get('from')
+    if '/feeds/' in source_path:
+        parent_category_id, feed_id = source_path.split('/feeds/')
+        source = Cursor(parent_category_id)
+        target = None
+        for child in source:
+            if child.feed_id == feed_id:
+                target = child
+    else:
+        source = Cursor(source_path, True)
+        target = source.target_child
+    source.discard(target)
+    with get_stage() as stage:
+        stage.subscriptions = source.subscriptionlist
+    dest = Cursor(dest_path)
+    dest.add(target)
+    with get_stage() as stage:
+        stage.subscriptions = dest.subscriptionlist
+    return jsonify()
+
+
 entry_generators = {}
 
 
