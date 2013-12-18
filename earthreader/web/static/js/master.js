@@ -218,6 +218,12 @@ var makeCategory = function(parentObj, obj) {
 	if (obj.remove_category_url) {
 		container.attr('data-remove-category-url', obj.remove_category_url);
 	}
+	if (obj.move_url) {
+		container.attr('data-move-url', obj.move_url);
+	}
+	if (obj.path){
+		container.attr('data-path', obj.path);
+	}
 
 	header.html(obj.title.link(obj.entries_url));
 
@@ -240,6 +246,9 @@ var makeCategory = function(parentObj, obj) {
 		}
 	});
 	list.addClass('fold');
+	header.on('dragstart', dragStart);
+	header.on('dragover', dragOver);
+	header.on('drop', drop);
 
 	container.append(header);
 	container.append(list);
@@ -253,6 +262,7 @@ var makeFeed = function(parentObj, obj) {
 	elem.addClass('feed');
 	elem.attr('data-entries', obj.entries_url);
 	elem.attr('data-remove-feed-url', obj.remove_feed_url);
+	elem.attr('data-path', obj.path);
 	elem.attr('role', 'link');
 	elem.html(obj.title.link(obj.entries_url));
 
@@ -261,6 +271,7 @@ var makeFeed = function(parentObj, obj) {
 	elem.prepend(handle);
 
 	elem.attr('draggable', true);
+	elem.on('dragstart', dragStart);
 
 	parentObj.append(elem);
 };
@@ -287,6 +298,42 @@ function makeFeedList(obj, target) {
 function refreshFeedList() {
 	$.get(URLS.feeds, function(obj) {
 		makeFeedList(obj);
+	});
+}
+
+function dragStart(event) {
+	if (!$(event.target).is('li')) {
+		event.target = $(event.target).closest('li');
+	}
+	var target = $(event.target).attr('data-path');
+	event.originalEvent.dataTransfer.setData('data-path', target);
+}
+
+function dragOver(event) {
+	event.preventDefault();
+}
+
+function drop(event) {
+	var dataPath = event.originalEvent.dataTransfer.getData('data-path');
+	if (!$(event.target).hasClass('.feed.header')){
+		event.target = $(event.target).closest('li');
+	}
+	moveUrl = $(event.target).attr('data-move-url') + '?from=' + dataPath;
+	moveOutline(moveUrl);
+}
+
+function dropToHeader(event) {
+	var dataPath = event.originalEvent.dataTransfer.getData('data-path');
+	moveUrl = URLS.feeds + '?from=' + dataPath;
+	moveOutline(moveUrl);
+}
+
+function moveOutline(url) {
+	$.ajax({
+		url: url,
+		type: 'put'
+	}).done(function(){
+		refreshFeedList();
 	});
 }
 
@@ -689,8 +736,12 @@ $(function () {
 
 	var navi = $('[role=navigation]');
 	var persistent = navi.find('.persistent');
+	var feedlistHeader = navi.find('.allfeed.header');
 	var feedlist = navi.find('.allfeed.folder');
-	navi.on('click', '.allfeed.header', getAllEntries);
+	feedlistHeader.on('click', getAllEntries);
+	feedlistHeader.on('click', getAllEntries);
+	feedlistHeader.on('dragover', dragOver);
+	feedlistHeader.on('drop', dropToHeader);
 	feedlist.on('click', '.feed', clickFeed);
 	persistent.on('click', '[data-filter]', changeFilter);
 	persistent.on('click', '.header', toggleFolding);

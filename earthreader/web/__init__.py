@@ -167,6 +167,7 @@ def add_urls(data, keys, category_id, feed_id=None, entry_id=None):
         'add_feed_url': 'add_feed',
         'add_category_url': 'add_category',
         'remove_category_url': 'delete_category',
+        'move_url': 'move_outline',
         'read_url': 'read_entry',
         'unread_url': 'unread_entry',
         'star_url': 'star_entry',
@@ -182,6 +183,15 @@ def add_urls(data, keys, category_id, feed_id=None, entry_id=None):
             _external=True
         )
     data.update(urls)
+
+
+def add_path_data(data, category_id, feed_id=''):
+    path = ''
+    if category_id:
+        path = category_id
+    if feed_id:
+        path = path + '/feeds/' + feed_id
+    data.update({'path': path})
 
 
 def get_stage():
@@ -238,11 +248,13 @@ def feeds(category_id):
         if isinstance(child, Subscription):
             url_keys = ['entries_url', 'remove_feed_url']
             add_urls(data, url_keys, cursor.category_id, child.feed_id)
+            add_path_data(data, cursor.category_id, child.feed_id)
             feeds.append(data)
         elif isinstance(child, Category):
             url_keys = ['feeds_url', 'entries_url', 'add_feed_url',
-                        'add_category_url', 'remove_category_url']
+                        'add_category_url', 'remove_category_url', 'move_url']
             add_urls(data, url_keys, cursor.join_id(child._title))
+            add_path_data(data, cursor.join_id(child._title))
             categories.append(data)
     return jsonify(feeds=feeds, categories=categories)
 
@@ -330,6 +342,30 @@ def delete_feed(category_id, feed_id):
     with get_stage() as stage:
         stage.subscriptions = cursor.subscriptionlist
     return feeds(category_id)
+
+
+@app.route('/<path:category_id>/feeds/', methods=['PUT'])
+@app.route('/feeds/', methods=['PUT'], defaults={'category_id': ''})
+def move_outline(category_id):
+    source_path = request.args.get('from')
+    if '/feeds/' in source_path:
+        parent_category_id, feed_id = source_path.split('/feeds/')
+        source = Cursor(parent_category_id)
+        target = None
+        for child in source:
+            if child.feed_id == feed_id:
+                target = child
+    else:
+        source = Cursor(source_path, True)
+        target = source.target_child
+    source.discard(target)
+    with get_stage() as stage:
+        stage.subscriptions = source.subscriptionlist
+    dest = Cursor(category_id)
+    dest.add(target)
+    with get_stage() as stage:
+        stage.subscriptions = dest.subscriptionlist
+    return jsonify()
 
 
 entry_generators = {}

@@ -24,7 +24,7 @@ from libearth.session import Session
 from libearth.stage import Stage
 from libearth.subscribe import Category, Subscription, SubscriptionList
 from libearth.tz import utc
-from pytest import fixture, mark
+from pytest import fixture, mark, raises
 from werkzeug.urls import url_encode
 
 from earthreader.web import (app, crawling_queue, get_hash, spawn_worker,
@@ -250,6 +250,10 @@ def fx_crawling_queue(request):
 
 def test_all_feeds(xmls):
     with app.test_client() as client:
+        FEED_ONE_ID = get_hash('http://feedone.com/feed/atom/')
+        FEED_TWO_ID = get_hash('http://feedtwo.com/feed/atom/')
+        FEED_THREE_ID = get_hash('http://feedthree.com/feed/atom/')
+        FEED_FOUR_ID = get_hash('http://feedfour.com/feed/atom/')
         # /
         r = client.get('/feeds/')
         assert r.status_code == 200
@@ -257,15 +261,17 @@ def test_all_feeds(xmls):
         root_feeds = result['feeds']
         root_categories = result['categories']
         assert root_feeds[0]['title'] == 'Feed Three'
+        assert root_feeds[0]['path'] == '/feeds/' + FEED_THREE_ID
         assert root_categories[0]['title'] == 'categoryone'
+        assert root_categories[0]['path'] == '-categoryone'
         assert root_categories[1]['title'] == 'categorythree'
+        assert root_categories[1]['path'] == '-categorythree'
         # /feedthree
         feed_url = root_feeds[0]['entries_url']
-        feed_id = get_hash('http://feedthree.com/feed/atom/')
         assert feed_url == \
             url_for(
                 'feed_entries',
-                feed_id=feed_id,
+                feed_id=FEED_THREE_ID,
                 _external=True
             )
         r = client.get(feed_url)
@@ -276,7 +282,7 @@ def test_all_feeds(xmls):
         assert entries[0]['entry_url'] == \
             url_for(
                 'feed_entry',
-                feed_id=feed_id,
+                feed_id=FEED_THREE_ID,
                 entry_id=get_hash('http://feedthree.com/feed/atom/1/'),
                 _external=True,
             )
@@ -302,6 +308,7 @@ def test_all_feeds(xmls):
         one_feeds = one_result['feeds']
         one_categories = one_result['categories']
         assert one_feeds[0]['title'] == 'Feed One'
+        assert one_feeds[0]['path'] == '-categoryone/feeds/' + FEED_ONE_ID
         assert one_categories[0]['title'] == 'categorytwo'
         # /categoryone/feedone
         feed_url = one_feeds[0]['entries_url']
@@ -351,6 +358,8 @@ def test_all_feeds(xmls):
         two_feeds = two_result['feeds']
         two_categories = two_result['categories']
         assert two_feeds[0]['title'] == 'Feed Two'
+        assert two_feeds[0]['path'] == '-categoryone/-categorytwo/feeds/' + \
+            FEED_TWO_ID
         assert len(two_categories) == 0
         # /categoryone/categorytwo/feedtwo
         category_url = one_categories[0]['feeds_url']
@@ -405,6 +414,7 @@ def test_all_feeds(xmls):
         three_feeds = three_result['feeds']
         three_categories = three_result['categories']
         assert three_feeds[0]['title'] == 'Feed Four'
+        assert three_feeds[0]['path'] == '-categorythree/feeds/' + FEED_FOUR_ID
         assert len(three_categories) == 0
         # /categorythree/feedfour
         feed_url = three_feeds[0]['entries_url']
@@ -1095,3 +1105,41 @@ def test_request_same_feed(make_empty, xmls_for_next):
         r1_result = json.loads(r1_next.data)
         r2_result = json.loads(r2_next.data)
         assert r1_result['entries'] == r2_result['entries']
+
+
+def test_move_feed(xmls, fx_test_stage):
+    with app.test_client() as client:
+        r = client.put('/-categoryone/feeds/?from=/feeds/' +
+                       get_hash('http://feedthree.com/feed/atom/'))
+        assert r.status_code == 200
+    with fx_test_stage as stage:
+        subscriptions = stage.subscriptions
+        for child in subscriptions.children:
+            assert child.label != 'Feed Three'
+        assert len(subscriptions.categories['categoryone'].children) == 3
+
+
+def test_move_category(xmls, fx_test_stage):
+    with app.test_client() as client:
+        r = client.put('/-categorythree/feeds/?from=-categoryone')
+        assert r.status_code == 200
+    with fx_test_stage as stage:
+        subscriptions = stage.subscriptions
+        with raises(KeyError):
+            subscriptions.categories['categoryone']
+        category_three = subscriptions.categories['categorythree']
+        assert len(category_three.children) == 2
+        category_one = category_three.categories['categoryone']
+        assert len(category_one.children) == 2
+
+
+def test_move_to_root(xmls, fx_test_stage):
+    with app.test_client() as client:
+        r = client.put('/feeds/?from=-categoryone/feeds/' +
+                       get_hash('http://feedone.com/feed/atom/'))
+        assert r.status_code == 200
+    with fx_test_stage as stage:
+        subscriptions = stage.subscriptions
+        for child in subscriptions.categories['categoryone'].children:
+            assert child.label != 'Feed One'
+        assert len(subscriptions.children) == 4
