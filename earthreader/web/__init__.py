@@ -360,7 +360,7 @@ def move_outline(category_id):
         target = source.target_child
 
     dest = Cursor(category_id)
-    if isinstance(target, Category) and  dest.value in target:
+    if isinstance(target, Category) and dest.value in target:
         r = jsonify(
             error='circular-refernce',
             message='Cannot move into child element.'
