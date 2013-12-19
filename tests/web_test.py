@@ -1143,3 +1143,9 @@ def test_move_to_root(xmls, fx_test_stage):
         for child in subscriptions.categories['categoryone'].children:
             assert child.label != 'Feed One'
         assert len(subscriptions.children) == 4
+
+
+def test_move_category_circular(xmls):
+    with app.test_client() as client:
+        r = client.put('/-categoryone/-categorytwo/feeds/?from=-categoryone')
+        assert r.status_code == 400
