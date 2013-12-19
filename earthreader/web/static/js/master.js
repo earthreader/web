@@ -315,6 +315,7 @@ function dragOver(event) {
 
 function drop(event) {
 	var dataPath = event.originalEvent.dataTransfer.getData('data-path');
+	var moveUrl;
 	if (!$(event.target).hasClass('.feed.header')){
 		event.target = $(event.target).closest('li');
 	}
@@ -324,7 +325,7 @@ function drop(event) {
 
 function dropToHeader(event) {
 	var dataPath = event.originalEvent.dataTransfer.getData('data-path');
-	moveUrl = URLS.feeds + '?from=' + dataPath;
+	var moveUrl = URLS.feeds + '?from=' + dataPath;
 	moveOutline(moveUrl);
 }
 
