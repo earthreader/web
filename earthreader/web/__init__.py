@@ -358,6 +358,11 @@ def move_outline(category_id):
     else:
         source = Cursor(source_path, True)
         target = source.target_child
+
+    dest = Cursor(category_id)
+    if isinstance(target, Category) and  dest.value in target:
+        return jsonify()
+
     source.discard(target)
     with get_stage() as stage:
         stage.subscriptions = source.subscriptionlist
