@@ -361,7 +361,12 @@ def move_outline(category_id):
 
     dest = Cursor(category_id)
     if isinstance(target, Category) and  dest.value in target:
-        return jsonify()
+        r = jsonify(
+            error='circular-refernce',
+            message='Cannot move into child element.'
+        )
+        r.status_code = 400
+        return r
 
     source.discard(target)
     with get_stage() as stage:

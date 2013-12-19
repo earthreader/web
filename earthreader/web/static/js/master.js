@@ -332,7 +332,7 @@ function moveOutline(url) {
 		type: 'put'
 	}).done(function(){
 		refreshFeedList();
-	});
+	}).fail(printError);
 }
 
 function getAllEntries() {
