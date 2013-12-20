@@ -26,6 +26,7 @@ from libearth.session import Session
 from libearth.stage import Stage
 from libearth.subscribe import Category, Subscription, SubscriptionList
 from libearth.tz import now, utc
+from libearth.version import VERSION as LIBEARTH_VERSION
 from werkzeug.exceptions import HTTPException
 
 from .wsgi import MethodRewriteMiddleware
@@ -360,14 +361,15 @@ def move_outline(category_id):
         target = source.target_child
 
     dest = Cursor(category_id)
-    if isinstance(target, Category) and dest.value in target:
+    # TODO: use SubscriptionSet.contains() after releasing libearth 0.2
+    if isinstance(target, Category) and \
+            (category_id).startswith(source_path + '/'):
         r = jsonify(
             error='circular-refernce',
             message='Cannot move into child element.'
         )
         r.status_code = 400
         return r
-
     source.discard(target)
     with get_stage() as stage:
         stage.subscriptions = source.subscriptionlist
