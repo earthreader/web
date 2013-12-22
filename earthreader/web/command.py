@@ -4,14 +4,14 @@ import argparse
 import hashlib
 import sys
 
-from earthreader.web import app, spawn_worker
-from waitress import serve
-
 from libearth.compat.parallel import cpu_count
 from libearth.crawler import crawl, CrawlError
 from libearth.repository import from_url
 from libearth.session import Session
 from libearth.stage import Stage
+from waitress import serve
+
+from .app import app, spawn_worker
 
 __all__ = 'crawl', 'main', 'server'
 

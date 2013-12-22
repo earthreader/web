@@ -27,8 +27,8 @@ from libearth.tz import utc
 from pytest import fixture, mark, raises
 from werkzeug.urls import url_encode
 
-from earthreader.web import (app, crawling_queue, get_hash, spawn_worker,
-                             entry_generators)
+from earthreader.web.app import (app, crawling_queue, get_hash, spawn_worker,
+                                 entry_generators)
 
 
 @app.errorhandler(400)
