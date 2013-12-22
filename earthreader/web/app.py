@@ -26,16 +26,15 @@ from libearth.session import Session
 from libearth.stage import Stage
 from libearth.subscribe import Category, Subscription, SubscriptionList
 from libearth.tz import now, utc
-from libearth.version import VERSION as LIBEARTH_VERSION
 from werkzeug.exceptions import HTTPException
 
 from .wsgi import MethodRewriteMiddleware
+
 
 app = Flask(__name__)
 app.wsgi_app = MethodRewriteMiddleware(app.wsgi_app)
 
 crawling_queue = Queue.Queue()
-
 
 app.config.update(
     ALLFEED='All Feeds',
