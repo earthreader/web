@@ -100,12 +100,12 @@ Keyboard Shortcuts
 
 Vim-inspired keyboard shortcuts are also available:
 
-- ``j``/``k``: Go to older/newer entry.
-- ``n``/``p``: Down/Up with feed list.
+- ``j``/``k``: Older/newer entry.
+- ``n``/``p``: Next/previous subscription.
 - ``o``: Open entry in new tab.
-- ``r``: Refresh current feed.
-- ``s``: Star/Unstar.
-- ``u``: Mark as unread.
+- ``r``: Refresh the feed.
+- ``s``: Star/unstar.
+- ``u`` or ``m``: Mark as unread.
 - ``?``: This help message.
 
 

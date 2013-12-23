@@ -699,6 +699,7 @@ function keyboardShortcut(event) {
 			toggleStarCurrent();
 			break;
 		case 85: //u
+        case 77: //m
 			unreadCurrent();
 			break;
 		case 191: // /
