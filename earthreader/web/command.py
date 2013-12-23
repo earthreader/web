@@ -3,6 +3,7 @@ from __future__ import print_function
 import argparse
 import hashlib
 import sys
+import urlparse
 
 from libearth.compat.parallel import cpu_count
 from libearth.crawler import crawl, CrawlError
@@ -89,6 +90,11 @@ def main():
     if not args.command:
         parser.print_help()
         exit(1)
+
+    url = urlparse.urlparse(args.repository)
+    if url.scheme == '':
+        args.repository = urlparse.urljoin('file://', args.repository)
+    
     args.function(args)
 
 

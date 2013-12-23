@@ -218,7 +218,7 @@ def get_stage():
 
         session = Session(session_id)
         url = urlparse.urlparse(app.config['REPOSITORY'])
-        if url.scheme == 'file' or url.scheme == '':
+        if url.scheme == 'file':
             repository = FileSystemRepository(
                 url.path,
                 atomic=request.environ['wsgi.multithread']
