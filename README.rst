@@ -18,7 +18,7 @@ You can install Earth Reader for Web using ``pip``:
 
 .. code-block:: console
 
-   $ pip install git+git://github.com/earthreader/web.git
+   $ pip install EarthReader-Web
 
 Then you can use command ``earthreader``.
 
@@ -160,3 +160,12 @@ Continuous integration (Travis)
    .. image:: https://travis-ci.org/earthreader/web.png?branch=master
       :alt: Build Status
       :target: https://travis-ci.org/earthreader/web
+
+
+Changelog
+---------
+
+Version 0.1.0
+~~~~~~~~~~~~~
+
+Released on December 23, 2013.  Alpha version.
