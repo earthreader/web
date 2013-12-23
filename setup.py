@@ -47,7 +47,7 @@ setup(
     description='Earth Reader for Web',
     long_description=readme(),
     url='http://earthreader.org/',
-    author='Earth Reader Project',
+    author='Earth Reader team',
     author_email='earthreader' '@' 'librelist.com',
     entry_points={
         'console_scripts': [

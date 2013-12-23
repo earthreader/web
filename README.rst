@@ -27,35 +27,54 @@ Then you can use command ``earthreader``.
    $ earthreader -h
 
 
-Usage
------
+Repository
+----------
 
-Crawl
-~~~~~
+*Repository* is a directory to store data.  It can be inside of Dropbox_ or
+`Google Drive`_ folder to be synchronized__ with other devices.  You also
+can synchronize the repository directory using rsync_.
+
+If the path that doesn't exist yet is passed to ``--repository`` option or
+``EARTHREADER_REPOSITORY`` environment variable the new folder will be
+automatically created.
+
+.. _Dropbox: https://www.dropbox.com/
+.. _Google Drive: https://drive.google.com/
+__ http://blog.earthreader.org/2013/12/sync/
+.. _rsync: http://rsync.samba.org/
+
+
+Standalone server
+-----------------
+
+You can run Earth Reader for Web using its standalone server:
 
 .. code-block:: console
 
-   $ earthreader crawl <repository dir>
+   $ earthreader server /path/to/repository/dir
+   $ earthreader server -p 8080 /path/to/repository/dir  # listen to 8080 port
+   $ earthreader server -d /path/to/repository/dir  # debug mode
 
-Server
-~~~~~~
+And then open ``http://localhost:<port>/`` with your browser.
 
-``<repository dir>`` is a directory where all data are stored.
+
+WSGI server
+-----------
+
+Earth Reader for Web is actually an ordinary WSGI_-compliant web application,
+so you can run it using your preferred WSGI server e.g. Gunicorn_, `mod_wsgi`_.
+The WSGI endpoint is ``earthreader.web.app:app``.  Note that you can provide
+the path of repository by setting ``EARTHREADER_REPOSITORY`` environment
+variable.
+
+For example, you can run it on Gunicorn:
 
 .. code-block:: console
 
-   $ earthreader server <repository dir>
-   $ #with port
-   $ earthreader server -p <port> <repository dir>
-   $ #with debug mode
-   $ earthreader server -d <repository dir>
+   $ export EARTHREADER_REPOSITORY=/path/to/repository/dir
+   $ gunicorn earthreader.web.app:app
 
-And open ``http://localhost:<port>/`` with your browser.
-
-WSGI
-++++
-
-You can attach Earth Reader to Apache with `mod_wsgi`_ like this:
+Or you can attach Earth Reader to Apache with mod_wsgi like this:
 
 .. code-block:: apache
 
@@ -70,7 +89,7 @@ You can attach Earth Reader to Apache with `mod_wsgi`_ like this:
 
         Order deny,allow
         Allow from all
-        <!-- For security, We prefer use auth system. -->
+        # We recommend you to use authorization for security.
         AuthType Basic
         AuthName "Private rss reader"
         AuthUserFile /var/wsgi/earthreader.htpasswd
@@ -83,20 +102,31 @@ You can attach Earth Reader to Apache with `mod_wsgi`_ like this:
    #!/usr/bin/env python
    #/var/wsgi/earthreader.wsgi
    import sys
-   sys.path.insert(0, '<Directory where earthreader installed>')
+   from earthreader.web.app import app as application
 
-   from earthreader.web import app as application
-   application.config.update(dict(
-       REPOSITORY='<repository dir>'
-       ))
+   application.config.update(
+       REPOSITORY='/path/to/repository/dir'
+   )
 
 And open ``http://yourwebsite.com/`` in your browser.
 
+.. _WSGI: http://www.python.org/dev/peps/pep-3333/
+.. _Gunicorn: http://gunicorn.org/
 .. _mod_wsgi: http://code.google.com/p/modwsgi/
 
 
-Keyboard Shortcuts
-~~~~~~~~~~~~~~~~~~
+Crawler
+-------
+
+You can manually crawl feeds as well via CLI:
+
+.. code-block:: console
+
+   $ earthreader crawl /path/to/repository/dir
+
+
+Keyboard shortcuts
+------------------
 
 Vim-inspired keyboard shortcuts are also available:
 

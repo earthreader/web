@@ -43,6 +43,12 @@ app.config.update(
     CRAWLER_THREAD=4,
 )
 
+# Load EARTHREADER_REPOSITORY environment variable if present.
+try:
+    app.config['REPOSITORY'] = os.environ['EARTHREADER_REPOSITORY']
+except KeyError:
+    pass
+
 
 def crawl_category():
     running = True
