@@ -94,7 +94,7 @@ def main():
     url = urlparse.urlparse(args.repository)
     if url.scheme == '':
         args.repository = urlparse.urljoin('file://', args.repository)
-    
+
     args.function(args)
 
 
