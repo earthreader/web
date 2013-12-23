@@ -154,6 +154,12 @@ Git repository (GitHub)
 Issue tracker (GitHub)
    https://github.com/earthreader/web/issues
 
+Mailing list
+   earthreader@librelist.com
+
+List archive
+   http://librelist.com/browser/earthreader/
+
 Continuous integration (Travis)
    https://travis-ci.org/earthreader/web
 
