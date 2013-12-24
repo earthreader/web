@@ -678,7 +678,7 @@ function keyboardShortcut(event) {
 
 	var closeEntry = function closeEntry() {
 		main.find('article.current .entry-content').remove();
-	}
+	};
 
 	switch (event.keyCode) {
 		case 13: // return
