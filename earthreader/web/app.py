@@ -399,8 +399,8 @@ def tidy_generators_up():
     entry_generators = dict(generators[:10])
 
 
-def to_bool(str):
-    return str.strip().lower() == 'true'
+def to_bool(str_):
+    return str_.strip().lower() == 'true'
 
 
 def get_optional_args():
