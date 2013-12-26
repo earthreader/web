@@ -171,6 +171,18 @@ Continuous integration (Travis)
 Changelog
 ---------
 
+Version 0.1.1
+~~~~~~~~~~~~~
+
+To be released.
+
+- The repository path argument format becomes consistent both for
+  ``earthreader server`` and ``earthreader crawl`` commands.
+  [`#24`__]
+
+__ https://github.com/earthreader/web/issues/24
+
+
 Version 0.1.0
 ~~~~~~~~~~~~~
 
