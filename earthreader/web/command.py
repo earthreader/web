@@ -33,6 +33,10 @@ def crawl_command(args):
     generator = crawl(urllist, threads_count)
     try:
         for feed_url, feed_data, crawler_hints in generator:
+            if args.verbose:
+                print('{0.title} - {1} entries'.format(
+                    feed_data, len(feed_data.entries)
+                ))
             with stage:
                 feed_id = hashlib.sha1(feed_url).hexdigest()
                 stage.feeds[feed_id] = feed_data
@@ -82,6 +86,8 @@ crawl_parser.add_argument('-n', '--threads',
 crawl_parser.add_argument('-i', '--session-id',
                           default=Session().identifier,
                           help='session identifier.  [default: %(default)s]')
+crawl_parser.add_argument('-v', '--verbose', default=False, action='store_true',
+                          help='verbose mode')
 crawl_parser.add_argument('repository', help='repository which has the opml')
 
 
