@@ -110,6 +110,8 @@ crawl_parser.add_argument('-n', '--threads',
 crawl_parser.add_argument('-i', '--session-id',
                           default=Session().identifier,
                           help='session identifier.  [default: %(default)s]')
+crawl_parser.add_argument('-v', '--verbose', default=False, action='store_true',
+                          help='verbose mode')
 crawl_parser.add_argument('repository', help='repository which has the opml')
 
 
