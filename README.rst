@@ -176,10 +176,13 @@ Version 0.1.1
 
 To be released.
 
-- The repository path argument format becomes consistent both for
+- Fixed ``ImportError`` when ``earthreader`` command is invoked on Python 3.
+  [`#25`__ by Yong Choi]
+- The repository path argument format became consistent both for
   ``earthreader server`` and ``earthreader crawl`` commands.
   [`#24`__]
 
+__ https://github.com/earthreader/web/pull/25
 __ https://github.com/earthreader/web/issues/24
 
 

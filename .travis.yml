@@ -19,6 +19,7 @@ script:
   else
     py.test --durations=10;
   fi
+- earthreader -h > /dev/null
 - if [ `python -c 'import sys; print(sys.version_info[0])'` != '3' ]; then
     python -c "from earthreader.web.app import app; print(app.test_client().get('/').data)" | python tests/html5check.py -h ||
     exit $?;
