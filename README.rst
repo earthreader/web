@@ -171,6 +171,12 @@ Continuous integration (Travis)
 Changelog
 ---------
 
+Version 0.2.0
+~~~~~~~~~~~~~
+
+- Added verbose option to crawler.
+  It shows more detail information.
+
 Version 0.1.1
 ~~~~~~~~~~~~~
 
