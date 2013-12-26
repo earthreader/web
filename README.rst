@@ -34,7 +34,7 @@ Repository
 `Google Drive`_ folder to be synchronized__ with other devices.  You also
 can synchronize the repository directory using rsync_.
 
-If the path that doesn't exist yet is passed to ``--repository`` option or
+If the path that doesn't exist yet is passed to CLI repository path argument or
 ``EARTHREADER_REPOSITORY`` environment variable the new folder will be
 automatically created.
 
