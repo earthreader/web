@@ -3,7 +3,10 @@ from __future__ import print_function
 import argparse
 import hashlib
 import sys
-import urlparse
+try:
+    from urllib import parse as urlparse
+except ImportError:
+    import urlparse
 
 from libearth.compat.parallel import cpu_count
 from libearth.crawler import crawl, CrawlError
