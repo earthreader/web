@@ -693,7 +693,7 @@ function keyboardShortcut(event) {
 
 	var toggleFolding = function toggleFolding() {
 		feedlist.find('.current').children('.toggle').click();
-	}
+	};
 
 	switch (event.keyCode) {
 		case 13: // return
