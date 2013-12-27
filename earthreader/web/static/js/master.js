@@ -691,6 +691,10 @@ function keyboardShortcut(event) {
 		main.find('article.current .entry-content').remove();
 	};
 
+	var toggleFolding = function toggleFolding() {
+		feedlist.find('.current').children('.toggle').click();
+	}
+
 	switch (event.keyCode) {
 		case 13: // return
 			closeEntry();
@@ -719,6 +723,11 @@ function keyboardShortcut(event) {
 		case 85: //u
         case 77: //m
 			unreadCurrent();
+			break;
+		case 88: // x
+			if (event.shiftKey) {
+				toggleFolding();
+			}
 			break;
 		case 191: // /
 			// ?
