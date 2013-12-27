@@ -176,6 +176,7 @@ Version 0.2.0
 
 - Added verbose option to crawler.
   It shows more detail information.
+- Categories are folded at first.
 
 Version 0.1.1
 ~~~~~~~~~~~~~
