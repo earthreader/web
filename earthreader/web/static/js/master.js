@@ -200,7 +200,6 @@ function processForm(event) {
 var makeCategory = function(parentObj, obj) {
 	var container = $('<li>');
 	var header = $('<div>');
-	var list = $('<ul>');
 	var i;
 
 	header.addClass('feed header');
@@ -224,6 +223,9 @@ var makeCategory = function(parentObj, obj) {
 	if (obj.path){
 		container.attr('data-path', obj.path);
 	}
+	if (obj.feeds_url) {
+		container.attr('data-feed-url', obj.feeds_url);
+	}
 
 	header.html(obj.title.link(obj.entries_url));
 
@@ -235,23 +237,14 @@ var makeCategory = function(parentObj, obj) {
 	handle.addClass('handle');
 	header.prepend(handle);
 
+	header.addClass('closed');
 	header.attr('draggable', true);
 
-	$.get(obj.feeds_url, function(obj) {
-		for (i=0; i<obj.categories.length; i++) {
-			makeCategory(list, obj.categories[i]);
-		}
-		for (i=0; i<obj.feeds.length; i++) {
-			makeFeed(list, obj.feeds[i]);
-		}
-	});
-	list.addClass('fold');
 	header.on('dragstart', dragStart);
 	header.on('dragover', dragOver);
 	header.on('drop', drop);
 
 	container.append(header);
-	container.append(list);
 
 	container.addClass('folder');
 	parentObj.append(container);
@@ -494,6 +487,20 @@ function reloadEntries() {
 	getEntries(url, filter);
 }
 
+function loadSubCategory(container) {
+	var list = $('<ul>');
+	$.get(container.attr('data-feed-url'), function(obj) {
+		for (i=0; i<obj.categories.length; i++) {
+			makeCategory(list, obj.categories[i]);
+		}
+		for (i=0; i<obj.feeds.length; i++) {
+			makeFeed(list, obj.feeds[i]);
+		}
+	});
+	list.addClass('fold');
+	container.append(list);
+}
+
 function clickFeed(event) {
 	var target = $(event.target);
 	var feedlist = $('[role=navigation] .feedlist');
@@ -501,7 +508,11 @@ function clickFeed(event) {
 	while (target.hasClass('feed') === false) {
 		//toggle folding
 		if (target.hasClass('toggle')) {
-			target.parent().toggleClass('closed');
+			var header = target.parent();
+			header.toggleClass('closed');
+			if (header.siblings('.fold').length === 0) {
+				loadSubCategory(header.parent());
+			}
 			return;
 		}
 		target = target.parent();
