@@ -183,10 +183,13 @@ To be released.
   [`#24`__]
 - Close help overlay on ``escape`` key.
   [`#27`__]
+- Added ``--P``/``--profile``/``--linesman`` option, available only when
+  linesman_ is installed, to ``earthreader server`` comand.
 
 __ https://github.com/earthreader/web/pull/25
 __ https://github.com/earthreader/web/issues/24
 __ https://github.com/earthreader/web/issues/27
+.. _linesman: https://pypi.python.org/pypi/linesman
 
 
 Version 0.1.0
