@@ -47,7 +47,7 @@ def server_command(args):
     repository = args.repository
     app.config.update(REPOSITORY=repository, SESSION_ID=args.session_id)
     app.debug = args.debug
-    if args.profiler:
+    if args.profile:
         try:
             from linesman.middleware import make_linesman_middleware
         except ImportError:
