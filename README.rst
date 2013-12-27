@@ -181,9 +181,12 @@ To be released.
 - The repository path argument format became consistent both for
   ``earthreader server`` and ``earthreader crawl`` commands.
   [`#24`__]
+- Close help overlay on ``escape`` key.
+  [`#27`__]
 
 __ https://github.com/earthreader/web/pull/25
 __ https://github.com/earthreader/web/issues/24
+__ https://github.com/earthreader/web/issues/27
 
 
 Version 0.1.0
