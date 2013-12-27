@@ -35,10 +35,7 @@ function changeFilter(event) {
 }
 
 function clickComplementaryMenu(event) {
-	var target = $(event.target);
-	while (target.attr('data-action') === undefined) {
-		target = target.parent();
-	}
+	var target = $(event.target).closest('[data-action]');
 
 	var action = target.attr('data-action');
 	closeSide();
@@ -64,13 +61,7 @@ function removeCurrentSelected() {
 	}
 	url = current.attr('data-remove-feed-url') || current.attr('data-remove-category-url');
 	if (url) {
-		var parentMenu = current;
-		while (parentMenu.hasClass('fold') === false) {
-			parentMenu = parentMenu.parent();
-			if (parentMenu.length === 0) {
-				break;
-			}
-		}
+		var parentMenu = current.closest('.fold');
 
 		if (confirm('remove ' + current.text() + '\nAre you sure?') === true){
 			$.ajax({
@@ -139,13 +130,7 @@ function toggleSide(event) {
 }
 
 function toggleFolding(event) {
-	var target = $(event.target);
-	while (target.hasClass('header') === false) {
-		target = target.parent();
-		if (target === null) {
-			return;
-		}
-	}
+	var target = $(event.target).closest('.header');
 
 	target.toggleClass('closed');
 }
@@ -518,12 +503,8 @@ function clickFeed(event) {
 }
 
 function clickEntry(event) {
-	var target = $(event.target);
+	var target = $(event.target).closest('.entry-title');
 	var main = $('[role=main]');
-
-	while (target.hasClass('entry-title') === false) {
-		target = target.parent();
-	}
 
 	var entry = target.parent();
 	var entry_url = entry.attr('data-entries');
