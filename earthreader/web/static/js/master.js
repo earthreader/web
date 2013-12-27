@@ -686,6 +686,7 @@ function keyboardShortcut(event) {
 			break;
 		case 27: // esc
 			closeManual();
+			break;
 		case 74: //j
 			nextEntry();
 			break;
