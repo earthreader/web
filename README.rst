@@ -185,6 +185,7 @@ To be released.
   [`#27`__]
 - Added ``--P``/``--profile``/``--linesman`` option, available only when
   linesman_ is installed, to ``earthreader server`` comand.
+- Continue crawling when some feed raises error.
 
 __ https://github.com/earthreader/web/pull/25
 __ https://github.com/earthreader/web/issues/24
