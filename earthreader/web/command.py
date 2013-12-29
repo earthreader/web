@@ -33,14 +33,21 @@ def crawl_command(args):
                for subscription in opml.recursive_subscriptions]
     threads_count = args.threads if args.threads is not None else cpu_count()
 
-    generator = crawl(urllist, threads_count)
-    try:
-        for feed_url, feed_data, crawler_hints in generator:
+    iterator = iter(crawl(urllist, threads_count))
+    while 1:
+        try:
+            feed_url, feed_data, crawler_hints = next(iterator)
+            if args.verbose:
+                print('{0.title} - {1} entries'.format(
+                    feed_data, len(feed_data.entries)
+                ))
             with stage:
                 feed_id = hashlib.sha1(feed_url).hexdigest()
                 stage.feeds[feed_id] = feed_data
-    except CrawlError as e:
-        print(e, file=sys.stderr)
+        except CrawlError as e:
+            print(e, file=sys.stderr)
+        except StopIteration:
+            break
 
 
 def server_command(args):
