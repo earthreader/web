@@ -59,7 +59,7 @@ def server_command(args):
 
 
 parser = argparse.ArgumentParser(prog='earthreader')
-subparsers = parser.add_subparsers(dest='command', help='command-help')
+subparsers = parser.add_subparsers(dest='command')
 
 server_parser = subparsers.add_parser('server',
                                       help='run a server for Earth Reader')
