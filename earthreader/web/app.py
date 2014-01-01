@@ -75,8 +75,9 @@ def crawl_category():
             while True:
                 try:
                     feed_url, feed_data, crawler_hints = next(iterator)
+                    feed_id = get_hash(feed_data.id)
                     with get_stage() as stage:
-                        stage.feeds[ids[feed_url]] = feed_data
+                        stage.feeds[feed_id] = feed_data
                 except CrawlError:
                     continue
                 except StopIteration:

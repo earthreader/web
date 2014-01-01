@@ -42,7 +42,7 @@ def crawl_command(args):
                     feed_data, len(feed_data.entries)
                 ))
             with stage:
-                feed_id = hashlib.sha1(feed_url).hexdigest()
+                feed_id = hashlib.sha1(feed_data.id).hexdigest()
                 stage.feeds[feed_id] = feed_data
         except CrawlError as e:
             print(e, file=sys.stderr)
