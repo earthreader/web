@@ -331,8 +331,7 @@ def delete_feed(category_id, feed_id):
     target = None
     for subscription in cursor:
         if isinstance(subscription, Subscription):
-            if feed_id == hashlib.sha1(
-                    binary(subscription.feed_uri)).hexdigest():
+            if feed_id == subscription.feed_id:
                 target = subscription
     if target:
         cursor.discard(target)
