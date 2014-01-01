@@ -516,10 +516,14 @@ function clickFeed(event) {
 		target = target.parent();
 	}
 
+	if (target.hasClass('closed')) {
+		target.removeClass('closed');
+		loadSubCategory(target.parent());
+	}
+
 	//set current marker
 	feedlist.find('.current').removeClass('current');
 	target.addClass('current');
-
 
 	closeMenu();
 

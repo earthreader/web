@@ -178,6 +178,7 @@ Version 0.2.0
   It shows more detail information.
 - Categories are folded at first.
 - Keyboard shortcut for toggle folding category.
+- Expand categories when click feed for mobile layout.
 
 Version 0.1.1
 ~~~~~~~~~~~~~
