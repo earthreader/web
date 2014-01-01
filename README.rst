@@ -34,7 +34,7 @@ Repository
 `Google Drive`_ folder to be synchronized__ with other devices.  You also
 can synchronize the repository directory using rsync_.
 
-If the path that doesn't exist yet is passed to ``--repository`` option or
+If the path that doesn't exist yet is passed to CLI repository path argument or
 ``EARTHREADER_REPOSITORY`` environment variable the new folder will be
 automatically created.
 
@@ -190,9 +190,16 @@ To be released.
 - The repository path argument format became consistent both for
   ``earthreader server`` and ``earthreader crawl`` commands.
   [`#24`__]
+- Close help overlay on ``escape`` key.
+  [`#27`__]
+- Added ``--P``/``--profile``/``--linesman`` option, available only when
+  linesman_ is installed, to ``earthreader server`` comand.
+- Continue crawling when some feed raises error.
 
 __ https://github.com/earthreader/web/pull/25
 __ https://github.com/earthreader/web/issues/24
+__ https://github.com/earthreader/web/issues/27
+.. _linesman: https://pypi.python.org/pypi/linesman
 
 
 Version 0.1.0

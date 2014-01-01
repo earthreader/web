@@ -43,3 +43,6 @@ desktop.ini
 
 # IntelliJ/PyCharm
 .idea
+
+# Linesman (profiler)
+sessions.db

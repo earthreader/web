@@ -33,9 +33,10 @@ def crawl_command(args):
                for subscription in opml.recursive_subscriptions]
     threads_count = args.threads if args.threads is not None else cpu_count()
 
-    generator = crawl(urllist, threads_count)
-    try:
-        for feed_url, feed_data, crawler_hints in generator:
+    iterator = iter(crawl(urllist, threads_count))
+    while 1:
+        try:
+            feed_url, feed_data, crawler_hints = next(iterator)
             if args.verbose:
                 print('{0.title} - {1} entries'.format(
                     feed_data, len(feed_data.entries)
@@ -43,14 +44,29 @@ def crawl_command(args):
             with stage:
                 feed_id = hashlib.sha1(feed_url).hexdigest()
                 stage.feeds[feed_id] = feed_data
-    except CrawlError as e:
-        print(e, file=sys.stderr)
+        except CrawlError as e:
+            print(e, file=sys.stderr)
+        except StopIteration:
+            break
 
 
 def server_command(args):
     repository = args.repository
     app.config.update(REPOSITORY=repository, SESSION_ID=args.session_id)
     app.debug = args.debug
+    if args.profile:
+        try:
+            from linesman.middleware import make_linesman_middleware
+        except ImportError:
+            print('-P/--profile/--linesman option is available only when '
+                  "linesman is installed", file=sys.stderr)
+            print('Try the following command:', file=sys.stderr)
+            print('\tpip install linesman', file=sys.stderr)
+            raise SystemExit
+        else:
+            print('Profiler (linesman) is available:',
+                  'http://{0.host}:{0.port}/__profiler__/'.format(args))
+        app.wsgi_app = make_linesman_middleware(app.wsgi_app)
     spawn_worker()
     if args.debug:
         app.run(host=args.host, port=args.port, debug=args.debug, threaded=True)
@@ -79,6 +95,11 @@ server_parser.add_argument('-d', '--debug',
 server_parser.add_argument('-i', '--session-id',
                            default=Session().identifier,
                            help='session identifier.  [default: %(default)s]')
+server_parser.add_argument('-P', '--profile', '--linesman',
+                           default=False,
+                           action='store_true',
+                           help="profile using linesman.  it's available only "
+                                'when linesman is installed')
 server_parser.add_argument('repository', help='repository for Earth Reader')
 
 crawl_parser = subparsers.add_parser('crawl', help='crawl feeds in the opml')
