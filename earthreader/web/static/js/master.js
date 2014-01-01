@@ -639,7 +639,7 @@ function keyboardShortcut(event) {
 	};
 
 	var nextFeed = function nextFeed() {
-		var feeds = feedlist.find('.feed');
+		var feeds = feedlist.find('.feed:visible');
 		if (feeds.filter('.current').length === 0) {
 			feeds.first().click();
 			return;
@@ -653,7 +653,7 @@ function keyboardShortcut(event) {
 	};
 
 	var prevFeed = function prevFeed() {
-		var feeds = feedlist.find('.feed');
+		var feeds = feedlist.find('.feed:visible');
 
 		if (feeds.first().hasClass('current')) {
 			feedlist.find('.allfeed.header').click();
