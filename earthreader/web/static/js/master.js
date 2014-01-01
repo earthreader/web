@@ -164,6 +164,9 @@ function processForm(event) {
 	} catch (err) {
 	}
 
+	var submit = target.find('input[type=submit]');
+	submit.prop('disabled', true);
+
 	$.post(action,data).done(function(res) {
 		if (current === null) {
 			makeFeedList(res);
@@ -178,6 +181,8 @@ function processForm(event) {
 	}).fail(function(xhr, status, err) {
 		var json = xhr.responseJSON;
 		alert(json.error + "\n" + json.message);
+	}).always(function() {
+		submit.prop('disabled', false);
 	});
 }
 
