@@ -69,6 +69,9 @@ function removeCurrentSelected() {
 				'type': 'delete',
 			}).done(function(obj) {
 				makeFeedList(obj, parentMenu);
+			}).fail(function(xhr, status, err) {
+				var json = xhr.responseJSON;
+				alert(json.error + "\n" + json.message);
 			});
 		}
 	}

@@ -192,6 +192,7 @@ To be released.
   linesman_ is installed, to ``earthreader server`` comand.
 - Continue crawling when some feed raises error.
 - Fix crawling bug.
+- Print error when failed to remove feed.
 
 __ https://github.com/earthreader/web/pull/25
 __ https://github.com/earthreader/web/issues/24
