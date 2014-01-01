@@ -508,7 +508,9 @@ function clickFeed(event) {
 
 	if (target.hasClass('closed')) {
 		target.removeClass('closed');
-		loadSubCategory(target.parent());
+		if (target.siblings('.fold').length === 0) {
+			loadSubCategory(target.parent());
+		}
 	}
 
 	//set current marker
