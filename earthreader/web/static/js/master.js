@@ -295,11 +295,9 @@ function refreshFeedList() {
 }
 
 function dragStart(event) {
-	if (!$(event.target).is('li')) {
-		event.target = $(event.target).closest('li');
-	}
-	var target = $(event.target).attr('data-path');
-	event.originalEvent.dataTransfer.setData('data-path', target);
+	var target = $(event.target).closest('li');
+	var dst = $(event.target).attr('data-path');
+	event.originalEvent.dataTransfer.setData('data-path', dst);
 }
 
 function dragOver(event) {
