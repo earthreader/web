@@ -67,6 +67,11 @@ The WSGI endpoint is ``earthreader.web.app:app``.  Note that you can provide
 the path of repository by setting ``EARTHREADER_REPOSITORY`` environment
 variable.
 
+Note that you should manually invoke ``earthreader crawl`` command when
+you run it using your preferred WSGI server while the standalone server
+(``earthreader server`` command) automatically does it for you.  We recommend
+you to register ``earthreader crawl`` command to your ``crontab``.
+
 For example, you can run it on Gunicorn:
 
 .. code-block:: console
