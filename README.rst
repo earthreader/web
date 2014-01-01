@@ -191,6 +191,7 @@ To be released.
 - Added ``--P``/``--profile``/``--linesman`` option, available only when
   linesman_ is installed, to ``earthreader server`` comand.
 - Continue crawling when some feed raises error.
+- Fix crawling bug.
 
 __ https://github.com/earthreader/web/pull/25
 __ https://github.com/earthreader/web/issues/24
