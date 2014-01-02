@@ -64,6 +64,7 @@ setup(
     dependency_links=[
         'https://github.com/earthreader/libearth/releases'
     ],
+    download_url='https://github.com/earthreader/web/releases',
     tests_require=['pytest >= 2.3.0'],
     cmdclass={'test': pytest},
     classifiers=[
