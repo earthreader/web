@@ -18,8 +18,7 @@ except ImportError:
 from flask import Flask, jsonify, render_template, request, url_for
 from libearth.codecs import Rfc3339
 from libearth.compat import binary
-from libearth.compat.parallel import parallel_map
-from libearth.crawler import CrawlError, crawl, get_feed
+from libearth.crawler import CrawlError, crawl
 from libearth.parser.autodiscovery import autodiscovery, FeedUrlNotFoundError
 from libearth.repository import FileSystemRepository, from_url
 from libearth.sanitizer import clean_html
@@ -51,13 +50,6 @@ except KeyError:
     pass
 
 
-def get_feed_safe(feed_url):
-    try:
-        return get_feed(feed_url)
-    except CrawlError:
-        return None
-
-
 def crawl_category():
     running = True
     while running:
@@ -76,10 +68,7 @@ def crawl_category():
                 urls = [sub.feed_uri for sub in cursor.recursive_subscriptions
                         if sub.feed_id == feed_id]
 
-            #FIXME: See https://github.com/earthreader/libearth/issues/38
-            iterator = iter(parallel_map(app.config['CRAWLER_THREAD'],
-                                         get_feed_safe,
-                                         urls))
+            iterator = iter(crawl(urls, app.config['CRAWLER_THREAD']))
             while True:
                 try:
                     feed_url, feed_data, crawler_hints = next(iterator)
@@ -90,8 +79,6 @@ def crawl_category():
                     continue
                 except StopIteration:
                     break
-                except TypeError:
-                    continue
             crawling_queue.task_done()
 
 
