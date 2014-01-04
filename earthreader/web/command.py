@@ -1,7 +1,6 @@
 from __future__ import print_function
 
 import argparse
-import hashlib
 import sys
 try:
     from urllib import parse as urlparse
@@ -42,8 +41,7 @@ def crawl_command(args):
                     feed_data, len(feed_data.entries)
                 ))
             with stage:
-                feed_id = hashlib.sha1(feed_data.id).hexdigest()
-                stage.feeds[feed_id] = feed_data
+                stage.feeds[feed_data.feed_id] = feed_data
         except CrawlError as e:
             print(e, file=sys.stderr)
         except StopIteration:

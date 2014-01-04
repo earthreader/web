@@ -72,9 +72,8 @@ def crawl_category():
             while True:
                 try:
                     feed_url, feed_data, crawler_hints = next(iterator)
-                    feed_id = get_hash(feed_data.id)
                     with get_stage() as stage:
-                        stage.feeds[feed_id] = feed_data
+                        stage.feeds[feed_data.feed_id] = feed_data
                 except CrawlError:
                     continue
                 except StopIteration:
@@ -689,12 +688,12 @@ def category_entries(category_id):
                     feed = stage.feeds[subscription.feed_id]
             except KeyError:
                 continue
-            feed_id = get_hash(feed.id)
             feed_title = clean_html(text_type(feed.title))
             it = iter(feed.entries)
             feed_permalink = get_permalink(feed)
-            child = FeedEntryGenerator(category_id, feed_id, feed_title,
-                                       feed_permalink, it, now(), read, starred)
+            child = FeedEntryGenerator(category_id, subscription.feed_id,
+                                       feed_title, feed_permalink, it, now(),
+                                       read, starred)
             generator.add(child)
         generator.set_generators(id_after, time_after)
     save_entry_generators(url_token, generator)
