@@ -193,6 +193,7 @@ To be released.
 - Continue crawling when some feed raises error.
 - Fix crawling bug.
 - Print error when failed to remove feed.
+- Fixed some Unicode coding bugs on server side.
 
 __ https://github.com/earthreader/web/pull/25
 __ https://github.com/earthreader/web/issues/24
