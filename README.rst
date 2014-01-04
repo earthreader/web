@@ -67,6 +67,11 @@ The WSGI endpoint is ``earthreader.web.app:app``.  Note that you can provide
 the path of repository by setting ``EARTHREADER_REPOSITORY`` environment
 variable.
 
+Note that you should manually invoke ``earthreader crawl`` command when
+you run it using your preferred WSGI server while the standalone server
+(``earthreader server`` command) automatically does it for you.  We recommend
+you to register ``earthreader crawl`` command to your ``crontab``.
+
 For example, you can run it on Gunicorn:
 
 .. code-block:: console
@@ -195,6 +200,9 @@ To be released.
 - Added ``--P``/``--profile``/``--linesman`` option, available only when
   linesman_ is installed, to ``earthreader server`` comand.
 - Continue crawling when some feed raises error.
+- Fix crawling bug.
+- Print error when failed to remove feed.
+- Fixed some Unicode coding bugs on server side.
 
 __ https://github.com/earthreader/web/pull/25
 __ https://github.com/earthreader/web/issues/24

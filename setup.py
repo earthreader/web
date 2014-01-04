@@ -34,7 +34,7 @@ class pytest(test):
 
 install_requires = [
     'Flask >= 0.10',
-    'libearth >= 0.1.0',
+    'libearth >= 0.1.1',
     'waitress'
 ]
 if sys.version_info < (2, 7):
@@ -64,6 +64,7 @@ setup(
     dependency_links=[
         'https://github.com/earthreader/libearth/releases'
     ],
+    download_url='https://github.com/earthreader/web/releases',
     tests_require=['pytest >= 2.3.0'],
     cmdclass={'test': pytest},
     classifiers=[
