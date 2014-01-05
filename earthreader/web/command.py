@@ -30,9 +30,8 @@ def crawl_command(args):
         return
     urllist = [subscription.feed_uri
                for subscription in opml.recursive_subscriptions]
-    id_map = {
-        (sub.feed_uri, sub.feed_id) for sub in opml.recursive_subscriptions
-    }
+    id_map = dict((sub.feed_uri, sub.feed_id)
+                  for sub in opml.recursive_subscriptions)
     threads_count = args.threads if args.threads is not None else cpu_count()
 
     iterator = iter(crawl(urllist, threads_count))
