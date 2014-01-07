@@ -184,6 +184,7 @@ Version 0.2.0
 - Categories are folded at first.
 - Keyboard shortcut for toggle folding category.
 - Expand categories when click feed for mobile layout.
+- Google reader style shortcuts.
 
 Version 0.1.1
 ~~~~~~~~~~~~~
