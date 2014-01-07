@@ -525,26 +525,35 @@ function clickFeed(event) {
 	reloadEntries();
 }
 
-function clickEntry(event) {
-	var target = $(event.target).closest('.entry-title');
+function selectEntry(entry) {
+    var main = $('[role=main]');
+
+    entry = $(entry).closest('.entry');
+    main.find('.current').removeClass('current');
+    entry.addClass('current');
+}
+
+function toggleEntryCollapse(entry) {
+    var entry_url;
+    var content;
+    var entry_title;
 	var main = $('[role=main]');
 
-	var entry = target.parent();
-	var entry_url = entry.attr('data-entries');
+    entry = entry.closest('.entry');
+    entry_url = entry.attr('data-entries');
+    entry_title = entry.find('.entry-title');
+    content = entry.find('.entry-content');
 
-
-	//close content
-	var content = entry.find('.entry-content');
-	if (content.length) {
-		content.remove();
-		return;
-	}
+    // close content
+    if (content.length) {
+        content.remove();
+        return;
+    }
 
 	$.get(entry_url, function(obj) {
 		var i;
 		//set current marker
-		main.find('.current').removeClass('current');
-		target.parent().addClass('current');
+        selectEntry(entry);
 
 		//remove content
 		contents = main.find('.entry-content');
@@ -573,18 +582,24 @@ function clickEntry(event) {
 		wrapper.append(bottom_bar);
 		entry.append(wrapper);
 
-		target.parent().attr('data-read-url', obj.read_url);
-		target.parent().attr('data-star-url', obj.star_url);
+		entry.attr('data-read-url', obj.read_url);
+		entry.attr('data-star-url', obj.star_url);
 		//read
 		$.ajax({
 			'type': 'put',
 			'url': obj.read_url,
 		}).done(function() {
-			target.addClass('read');
+			entry_title.addClass('read');
 		});
 
 		$(window).scrollTop(entry.position().top);
 	}).fail(printError);
+}
+
+function clickEntry(event) {
+	var entry = $(event.target).closest('.entry');
+
+    toggleEntryCollapse(entry);
 }
 
 function refreshFeed() {
