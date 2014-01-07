@@ -720,6 +720,7 @@ function keyboardShortcut(event) {
 
 	switch (event.keyCode) {
 		case 13: // return
+        case 79:
 			toggleEntry();
 			break;
 		case 27: // esc
