@@ -375,7 +375,7 @@ input:not([type=button]):not([type=submit]):focus, textarea:focus {
 		z-index: 10;
 	}
 
-	#manual > header {
+	#manual > h1 {
 		text-align: center;
 		font-size: 1.4em;
 	}
