@@ -742,9 +742,6 @@ function keyboardShortcut(event) {
 		case 78: //n
             nextEntry();
 			break;
-		case 79: //o
-			openInNewTab();
-			break;
 		case 80: //p
             prevEntry();
 			break;
@@ -758,6 +755,9 @@ function keyboardShortcut(event) {
         case 77: //m
 			unreadCurrent();
 			break;
+        case 86: //v
+            openInNewTab();
+            break;
 		case 88: // x
 			if (event.shiftKey) {
 				toggleFolding();
