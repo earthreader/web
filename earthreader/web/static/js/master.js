@@ -480,6 +480,7 @@ function reloadEntries() {
 
 function loadSubCategory(container) {
 	var list = $('<ul>');
+    container = container.closest('.folder');
 	$.get(container.attr('data-feed-url'), function(obj) {
 		for (i=0; i<obj.categories.length; i++) {
 			makeCategory(list, obj.categories[i]);
@@ -492,37 +493,44 @@ function loadSubCategory(container) {
 	container.append(list);
 }
 
-function clickFeed(event) {
-	var target = $(event.target);
-	var feedlist = $('[role=navigation] .feedlist');
+function selectFeed(feed) {
+    var feedlist = $('[role=navigation] .feedlist');
+    feedlist.find('.current').removeClass('current');
+    feed.closest('.feed').addClass('current');
+}
 
-	while (target.hasClass('feed') === false) {
-		//toggle folding
-		if (target.hasClass('toggle')) {
-			var header = target.parent();
-			header.toggleClass('closed');
-			if (header.siblings('.fold').length === 0) {
-				loadSubCategory(header.parent());
-			}
-			return;
-		}
-		target = target.parent();
-	}
+function enterFeed(feed) {
+    selectFeed(feed);
 
-	if (target.hasClass('closed')) {
-		target.removeClass('closed');
-		if (target.siblings('.fold').length === 0) {
-			loadSubCategory(target.parent());
+	if (feed.hasClass('closed')) {
+		feed.removeClass('closed');
+		if (feed.siblings('.fold').length === 0) {
+			loadSubCategory(feed);
 		}
 	}
-
-	//set current marker
-	feedlist.find('.current').removeClass('current');
-	target.addClass('current');
 
 	closeMenu();
 
 	reloadEntries();
+}
+
+function clickFeed(event) {
+	var target = $(event.target);
+	var feedlist = $('[role=navigation] .feedlist');
+    var feed = target.closest('.feed');
+
+    //set current marker
+    selectFeed(feed);
+
+    if (target.closest('.toggle').length) {
+        feed.toggleClass('closed');
+        if (feed.siblings('.fold').length === 0) {
+            loadSubCategory(feed);
+        }
+        return;
+    }
+
+    enterFeed(feed);
 }
 
 function selectEntry(entry) {
