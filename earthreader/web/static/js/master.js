@@ -632,30 +632,44 @@ function keyboardShortcut(event) {
 	var main = $('[role=main]');
 	var feedlist = $('[role=navigation] .feedlist');
 
-	var nextEntry = function nextEntry() {
+	var nextEntry = function nextEntry(open) {
+        var first;
 		var entry = main.find('.current').first();
 		if (entry.length === 0) {
-			main.find('.entry .entry-title').first().click();
+            first = main.find('.entry').first();
+            selectEntry(first);
+            if (open) {
+                toggleEntryCollapse(first);
+            }
 			return;
 		}
 		var next = entry.next().first();
 		if (next.length === 0) {
 			return;
 		}
-		next.find('.entry-title').click();
+
+        if (open) {
+            toggleEntryCollapse(next);
+        } else {
+            selectEntry(next);
+        }
 	};
 
-	var prevEntry = function prevEntry() {
+	var prevEntry = function prevEntry(open) {
 		var entry = main.find('.current').first();
 		if (entry.length === 0) {
 			return;
 		}
 		var prev = entry.prev().last();
-		if (prev.length === 0 || prev.hasClass('entry')) {
-			//close current
-			entry.click();
+		if (prev.length === 0 || prev.hasClass('entry') === false) {
+			return;
 		}
-		prev.find('.entry-title').click();
+
+        if (open) {
+            toggleEntryCollapse(prev);
+        } else {
+            selectEntry(prev);
+        }
 	};
 
 	var nextFeed = function nextFeed() {
@@ -695,8 +709,9 @@ function keyboardShortcut(event) {
 		}
 	};
 
-	var closeEntry = function closeEntry() {
-		main.find('article.current .entry-content').remove();
+	var toggleEntry = function closeEntry() {
+        var entry = main.find('.current');
+        toggleEntryCollapse(entry);
 	};
 
 	var toggleFolding = function toggleFolding() {
@@ -705,25 +720,33 @@ function keyboardShortcut(event) {
 
 	switch (event.keyCode) {
 		case 13: // return
-			closeEntry();
+			toggleEntry();
 			break;
 		case 27: // esc
 			closeManual();
 			break;
 		case 74: //j
-			nextEntry();
+            if (event.shiftKey) {
+                nextFeed();
+            } else {
+                nextEntry(true);
+            }
 			break;
 		case 75: //k
-			prevEntry();
+            if (event.shiftKey) {
+                prevFeed();
+            } else {
+                prevEntry(true);
+            }
 			break;
 		case 78: //n
-			nextFeed();
+            nextEntry();
 			break;
 		case 79: //o
 			openInNewTab();
 			break;
 		case 80: //p
-			prevFeed();
+            prevEntry();
 			break;
 		case 82: //r
 			reloadEntries();
