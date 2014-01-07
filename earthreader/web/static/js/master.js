@@ -531,6 +531,7 @@ function selectEntry(entry) {
     entry = $(entry).closest('.entry');
     main.find('.current').removeClass('current');
     entry.addClass('current');
+    $(window).scrollTop(entry.position().top);
 }
 
 function toggleEntryCollapse(entry) {
@@ -592,7 +593,6 @@ function toggleEntryCollapse(entry) {
 			entry_title.addClass('read');
 		});
 
-		$(window).scrollTop(entry.position().top);
 	}).fail(printError);
 }
 
