@@ -480,6 +480,7 @@ function reloadEntries() {
 
 function loadSubCategory(container) {
 	var list = $('<ul>');
+    container = container.closest('.folder');
 	$.get(container.attr('data-feed-url'), function(obj) {
 		for (i=0; i<obj.categories.length; i++) {
 			makeCategory(list, obj.categories[i]);
@@ -492,59 +493,76 @@ function loadSubCategory(container) {
 	container.append(list);
 }
 
-function clickFeed(event) {
-	var target = $(event.target);
-	var feedlist = $('[role=navigation] .feedlist');
+function selectFeed(feed) {
+    var feedlist = $('[role=navigation] .feedlist');
+    feedlist.find('.current').removeClass('current');
+    feed.closest('.feed').addClass('current');
+}
 
-	while (target.hasClass('feed') === false) {
-		//toggle folding
-		if (target.hasClass('toggle')) {
-			var header = target.parent();
-			header.toggleClass('closed');
-			if (header.siblings('.fold').length === 0) {
-				loadSubCategory(header.parent());
-			}
-			return;
-		}
-		target = target.parent();
-	}
+function enterFeed(feed) {
+    selectFeed(feed);
 
-	if (target.hasClass('closed')) {
-		target.removeClass('closed');
-		if (target.siblings('.fold').length === 0) {
-			loadSubCategory(target.parent());
+	if (feed.hasClass('closed')) {
+		feed.removeClass('closed');
+		if (feed.siblings('.fold').length === 0) {
+			loadSubCategory(feed);
 		}
 	}
-
-	//set current marker
-	feedlist.find('.current').removeClass('current');
-	target.addClass('current');
 
 	closeMenu();
 
 	reloadEntries();
 }
 
-function clickEntry(event) {
-	var target = $(event.target).closest('.entry-title');
+function clickFeed(event) {
+	var target = $(event.target);
+	var feedlist = $('[role=navigation] .feedlist');
+    var feed = target.closest('.feed');
+
+    //set current marker
+    selectFeed(feed);
+
+    if (target.closest('.toggle').length) {
+        feed.toggleClass('closed');
+        if (feed.siblings('.fold').length === 0) {
+            loadSubCategory(feed);
+        }
+        return;
+    }
+
+    enterFeed(feed);
+}
+
+function selectEntry(entry) {
+    var main = $('[role=main]');
+
+    entry = $(entry).closest('.entry');
+    main.find('.current').removeClass('current');
+    entry.addClass('current');
+    $(window).scrollTop(entry.position().top);
+}
+
+function toggleEntryCollapse(entry) {
+    var entry_url;
+    var content;
+    var entry_title;
 	var main = $('[role=main]');
 
-	var entry = target.parent();
-	var entry_url = entry.attr('data-entries');
+    entry = entry.closest('.entry');
+    entry_url = entry.attr('data-entries');
+    entry_title = entry.find('.entry-title');
+    content = entry.find('.entry-content');
 
-
-	//close content
-	var content = entry.find('.entry-content');
-	if (content.length) {
-		content.remove();
-		return;
-	}
+    // close content
+    if (content.length) {
+        content.remove();
+        return;
+    }
 
 	$.get(entry_url, function(obj) {
 		var i;
 		//set current marker
-		main.find('.current').removeClass('current');
-		target.parent().addClass('current');
+        selectEntry(entry);
 
 		//remove content
 		contents = main.find('.entry-content');
@@ -573,18 +591,23 @@ function clickEntry(event) {
 		wrapper.append(bottom_bar);
 		entry.append(wrapper);
 
-		target.parent().attr('data-read-url', obj.read_url);
-		target.parent().attr('data-star-url', obj.star_url);
+		entry.attr('data-read-url', obj.read_url);
+		entry.attr('data-star-url', obj.star_url);
 		//read
 		$.ajax({
 			'type': 'put',
 			'url': obj.read_url,
 		}).done(function() {
-			target.addClass('read');
+			entry_title.addClass('read');
 		});
 
-		$(window).scrollTop(entry.position().top);
 	}).fail(printError);
+}
+
+function clickEntry(event) {
+	var entry = $(event.target).closest('.entry');
+
+    toggleEntryCollapse(entry);
 }
 
 function refreshFeed() {
@@ -617,30 +640,47 @@ function keyboardShortcut(event) {
 	var main = $('[role=main]');
 	var feedlist = $('[role=navigation] .feedlist');
 
-	var nextEntry = function nextEntry() {
+	var nextEntry = function nextEntry(open) {
+        var first;
 		var entry = main.find('.current').first();
 		if (entry.length === 0) {
-			main.find('.entry .entry-title').first().click();
+            first = main.find('.entry').first();
+            if (first.length === 0) {
+                return;
+            }
+            selectEntry(first);
+            if (open) {
+                toggleEntryCollapse(first);
+            }
 			return;
 		}
 		var next = entry.next().first();
 		if (next.length === 0) {
 			return;
 		}
-		next.find('.entry-title').click();
+
+        if (open) {
+            toggleEntryCollapse(next);
+        } else {
+            selectEntry(next);
+        }
 	};
 
-	var prevEntry = function prevEntry() {
+	var prevEntry = function prevEntry(open) {
 		var entry = main.find('.current').first();
 		if (entry.length === 0) {
 			return;
 		}
 		var prev = entry.prev().last();
-		if (prev.length === 0 || prev.hasClass('entry')) {
-			//close current
-			entry.click();
+		if (prev.length === 0 || prev.hasClass('entry') === false) {
+			return;
 		}
-		prev.find('.entry-title').click();
+
+        if (open) {
+            toggleEntryCollapse(prev);
+        } else {
+            selectEntry(prev);
+        }
 	};
 
 	var nextFeed = function nextFeed() {
@@ -680,8 +720,9 @@ function keyboardShortcut(event) {
 		}
 	};
 
-	var closeEntry = function closeEntry() {
-		main.find('article.current .entry-content').remove();
+	var toggleEntry = function closeEntry() {
+        var entry = main.find('.current');
+        toggleEntryCollapse(entry);
 	};
 
 	var toggleFolding = function toggleFolding() {
@@ -690,25 +731,31 @@ function keyboardShortcut(event) {
 
 	switch (event.keyCode) {
 		case 13: // return
-			closeEntry();
+        case 79:
+			toggleEntry();
 			break;
 		case 27: // esc
 			closeManual();
 			break;
 		case 74: //j
-			nextEntry();
+            if (event.shiftKey) {
+                nextFeed();
+            } else {
+                nextEntry(true);
+            }
 			break;
 		case 75: //k
-			prevEntry();
+            if (event.shiftKey) {
+                prevFeed();
+            } else {
+                prevEntry(true);
+            }
 			break;
 		case 78: //n
-			nextFeed();
-			break;
-		case 79: //o
-			openInNewTab();
+            nextEntry();
 			break;
 		case 80: //p
-			prevFeed();
+            prevEntry();
 			break;
 		case 82: //r
 			reloadEntries();
@@ -720,6 +767,9 @@ function keyboardShortcut(event) {
         case 77: //m
 			unreadCurrent();
 			break;
+        case 86: //v
+            openInNewTab();
+            break;
 		case 88: // x
 			if (event.shiftKey) {
 				toggleFolding();
