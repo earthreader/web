@@ -637,6 +637,9 @@ function keyboardShortcut(event) {
 		var entry = main.find('.current').first();
 		if (entry.length === 0) {
             first = main.find('.entry').first();
+            if (first.length === 0) {
+                return;
+            }
             selectEntry(first);
             if (open) {
                 toggleEntryCollapse(first);
