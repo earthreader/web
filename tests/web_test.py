@@ -162,11 +162,13 @@ def get_feed_urls(category, urls=[]):
 
 
 mock_urls = {
-    'http://feedone.com/feed/atom/': (200, 'application+xml', feed_one),
-    'http://feedtwo.com/feed/atom/': (200, 'application+xml', feed_two),
-    'http://feedthree.com/feed/atom/': (200, 'application+xml', feed_three),
-    'http://feedfour.com/feed/atom/': (200, 'application+xml', feed_four),
-    'http://feedfive.com/feed/atom/': (200, 'application+xml', feed_to_add),
+    'http://feedone.com/feed/atom/': (200, 'application/atom+xml', feed_one),
+    'http://feedtwo.com/feed/atom/': (200, 'application/atom+xml', feed_two),
+    'http://feedthree.com/feed/atom/': (200, 'application/atom+xml',
+                                        feed_three),
+    'http://feedfour.com/feed/atom/': (200, 'application/atom+xml', feed_four),
+    'http://feedfive.com/feed/atom/': (200, 'application/atom+xml',
+                                       feed_to_add),
 }
 
 
@@ -692,13 +694,16 @@ def fx_xml_for_update(xmls, request):
     '''
 
     mock_urls = {
-        'http://feedone.com/feed/atom/': (200, 'application+xml', feed_one),
-        'http://feedtwo.com/feed/atom/': (200, 'application+xml',
+        'http://feedone.com/feed/atom/': (200, 'application/atom+xml',
+                                          feed_one),
+        'http://feedtwo.com/feed/atom/': (200, 'application/atom+xml',
                                           updated_feed_two),
-        'http://feedthree.com/feed/atom/': (200, 'application+xml',
+        'http://feedthree.com/feed/atom/': (200, 'application/atom+xml',
                                             updated_feed_three),
-        'http://feedfour.com/feed/atom/': (200, 'application+xml', feed_four),
-        'http://feedfive.com/feed/atom/': (200, 'application+xml', feed_to_add),
+        'http://feedfour.com/feed/atom/': (200, 'application/atom+xml',
+                                           feed_four),
+        'http://feedfive.com/feed/atom/': (200, 'application/atom+xml',
+                                           feed_to_add),
     }
 
     # FIXME: duplicated to TestHTTPHandler; should be removed
