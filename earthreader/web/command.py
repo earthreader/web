@@ -28,13 +28,22 @@ def crawl_command(args):
     if not opml:
         print('OPML does not exist in the repository', file=sys.stderr)
         return
-    urllist = [subscription.feed_uri
-               for subscription in opml.recursive_subscriptions]
-    id_map = dict((sub.feed_uri, sub.feed_id)
-                  for sub in opml.recursive_subscriptions)
+    feed_id = args.feed_id
+    if feed_id:
+        feed_map = dict((sub.feed_uri, sub.feed_id)
+                        for sub in opml.recursive_subscriptions
+                        if sub.feed_id == feed_id)
+        if not feed_map:
+            print('There is no such feed:', feed_id, file=sys.stderr)
+            return
+    else:
+        feed_map = dict((sub.feed_uri, sub.feed_id)
+                        for sub in opml.recursive_subscriptions)
+        if not feed_map:
+            print('No feeds to crawl', file=sys.stderr)
+            return
     threads_count = args.threads if args.threads is not None else cpu_count()
-
-    iterator = iter(crawl(urllist, threads_count))
+    iterator = iter(crawl(feed_map.keys(), threads_count))
     while 1:
         try:
             feed_url, feed_data, crawler_hints = next(iterator)
@@ -43,7 +52,7 @@ def crawl_command(args):
                     feed_data, len(feed_data.entries)
                 ))
             with stage:
-                feed_id = id_map[feed_url]
+                feed_id = feed_map[feed_url]
                 stage.feeds[feed_id] = feed_data
         except CrawlError as e:
             print(e, file=sys.stderr)
@@ -113,6 +122,9 @@ crawl_parser.add_argument('-i', '--session-id',
                           help='session identifier.  [default: %(default)s]')
 crawl_parser.add_argument('-v', '--verbose', default=False, action='store_true',
                           help='verbose mode')
+crawl_parser.add_argument('-f', '--feed-id',
+                          help='crawl only the specified feed.  '
+                               'crawl all subscriptions by default')
 crawl_parser.add_argument('repository', help='repository which has the opml')
 
 
