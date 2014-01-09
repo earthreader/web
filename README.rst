@@ -179,7 +179,7 @@ Changelog
 Version 0.2.0
 ~~~~~~~~~~~~~
 
-To be released
+To be released.
 
 - ``earthreader crawl`` command adds new options:
   - ``-f``/``--feed-id`` crawls only the specified feed if present.
@@ -188,6 +188,7 @@ To be released
 - Keyboard shortcut for toggle folding category.
 - Expand categories when click feed for mobile layout.
 - Google reader style shortcuts.
+
 
 Version 0.1.1
 ~~~~~~~~~~~~~
@@ -207,6 +208,8 @@ To be released.
 - Fix crawling bug.
 - Print error when failed to remove feed.
 - Fixed some Unicode coding bugs on server side.
+- ``-v``/``--verbose`` option prints detailed tracebacks of
+  crawler errors.
 
 __ https://github.com/earthreader/web/pull/25
 __ https://github.com/earthreader/web/issues/24
