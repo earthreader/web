@@ -173,12 +173,12 @@ mock_urls = {
 }
 
 
-class TestHTTPHandler(urllib2.HTTPHandler):
+def create_http_handler(urls):
 
     def http_open(self, req):
         url = req.get_full_url()
         try:
-            status_code, mimetype, content = mock_urls[url]
+            status_code, mimetype, content = self.mock_urls[url]
         except KeyError:
             return urllib2.HTTPHandler.http_open(self, req)
         resp = urllib2.addinfourl(StringIO(content),
@@ -188,8 +188,11 @@ class TestHTTPHandler(urllib2.HTTPHandler):
         resp.msg = httplib.responses[status_code]
         return resp
 
+    return type('HTTPHandler', (urllib2.HTTPHandler, object),
+                dict(mock_urls=urls, http_open=http_open))
 
-my_opener = urllib2.build_opener(TestHTTPHandler)
+
+my_opener = urllib2.build_opener(create_http_handler(mock_urls))
 urllib2.install_opener(my_opener)
 
 
@@ -704,22 +707,7 @@ def fx_xml_for_update(xmls, request):
         'http://feedfive.com/feed/atom/': (200, 'application+xml', feed_to_add),
     }
 
-    class TestHTTPHandler2(urllib2.HTTPHandler):
-
-        def http_open(self, req):
-            url = req.get_full_url()
-            try:
-                status_code, mimetype, content = mock_urls[url]
-            except KeyError:
-                return urllib2.HTTPHandler.http_open(self, req)
-            resp = urllib2.addinfourl(StringIO(content),
-                                      {'content-type': mimetype},
-                                      url)
-            resp.code = status_code
-            resp.msg = httplib.responses[status_code]
-            return resp
-
-    my_opener2 = urllib2.build_opener(TestHTTPHandler2)
+    my_opener2 = urllib2.build_opener(create_http_handler(mock_urls))
     urllib2.install_opener(my_opener2)
 
     def finalizer():
