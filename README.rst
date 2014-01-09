@@ -194,6 +194,8 @@ To be released.
 - Fix crawling bug.
 - Print error when failed to remove feed.
 - Fixed some Unicode coding bugs on server side.
+- ``-v``/``--verbose`` option prints detailed tracebacks of
+  crawler errors.
 
 __ https://github.com/earthreader/web/pull/25
 __ https://github.com/earthreader/web/issues/24

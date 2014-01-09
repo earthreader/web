@@ -2,6 +2,7 @@ from __future__ import print_function
 
 import argparse
 import sys
+import traceback
 try:
     from urllib import parse as urlparse
 except ImportError:
@@ -10,6 +11,7 @@ except ImportError:
 from libearth.compat.parallel import cpu_count
 from libearth.crawler import crawl, CrawlError
 from libearth.repository import from_url
+from libearth.schema import SchemaError
 from libearth.session import Session
 from libearth.stage import Stage
 from waitress import serve
@@ -45,8 +47,12 @@ def crawl_command(args):
             with stage:
                 feed_id = id_map[feed_url]
                 stage.feeds[feed_id] = feed_data
-        except CrawlError as e:
-            print(e, file=sys.stderr)
+        except (CrawlError, SchemaError) as e:
+            print('Something went wrong with', feed_url, file=sys.stderr)
+            if args.verbose:
+                traceback.print_exc()
+            else:
+                print(e, file=sys.stderr)
         except StopIteration:
             break
 
