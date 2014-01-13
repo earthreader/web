@@ -161,23 +161,20 @@ def get_feed_urls(category, urls=[]):
     return urls
 
 
-mock_urls = {
-    'http://feedone.com/feed/atom/': (200, 'application/atom+xml', feed_one),
-    'http://feedtwo.com/feed/atom/': (200, 'application/atom+xml', feed_two),
-    'http://feedthree.com/feed/atom/': (200, 'application/atom+xml',
-                                        feed_three),
-    'http://feedfour.com/feed/atom/': (200, 'application/atom+xml', feed_four),
-    'http://feedfive.com/feed/atom/': (200, 'application/atom+xml',
-                                       feed_to_add),
-}
+class HTTPHandler(urllib2.HTTPHandler):
 
-
-class TestHTTPHandler(urllib2.HTTPHandler):
+    mock_urls = {
+        'http://feedone.com/feed/atom/': (200, 'application+xml', feed_one),
+        'http://feedtwo.com/feed/atom/': (200, 'application+xml', feed_two),
+        'http://feedthree.com/feed/atom/': (200, 'application+xml', feed_three),
+        'http://feedfour.com/feed/atom/': (200, 'application+xml', feed_four),
+        'http://feedfive.com/feed/atom/': (200, 'application+xml', feed_to_add),
+    }
 
     def http_open(self, req):
         url = req.get_full_url()
         try:
-            status_code, mimetype, content = mock_urls[url]
+            status_code, mimetype, content = self.mock_urls[url]
         except KeyError:
             return urllib2.HTTPHandler.http_open(self, req)
         resp = urllib2.addinfourl(io.BytesIO(content),
@@ -188,7 +185,7 @@ class TestHTTPHandler(urllib2.HTTPHandler):
         return resp
 
 
-my_opener = urllib2.build_opener(TestHTTPHandler)
+my_opener = urllib2.build_opener(HTTPHandler)
 urllib2.install_opener(my_opener)
 
 
@@ -693,36 +690,21 @@ def fx_xml_for_update(xmls, request):
     </feed>
     '''
 
-    mock_urls = {
-        'http://feedone.com/feed/atom/': (200, 'application/atom+xml',
-                                          feed_one),
-        'http://feedtwo.com/feed/atom/': (200, 'application/atom+xml',
-                                          updated_feed_two),
-        'http://feedthree.com/feed/atom/': (200, 'application/atom+xml',
-                                            updated_feed_three),
-        'http://feedfour.com/feed/atom/': (200, 'application/atom+xml',
-                                           feed_four),
-        'http://feedfive.com/feed/atom/': (200, 'application/atom+xml',
-                                           feed_to_add),
-    }
+    class UpdateFeedHTTPHandler(HTTPHandler):
 
-    # FIXME: duplicated to TestHTTPHandler; should be removed
-    class TestHTTPHandler2(urllib2.HTTPHandler):
+        mock_urls = {
+            'http://feedone.com/feed/atom/': (200, 'application+xml', feed_one),
+            'http://feedtwo.com/feed/atom/': (200, 'application+xml',
+                                              updated_feed_two),
+            'http://feedthree.com/feed/atom/': (200, 'application+xml',
+                                                updated_feed_three),
+            'http://feedfour.com/feed/atom/': (200, 'application+xml',
+                                               feed_four),
+            'http://feedfive.com/feed/atom/': (200, 'application+xml',
+                                               feed_to_add),
+        }
 
-        def http_open(self, req):
-            url = req.get_full_url()
-            try:
-                status_code, mimetype, content = mock_urls[url]
-            except KeyError:
-                return urllib2.HTTPHandler.http_open(self, req)
-            resp = urllib2.addinfourl(io.BytesIO(content),
-                                      {'content-type': mimetype},
-                                      url)
-            resp.code = status_code
-            resp.msg = httplib.responses[status_code]
-            return resp
-
-    my_opener2 = urllib2.build_opener(TestHTTPHandler2)
+    my_opener2 = urllib2.build_opener(UpdateFeedHTTPHandler)
     urllib2.install_opener(my_opener2)
 
     def finalizer():
