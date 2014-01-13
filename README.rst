@@ -193,7 +193,7 @@ To be released.
 Version 0.1.1
 ~~~~~~~~~~~~~
 
-To be released.
+Released on January 10, 2014.
 
 - Fixed ``ImportError`` when ``earthreader`` command is invoked on Python 3.
   [`#25`__ by Yong Choi]
