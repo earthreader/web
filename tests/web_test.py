@@ -1,7 +1,4 @@
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
+import io
 import datetime
 import hashlib
 try:
@@ -64,7 +61,7 @@ def get_url(endpoint, **values):
         return url_for(endpoint, **values)
 
 
-feed_one = '''
+feed_one = b'''
 <feed xmlns="http://www.w3.org/2005/Atom">
     <title type="text">Feed One</title>
     <id>http://feedone.com/feed/atom/</id>
@@ -87,7 +84,7 @@ feed_one = '''
 </feed>
 '''
 
-feed_two = '''
+feed_two = b'''
 <feed xmlns="http://www.w3.org/2005/Atom">
     <title type="text">Feed Two</title>
     <id>http://feedtwo.com/feed/atom/</id>
@@ -104,7 +101,7 @@ feed_two = '''
 '''
 
 
-feed_three = '''
+feed_three = b'''
 <feed xmlns="http://www.w3.org/2005/Atom">
     <title type="text">Feed Three</title>
     <id>http://feedthree.com/feed/atom/</id>
@@ -121,7 +118,7 @@ feed_three = '''
 '''
 
 
-feed_four = '''
+feed_four = b'''
 <feed xmlns="http://www.w3.org/2005/Atom">
     <title type="text">Feed Four</title>
     <id>http://feedfour.com/feed/atom/</id>
@@ -138,7 +135,7 @@ feed_four = '''
 '''
 
 
-feed_to_add = '''
+feed_to_add = b'''
 <feed xmlns="http://www.w3.org/2005/Atom">
     <title type="text">Feed Five</title>
     <id>http://feedfive.com/feed/atom/</id>
@@ -180,7 +177,7 @@ class HTTPHandler(urllib2.HTTPHandler):
             status_code, mimetype, content = self.mock_urls[url]
         except KeyError:
             return urllib2.HTTPHandler.http_open(self, req)
-        resp = urllib2.addinfourl(StringIO(content),
+        resp = urllib2.addinfourl(io.BytesIO(content),
                                   {'content-type': mimetype},
                                   url)
         resp.code = status_code
@@ -648,7 +645,7 @@ def test_empty_category_all_entries(xmls):
 
 @fixture
 def fx_xml_for_update(xmls, request):
-    updated_feed_two = '''
+    updated_feed_two = b'''
     <feed xmlns="http://www.w3.org/2005/Atom">
         <title type="text">Feed Two</title>
         <id>http://feedtwo.com/feed/atom/</id>
@@ -670,7 +667,7 @@ def fx_xml_for_update(xmls, request):
         </entry>
     </feed>
     '''
-    updated_feed_three = '''
+    updated_feed_three = b'''
     <feed xmlns="http://www.w3.org/2005/Atom">
         <title type="text">Feed Three</title>
         <id>http://feedthree.com/feed/atom/</id>
