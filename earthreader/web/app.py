@@ -820,6 +820,25 @@ def unread_entry(category_id, feed_id, entry_id):
     return jsonify()
 
 
+@app.route('/feeds/<feed_id>/entries/read/', methods=['PUT'])
+@app.route('/<path:category_id>/feeds/<feed_id>/entries/read/', methods=['PUT'])
+def read_all_entries(feed_id, category_id=''):
+    try:
+        with get_stage() as stage:
+            feed = stage.feeds[feed_id]
+            for entry in feed.entries:
+                entry.read = True
+            stage.feeds[feed_id] = feed
+        return jsonify()
+    except KeyError:
+        r = jsonify(
+            error='feed-not-found',
+            message='Given feed does not exist'
+        )
+        r.status_code = 404
+        return r
+
+
 @app.route('/feeds/<feed_id>/entries/<entry_id>/star/',
            defaults={'category_id': ''}, methods=['PUT'])
 @app.route('/<path:category_id>/feeds/<feed_id>/entries/<entry_id>/star/',
