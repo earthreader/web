@@ -567,9 +567,6 @@ function toggleEntryCollapse(entry) {
 
 	$.get(entry_url, function(obj) {
 		var i;
-		//set current marker
-        selectEntry(entry);
-
 		//remove content
 		contents = main.find('.entry-content');
 		for (i=0; i<contents.length; i++) {
@@ -606,6 +603,9 @@ function toggleEntryCollapse(entry) {
 		}).done(function() {
 			entry_title.addClass('read');
 		});
+
+		//set current marker
+        selectEntry(entry);
 
 	}).fail(printError);
 }
