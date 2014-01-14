@@ -265,6 +265,10 @@ input:not([type=button]):not([type=submit]):focus, textarea:focus {
 	padding: 1.5em 2em;
 }
 
+[role=main] > header a {
+    margin: 0 1em;
+}
+
 [role=main] article .entry-content {
 	padding: 1em 3em;
 	line-height: 1.4;

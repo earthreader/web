@@ -386,6 +386,7 @@ function getEntries(feed_url, filter) {
 		var header = $('<header>');
 		var h2 = $('<h2>');
 		var refresh = $('<a>');
+                var mark_all = $('<a>');
 
 		main.html(null);
 
@@ -397,6 +398,11 @@ function getEntries(feed_url, filter) {
 		refresh.attr('href', feed_url);
 		refresh.text('crawl now');
 		header.append(refresh);
+
+                mark_all.addClass('mark_all');
+                mark_all.attr('href', obj.read_url);
+                mark_all.text('mark all as read');
+                header.append(mark_all);
 
 		main.append(header);
 
@@ -620,6 +626,18 @@ function refreshFeed() {
 		});
 }
 
+function markAllRead() {
+    var target = $('[role=main] .mark_all');
+    var url = target.attr('href');
+
+    target.addClass('requesting');
+    $.ajax(url, {'type': 'PUT'})
+        .done(function() {
+            target.removeClass('requesting');
+            $('.entry-title').addClass('read');
+        });
+}
+
 function clickLink(event) {
 	var target = event.target;
 
@@ -822,6 +840,7 @@ $(function () {
 	main.on('click', '.entry-title', clickEntry);
 	main.on('click', '.nextPage', loadNextPage);
 	main.on('click', '.refresh', refreshFeed);
+        main.on('click', '.mark_all', markAllRead);
 
 	var side = $('[role=complementary]');
 	side.on('click', '[data-action]', clickComplementaryMenu);
