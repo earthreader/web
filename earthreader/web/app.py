@@ -839,6 +839,24 @@ def read_all_entries(feed_id, category_id=''):
         return r
 
 
+@app.route('/entries/read/', methods=['PUT'])
+@app.route('/<path:category_id>/entries/read/', methods=['PUT'])
+def read_all_categories(category_id=''):
+    cursor = Cursor(category_id)
+    subscriptions = cursor.recursive_subscriptions
+
+    for sub in subscriptions:
+        try:
+            with get_stage() as stage:
+                feed = stage.feeds[sub.feed_id]
+                for entry in feed.entries:
+                    entry.read = True
+                stage.feeds[sub.feed_id] = feed
+        except KeyError:
+            continue
+    return jsonify()
+
+
 @app.route('/feeds/<feed_id>/entries/<entry_id>/star/',
            defaults={'category_id': ''}, methods=['PUT'])
 @app.route('/<path:category_id>/feeds/<feed_id>/entries/<entry_id>/star/',
