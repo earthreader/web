@@ -714,6 +714,8 @@ def category_entries(category_id):
     return jsonify(
         title=category_id.split('/')[-1][1:] or app.config['ALLFEED'],
         entries=entries,
+        read_url=url_for('read_all_entries', category_id=category_id,
+                         _external=True),
         next_url=next_url
     )
 
