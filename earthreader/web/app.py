@@ -714,6 +714,8 @@ def category_entries(category_id):
     return jsonify(
         title=category_id.split('/')[-1][1:] or app.config['ALLFEED'],
         entries=entries,
+        read_url=url_for('read_all_entries', category_id=category_id,
+                         _external=True),
         next_url=next_url
     )
 
@@ -817,6 +819,37 @@ def unread_entry(category_id, feed_id, entry_id):
     entry.read = False
     with get_stage() as stage:
         stage.feeds[feed_id] = feed
+    return jsonify()
+
+
+@app.route('/feeds/<feed_id>/entries/read/', methods=['PUT'])
+@app.route('/<path:category_id>/feeds/<feed_id>/entries/read/', methods=['PUT'])
+@app.route('/entries/read/', methods=['PUT'])
+@app.route('/<path:category_id>/entries/read/', methods=['PUT'])
+def read_all_entries(category_id='', feed_id=None):
+    if feed_id:
+        feed_ids = [feed_id]
+    else:
+        cursor = Cursor(category_id)
+        feed_ids = [sub.feed_id for sub in cursor.recursive_subscriptions]
+
+    for feed_id in feed_ids:
+        try:
+            with get_stage() as stage:
+                feed = stage.feeds[feed_id]
+                for entry in feed.entries:
+                    entry.read = True
+                stage.feeds[feed_id] = feed
+        except KeyError:
+            if feed_id:
+                r = jsonify(
+                    error='feed-not-found',
+                    message='Given feed does not exist'
+                )
+                r.status_code = 404
+                return r
+            else:
+                continue
     return jsonify()
 
 

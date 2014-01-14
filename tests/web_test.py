@@ -765,6 +765,21 @@ def test_entry_read_unread(xmls, fx_test_stage):
             assert not stage.feeds[feed_three_id].entries[0].read
 
 
+def test_mark_all_as_read(xmls, fx_test_stage):
+    with app.test_client() as client:
+        r = client.get('/entries/')
+        assert r.status_code == 200
+        result = json.loads(r.data)
+
+        r = client.put(result['read_url'])
+        assert r.status_code == 200
+
+        with fx_test_stage as stage:
+            for sub in stage.subscriptions.recursive_subscriptions:
+                for entry in stage.feeds[sub.feed_id].entries:
+                    assert entry.read
+
+
 def test_entry_star_unstar(xmls, fx_test_stage):
     with app.test_client() as client:
         feed_three_id = get_hash('http://feedthree.com/feed/atom/')

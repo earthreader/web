@@ -188,6 +188,9 @@ To be released.
 - Keyboard shortcut for toggle folding category.
 - Expand categories when click feed for mobile layout.
 - Google reader style shortcuts.
+- Mark all as read function [`#28`__]
+
+__ https://github.com/earthreader/web/issues/28
 
 
 Version 0.1.1
