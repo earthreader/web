@@ -822,38 +822,32 @@ def unread_entry(category_id, feed_id, entry_id):
 
 @app.route('/feeds/<feed_id>/entries/read/', methods=['PUT'])
 @app.route('/<path:category_id>/feeds/<feed_id>/entries/read/', methods=['PUT'])
-def read_all_entries(feed_id, category_id=''):
-    try:
-        with get_stage() as stage:
-            feed = stage.feeds[feed_id]
-            for entry in feed.entries:
-                entry.read = True
-            stage.feeds[feed_id] = feed
-        return jsonify()
-    except KeyError:
-        r = jsonify(
-            error='feed-not-found',
-            message='Given feed does not exist'
-        )
-        r.status_code = 404
-        return r
-
-
 @app.route('/entries/read/', methods=['PUT'])
 @app.route('/<path:category_id>/entries/read/', methods=['PUT'])
-def read_all_categories(category_id=''):
-    cursor = Cursor(category_id)
-    subscriptions = cursor.recursive_subscriptions
+def read_all_entries(category_id='', feed_id=None):
+    if feed_id:
+        feed_ids = [feed_id]
+    else:
+        cursor = Cursor(category_id)
+        feed_ids = [sub.feed_id for sub in cursor.recursive_subscriptions]
 
-    for sub in subscriptions:
+    for feed_id in feed_ids:
         try:
             with get_stage() as stage:
-                feed = stage.feeds[sub.feed_id]
+                feed = stage.feeds[feed_id]
                 for entry in feed.entries:
                     entry.read = True
-                stage.feeds[sub.feed_id] = feed
+                stage.feeds[feed_id] = feed
         except KeyError:
-            continue
+            if feed_id:
+                r = jsonify(
+                    error='feed-not-found',
+                    message='Given feed does not exist'
+                )
+                r.status_code = 404
+                return r
+            else:
+                continue
     return jsonify()
 
 
