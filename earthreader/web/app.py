@@ -21,7 +21,6 @@ from libearth.compat import binary, text_type
 from libearth.crawler import CrawlError, crawl
 from libearth.parser.autodiscovery import autodiscovery, FeedUrlNotFoundError
 from libearth.repository import FileSystemRepository, from_url
-from libearth.sanitizer import clean_html
 from libearth.session import Session
 from libearth.stage import Stage
 from libearth.subscribe import Category, Subscription, SubscriptionList
@@ -500,7 +499,7 @@ class FeedEntryGenerator():
             raise StopIteration
         entry_permalink = get_permalink(self.entry)
         entry_data = {
-            'title': clean_html(text_type(self.entry.title)),
+            'title': text_type(self.entry.title),
             'entry_id': get_hash(self.entry.id),
             'permalink': entry_permalink or None,
             'updated': Rfc3339().encode(self.entry.updated_at.astimezone(utc)),
@@ -556,7 +555,7 @@ def feed_entries(category_id, feed_id):
         url_token = text_type(now())
     if not generator:
         it = iter(feed.entries)
-        feed_title = clean_html(text_type(feed.title))
+        feed_title = text_type(feed.title)
         feed_permalink = get_permalink(feed)
         generator = FeedEntryGenerator(category_id, feed_id, feed_title,
                                        feed_permalink, it, now(), read, starred)
@@ -585,7 +584,7 @@ def feed_entries(category_id, feed_id):
             feed_id
         )
     return jsonify(
-        title=clean_html(text_type(feed.title)),
+        title=text_type(feed.title),
         entries=entries,
         next_url=next_url
     )
@@ -688,7 +687,7 @@ def category_entries(category_id):
                     feed = stage.feeds[subscription.feed_id]
             except KeyError:
                 continue
-            feed_title = clean_html(text_type(feed.title))
+            feed_title = text_type(feed.title)
             it = iter(feed.entries)
             feed_permalink = get_permalink(feed)
             child = FeedEntryGenerator(category_id, subscription.feed_id,
@@ -770,13 +769,13 @@ def feed_entry(category_id, feed_id, entry_id):
         content = content.sanitized_html
 
     entry_data = {
-        'title': clean_html(text_type(entry.title)),
+        'title': text_type(entry.title),
         'content': content,
         'updated': text_type(entry.updated_at),
         'permalink': entry_permalink or None,
     }
     feed_data = {
-        'title': clean_html(text_type(feed.title)),
+        'title': text_type(feed.title),
         'permalink': feed_permalink or None
     }
     add_urls(
