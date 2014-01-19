@@ -546,7 +546,8 @@ def feed_entries(category_id, feed_id):
         return r
     if request.if_modified_since and feed.__revision__:
         if_modified_since = request.if_modified_since.replace(tzinfo=utc)
-        if if_modified_since <= feed.__revision__.updated_at:
+        last_modified = feed.__revision__.updated_at.replace(microsecond=0)
+        if if_modified_since >= last_modified:
             return '', 304, {}  # Not Modified
     url_token, entry_after, read, starred = get_optional_args()
     generator = None
