@@ -1110,6 +1110,19 @@ def test_request_same_feed(make_empty, xmls_for_next):
         assert r1_result['entries'] == r2_result['entries']
 
 
+def test_feed_entries_http_cache():
+    """feed_entries() should be cached using Last-Modified header."""
+    with app.test_client() as client:
+        url = get_url('feed_entries', feed_id=get_hash('http://feedone.com/'))
+        response = client.get(url)
+        assert response.status_code == 200
+        assert response.last_modified
+        response2 = client.get(url, headers={
+            'If-Modified-Since': response.headers['Last-Modified']
+        })
+        assert response2.status_code == 304
+
+
 def test_move_feed(xmls, fx_test_stage):
     with app.test_client() as client:
         r = client.put('/-categoryone/feeds/?from=/feeds/' +

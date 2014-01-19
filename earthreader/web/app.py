@@ -544,6 +544,10 @@ def feed_entries(category_id, feed_id):
         )
         r.status_code = 404
         return r
+    if request.if_modified_since and feed.__revision__:
+        if_modified_since = request.if_modified_since.replace(tzinfo=utc)
+        if if_modified_since <= feed.__revision__.updated_at:
+            return '', 304, {}  # Not Modified
     url_token, entry_after, read, starred = get_optional_args()
     generator = None
     if url_token:
@@ -583,11 +587,14 @@ def feed_entries(category_id, feed_id):
             starred,
             feed_id
         )
-    return jsonify(
+    response = jsonify(
         title=text_type(feed.title),
         entries=entries,
         next_url=next_url
     )
+    if feed.__revision__:
+        response.last_modified = feed.__revision__.updated_at
+    return response
 
 
 class CategoryEntryGenerator():
