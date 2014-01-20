@@ -60,20 +60,20 @@ def crawl_category():
             crawling_queue.task_done()
         elif priority == 1:
             cursor, feed_id = arguments
-            urls = []
-
+            urls = {}
             if not feed_id:
-                urls = [sub.feed_uri for sub in cursor.recursive_subscriptions]
+                urls = dict((sub.feed_uri, sub.feed_id)
+                            for sub in cursor.recursive_subscriptions)
             else:
-                urls = [sub.feed_uri for sub in cursor.recursive_subscriptions
-                        if sub.feed_id == feed_id]
-
+                urls = dict((sub.feed_uri, sub.feed_id)
+                            for sub in cursor.recursive_subscriptions
+                            if sub.feed_id == feed_id)
             iterator = iter(crawl(urls, app.config['CRAWLER_THREAD']))
             while True:
                 try:
                     feed_url, feed_data, crawler_hints = next(iterator)
                     with get_stage() as stage:
-                        stage.feeds[feed_data.feed_id] = feed_data
+                        stage.feeds[urls[feed_url]] = feed_data
                 except CrawlError:
                     continue
                 except StopIteration:

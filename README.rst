@@ -189,6 +189,7 @@ To be released.
 - Expand categories when click feed for mobile layout.
 - Google reader style shortcuts.
 - Mark all as read function [`#28`__]
+- Fix a bug that "crawl now" button didn't work.
 
 __ https://github.com/earthreader/web/issues/28
 
