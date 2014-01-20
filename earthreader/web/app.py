@@ -428,11 +428,8 @@ def remove_entry_generator(url_token):
 def get_permalink(data):
     permalink = None
     for link in data.links:
-        if link.relation == 'alternate' and \
-                link.mimetype == 'text/html':
+        if link.relation == 'alternate':
             permalink = link.uri
-        if not permalink:
-            permalink = data.id
     return permalink
 
 
