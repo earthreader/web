@@ -432,7 +432,7 @@ def get_permalink(data):
         try:
             return MIMETYPES.index(mimetype)
         except ValueError:
-            return 100
+            return len(MIMETYPES)
 
     permalinks = []
     for link in data.links:
