@@ -25,6 +25,7 @@ from libearth.session import Session
 from libearth.stage import Stage
 from libearth.subscribe import Category, Subscription, SubscriptionList
 from libearth.tz import now, utc
+from libearth.version import VERSION_INFO as LIBEARTH_VERSION_INFO
 from werkzeug.exceptions import HTTPException
 
 from .wsgi import MethodRewriteMiddleware
@@ -425,23 +426,18 @@ def remove_entry_generator(url_token):
 
 
 def get_permalink(data):
-
-    def get_mimetype_precedence(mimetype):
-        MIMETYPES = ['text/html', None]
-        try:
-            return MIMETYPES.index(mimetype)
-        except ValueError:
-            return len(MIMETYPES)
-
-    permalinks = []
-    for link in data.links:
-        if link.relation == 'alternate':
-            permalinks.append(link)
-    if not permalinks:
-        return None
-    permalinks = sorted(permalinks,
-                        key=lambda x: get_mimetype_precedence(x.mimetype))
-    return permalinks[0].uri
+    if LIBEARTH_VERSION_INFO < (0, 2, 0):
+        candidates = []
+        for link in data.links:
+            html = link.mimetype in ('text/html', 'application/xhtml+xml')
+            alternate = link.relation == 'alternate'
+            if html or alternate:
+                candidates.append((link, (html, alternate)))
+        if candidates:
+            return max(candidates, key=lambda pair: pair[1])[0].uri
+        return
+    link = data.links.permalink
+    return link and link.uri
 
 
 def make_next_url(category_id, url_token, entry_after, read, starred,
