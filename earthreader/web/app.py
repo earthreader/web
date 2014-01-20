@@ -426,14 +426,23 @@ def remove_entry_generator(url_token):
 
 
 def get_permalink(data):
-    permalink = None
+
+    def get_mimetype_precedence(mimetype):
+        MIMETYPES = ['text/html', None]
+        try:
+            return MIMETYPES.index(mimetype)
+        except ValueError:
+            return len(MIMETYPES)
+
+    permalinks = []
     for link in data.links:
-        if link.relation == 'alternate' and \
-                link.mimetype == 'text/html':
-            permalink = link.uri
-        if not permalink:
-            permalink = data.id
-    return permalink
+        if link.relation == 'alternate':
+            permalinks.append(link)
+    if not permalinks:
+        return None
+    permalinks = sorted(permalinks,
+                        key=lambda x: get_mimetype_precedence(x.mimetype))
+    return permalinks[0].uri
 
 
 def make_next_url(category_id, url_token, entry_after, read, starred,
