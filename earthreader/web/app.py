@@ -427,7 +427,7 @@ def remove_entry_generator(url_token):
 
 def get_permalink(data):
 
-    def sort_by_mimetype(mimetype):
+    def get_mimetype_precedence(mimetype):
         MIMETYPES = ['text/html', None]
         try:
             return MIMETYPES.index(mimetype)
@@ -440,7 +440,8 @@ def get_permalink(data):
             permalinks.append(link)
     if not permalinks:
         return None
-    permalinks = sorted(permalinks, key=lambda x: sort_by_mimetype(x.mimetype))
+    permalinks = sorted(permalinks,
+                        key=lambda x: get_mimetype_precedence(x.mimetype))
     return permalinks[0].uri
 
 
