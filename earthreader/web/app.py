@@ -21,11 +21,11 @@ from libearth.compat import binary, text_type
 from libearth.crawler import CrawlError, crawl
 from libearth.parser.autodiscovery import autodiscovery, FeedUrlNotFoundError
 from libearth.repository import FileSystemRepository, from_url
-from libearth.sanitizer import clean_html
 from libearth.session import Session
 from libearth.stage import Stage
 from libearth.subscribe import Category, Subscription, SubscriptionList
 from libearth.tz import now, utc
+from libearth.version import VERSION_INFO as LIBEARTH_VERSION_INFO
 from werkzeug.exceptions import HTTPException
 
 from .wsgi import MethodRewriteMiddleware
@@ -60,20 +60,20 @@ def crawl_category():
             crawling_queue.task_done()
         elif priority == 1:
             cursor, feed_id = arguments
-            urls = []
-
+            urls = {}
             if not feed_id:
-                urls = [sub.feed_uri for sub in cursor.recursive_subscriptions]
+                urls = dict((sub.feed_uri, sub.feed_id)
+                            for sub in cursor.recursive_subscriptions)
             else:
-                urls = [sub.feed_uri for sub in cursor.recursive_subscriptions
-                        if sub.feed_id == feed_id]
-
+                urls = dict((sub.feed_uri, sub.feed_id)
+                            for sub in cursor.recursive_subscriptions
+                            if sub.feed_id == feed_id)
             iterator = iter(crawl(urls, app.config['CRAWLER_THREAD']))
             while True:
                 try:
                     feed_url, feed_data, crawler_hints = next(iterator)
                     with get_stage() as stage:
-                        stage.feeds[feed_data.feed_id] = feed_data
+                        stage.feeds[urls[feed_url]] = feed_data
                 except CrawlError:
                     continue
                 except StopIteration:
@@ -426,14 +426,18 @@ def remove_entry_generator(url_token):
 
 
 def get_permalink(data):
-    permalink = None
-    for link in data.links:
-        if link.relation == 'alternate' and \
-                link.mimetype == 'text/html':
-            permalink = link.uri
-        if not permalink:
-            permalink = data.id
-    return permalink
+    if LIBEARTH_VERSION_INFO < (0, 2, 0):
+        candidates = []
+        for link in data.links:
+            html = link.mimetype in ('text/html', 'application/xhtml+xml')
+            alternate = link.relation == 'alternate'
+            if html or alternate:
+                candidates.append((link, (html, alternate)))
+        if candidates:
+            return max(candidates, key=lambda pair: pair[1])[0].uri
+        return
+    link = data.links.permalink
+    return link and link.uri
 
 
 def make_next_url(category_id, url_token, entry_after, read, starred,
@@ -500,7 +504,7 @@ class FeedEntryGenerator():
             raise StopIteration
         entry_permalink = get_permalink(self.entry)
         entry_data = {
-            'title': clean_html(text_type(self.entry.title)),
+            'title': text_type(self.entry.title),
             'entry_id': get_hash(self.entry.id),
             'permalink': entry_permalink or None,
             'updated': Rfc3339().encode(self.entry.updated_at.astimezone(utc)),
@@ -545,6 +549,11 @@ def feed_entries(category_id, feed_id):
         )
         r.status_code = 404
         return r
+    if request.if_modified_since and feed.__revision__:
+        if_modified_since = request.if_modified_since.replace(tzinfo=utc)
+        last_modified = feed.__revision__.updated_at.replace(microsecond=0)
+        if if_modified_since >= last_modified:
+            return '', 304, {}  # Not Modified
     url_token, entry_after, read, starred = get_optional_args()
     generator = None
     if url_token:
@@ -556,7 +565,7 @@ def feed_entries(category_id, feed_id):
         url_token = text_type(now())
     if not generator:
         it = iter(feed.entries)
-        feed_title = clean_html(text_type(feed.title))
+        feed_title = text_type(feed.title)
         feed_permalink = get_permalink(feed)
         generator = FeedEntryGenerator(category_id, feed_id, feed_title,
                                        feed_permalink, it, now(), read, starred)
@@ -584,11 +593,14 @@ def feed_entries(category_id, feed_id):
             starred,
             feed_id
         )
-    return jsonify(
-        title=clean_html(text_type(feed.title)),
+    response = jsonify(
+        title=text_type(feed.title),
         entries=entries,
         next_url=next_url
     )
+    if feed.__revision__:
+        response.last_modified = feed.__revision__.updated_at
+    return response
 
 
 class CategoryEntryGenerator():
@@ -688,7 +700,7 @@ def category_entries(category_id):
                     feed = stage.feeds[subscription.feed_id]
             except KeyError:
                 continue
-            feed_title = clean_html(text_type(feed.title))
+            feed_title = text_type(feed.title)
             it = iter(feed.entries)
             feed_permalink = get_permalink(feed)
             child = FeedEntryGenerator(category_id, subscription.feed_id,
@@ -772,13 +784,13 @@ def feed_entry(category_id, feed_id, entry_id):
         content = content.sanitized_html
 
     entry_data = {
-        'title': clean_html(text_type(entry.title)),
+        'title': text_type(entry.title),
         'content': content,
         'updated': text_type(entry.updated_at),
         'permalink': entry_permalink or None,
     }
     feed_data = {
-        'title': clean_html(text_type(feed.title)),
+        'title': text_type(feed.title),
         'permalink': feed_permalink or None
     }
     add_urls(

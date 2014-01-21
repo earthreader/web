@@ -5,6 +5,7 @@ try:
     import httplib
 except ImportError:
     from http import client as httplib
+import time
 import traceback
 try:
     import urllib2
@@ -1105,6 +1106,32 @@ def test_request_same_feed(make_empty, xmls_for_next):
         r1_result = json.loads(r1_next.data)
         r2_result = json.loads(r2_next.data)
         assert r1_result['entries'] == r2_result['entries']
+
+
+def test_feed_entries_http_cache():
+    """feed_entries() should be cached using Last-Modified header."""
+    with app.test_client() as client:
+        url = get_url('feed_entries', feed_id=get_hash('http://feedone.com/'))
+        response = client.get(url)
+        assert response.status_code == 200
+        assert response.last_modified
+        result = json.loads(response.data)
+        entries = [e for e in result['entries'] if not e['read']]
+        response2 = client.get(url, headers={
+            'If-Modified-Since': response.headers['Last-Modified']
+        })
+        assert response2.status_code == 304
+        entry = json.loads(client.get(entries[0]['entry_url']).data)
+        time.sleep(1)
+        client.put(entry['read_url'])
+        response3 = client.get(url, headers={
+            'If-Modified-Since': response.headers['Last-Modified']
+        })
+        assert response3.status_code == 200
+        assert response3.last_modified > response.last_modified
+        result3 = json.loads(response3.data)
+        entries3 = [e for e in result3['entries'] if not e['read']]
+        assert len(entries) - 1 == len(entries3)
 
 
 def test_move_feed(xmls, fx_test_stage):

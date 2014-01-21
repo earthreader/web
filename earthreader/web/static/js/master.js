@@ -83,6 +83,10 @@ function unreadCurrent() {
 	var url = current.attr('data-read-url');
 	var method = 'DELETE';
 
+    if (!url) {
+        return;
+    }
+
 	$.ajax(url, {
 		'type': method,
 	}).done(function() {
@@ -96,6 +100,10 @@ function toggleStarCurrent() {
 	var markStar = current.find('.marks .star');
 	var url = current.attr('data-star-url');
 	var method;
+
+    if (!url) {
+        return;
+    }
 
 	if (current.length === 0) {
 		return;
