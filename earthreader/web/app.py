@@ -723,12 +723,19 @@ def category_entries(category_id):
             read,
             starred
         )
+
+    #FIXME: use Entry.updated_at instead of from json data.
+    codec = Rfc3339()
+    last_updated_at = ''
+    if len(entries) and not entry_after:
+        last_updated_at = codec.encode(max(map(
+            lambda x: codec.decode(x['updated']), entries
+        )))
     return jsonify(
         title=category_id.split('/')[-1][1:] or app.config['ALLFEED'],
         entries=entries,
         read_url=url_for('read_all_entries', category_id=category_id,
-                         #FIXME: use Entry.updated_at instead of from json data.
-                         last_updated=entries[0]['updated'],
+                         last_updated=last_updated_at,
                          _external=True),
         next_url=next_url
     )
@@ -847,15 +854,18 @@ def read_all_entries(category_id='', feed_id=None):
         cursor = Cursor(category_id)
         feed_ids = [sub.feed_id for sub in cursor.recursive_subscriptions]
 
-    codec = Rfc3339()
-    last_updated = codec.decode(request.args.get('last_updated'))
+    try:
+        codec = Rfc3339()
+        last_updated = codec.decode(request.args.get('last_updated'))
+    except:
+        last_updated = None
 
     for feed_id in feed_ids:
         try:
             with get_stage() as stage:
                 feed = stage.feeds[feed_id]
                 for entry in feed.entries:
-                    if entry.updated_at <= last_updated:
+                    if last_updated is None or entry.updated_at <= last_updated:
                         entry.read = True
                 stage.feeds[feed_id] = feed
         except KeyError:
