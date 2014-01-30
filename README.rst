@@ -223,6 +223,7 @@ Released on January 10, 2014.
 - Fixed some Unicode coding bugs on server side.
 - ``-v``/``--verbose`` option prints detailed tracebacks of
   crawler errors.
+- Spinner UI while loading contents.
 
 __ https://github.com/earthreader/web/pull/25
 __ https://github.com/earthreader/web/issues/24
