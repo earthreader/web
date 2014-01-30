@@ -381,61 +381,54 @@ function appendEntry(entry) {
 	main.append(article);
 }
 
-function getEntries(feed_url, filter) {
+function processEntries(obj, queryUrl) {
 	var main = $('[role=main]');
-	var requestUrl = feed_url;
-	if (filter) {
-		requestUrl += '?' + filter;
+	var feed_title = obj.title;
+	var entries = obj.entries;
+	var header = $('<header>');
+	var h2 = $('<h2>');
+	var refresh = $('<a>');
+	var mark_all = $('<a>');
+
+	main.html(null);
+
+	h2.text(feed_title);
+	header.append(h2);
+
+	refresh.addClass('refresh');
+	refresh.attr('role', 'button');
+	refresh.attr('href', queryUrl);
+	refresh.text('crawl now');
+	header.append(refresh);
+
+	mark_all.addClass('mark_all');
+	mark_all.attr('href', obj.read_url);
+	mark_all.text('mark all as read');
+	header.append(mark_all);
+
+	main.append(header);
+
+	if (entries.length === 0) {
+		var noEntry = $('<p>');
+		noEntry.text('No more entry');
+		main.append(noEntry);
+	} else {
+		for (var i=0; i<entries.length; i++) {
+			appendEntry(entries[i]);
+		}
 	}
 
-	$.get(requestUrl, function(obj) {
-		var feed_title = obj.title;
-		var entries = obj.entries;
-		var header = $('<header>');
-		var h2 = $('<h2>');
-		var refresh = $('<a>');
-		var mark_all = $('<a>');
-
-		main.html(null);
-
-		h2.text(feed_title);
-		header.append(h2);
-
-		refresh.addClass('refresh');
-		refresh.attr('role', 'button');
-		refresh.attr('href', feed_url);
-		refresh.text('crawl now');
-		header.append(refresh);
-
-		mark_all.addClass('mark_all');
-		mark_all.attr('href', obj.read_url);
-		mark_all.text('mark all as read');
-		header.append(mark_all);
-
-		main.append(header);
-
-		if (entries.length === 0) {
-			var noEntry = $('<p>');
-			noEntry.text('No more entry');
-			main.append(noEntry);
-		} else {
-			for (var i=0; i<entries.length; i++) {
-				appendEntry(entries[i]);
-			}
+	if (obj.next_url) {
+		var nextLoader = main.find('.nextPage');
+		if (nextLoader.length === 0) {
+			nextLoader = $('<div>');
+			nextLoader.addClass('nextPage');
+			nextLoader.text("Load next page");
 		}
-
-		if (obj.next_url) {
-			var nextLoader = main.find('.nextPage');
-			if (nextLoader.length === 0) {
-				nextLoader = $('<div>');
-				nextLoader.addClass('nextPage');
-				nextLoader.text("Load next page");
-			}
-			nextLoader.attr('data-next-url', obj.next_url);
-			main.append(nextLoader);
-		}
-		$(window).scrollTop(0);
-	}).fail(printError);
+		nextLoader.attr('data-next-url', obj.next_url);
+		main.append(nextLoader);
+	}
+	$(window).scrollTop(0);
 }
 
 function loadNextPage() {
@@ -489,7 +482,13 @@ function reloadEntries() {
 	var filter = currentFilter.attr('data-filter');
 	var url = currentFeed.attr('data-entries') || currentFeed.parent().attr('data-entries') || URLS.entries;
 
-	getEntries(url, filter);
+	if (filter) {
+		url += '?' + filter;
+	}
+
+	$.get(url, function (obj) {
+		processEntries(obj, url);
+	}).fail(printError);
 }
 
 function loadSubCategory(container) {
