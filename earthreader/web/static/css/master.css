@@ -318,6 +318,13 @@ input:not([type=button]):not([type=submit]):focus, textarea:focus {
 		margin-left: 0;
 	}
 
+	[role=navigation] .loading:after {
+		content: 'loading...';
+		font-size: .5em;
+		position: absolute;
+		right: 0;
+	}
+
 	[role=complementary] {
 		margin-right: -20%;
 	}
@@ -333,6 +340,10 @@ input:not([type=button]):not([type=submit]):focus, textarea:focus {
 
 	.side-open [role=main] {
 		margin-left: 0;
+	}
+
+	[role=main] .entry.loading {
+		border: 1px inset #ddf;
 	}
 
 	[role=main] .entry-title time,

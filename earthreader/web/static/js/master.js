@@ -486,8 +486,14 @@ function reloadEntries() {
 		url += '?' + filter;
 	}
 
+	$('[role=navigation] .loading').removeClass('loading');
+	currentFeed.addClass('loading');
+
 	$.get(url, function (obj) {
-		processEntries(obj, url);
+		currentFeed.removeClass('loading');
+		if (currentFeed.hasClass('current')) {
+			processEntries(obj, url);
+		}
 	}).fail(printError);
 }
 
@@ -572,6 +578,9 @@ function toggleEntryCollapse(entry) {
 		return;
 	}
 
+	main.find('.entry.loading').removeClass('loading');
+	entry.addClass('loading');
+
 	$.get(entry_url, function(obj) {
 		var i;
 		//remove content
@@ -579,6 +588,8 @@ function toggleEntryCollapse(entry) {
 		for (i=0; i<contents.length; i++) {
 			contents[i].parentElement.removeChild(contents[i]);
 		}
+
+		entry.removeClass('loading');
 
 		var wrapper = $('<div>');
 		var title = $('<h1>');
