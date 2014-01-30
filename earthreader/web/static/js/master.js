@@ -83,9 +83,9 @@ function unreadCurrent() {
 	var url = current.attr('data-read-url');
 	var method = 'DELETE';
 
-    if (!url) {
-        return;
-    }
+	if (!url) {
+		return;
+	}
 
 	$.ajax(url, {
 		'type': method,
@@ -101,9 +101,9 @@ function toggleStarCurrent() {
 	var url = current.attr('data-star-url');
 	var method;
 
-    if (!url) {
-        return;
-    }
+	if (!url) {
+		return;
+	}
 
 	if (current.length === 0) {
 		return;
@@ -273,7 +273,7 @@ var makeFeed = function(parentObj, obj) {
 function makeFeedList(obj, target) {
 	var feedList;
 	var i;
-  
+
 	if (target && target.length !== 0) {
 		feedList = target;
 	} else {
@@ -321,7 +321,7 @@ function dropToHeader(event) {
 function moveOutline(url) {
 	$.ajax({
 		url: url,
-		type: 'put'
+	type: 'put'
 	}).done(function(){
 		refreshFeedList();
 	}).fail(printError);
@@ -337,7 +337,7 @@ function getAllEntries() {
 
 function appendEntry(entry) {
 	var main = $('[role=main]');
-	
+
 	var article = $('<article>');
 	var header = $('<div>');
 	var time = $('<time>');
@@ -394,7 +394,7 @@ function getEntries(feed_url, filter) {
 		var header = $('<header>');
 		var h2 = $('<h2>');
 		var refresh = $('<a>');
-                var mark_all = $('<a>');
+		var mark_all = $('<a>');
 
 		main.html(null);
 
@@ -407,10 +407,10 @@ function getEntries(feed_url, filter) {
 		refresh.text('crawl now');
 		header.append(refresh);
 
-                mark_all.addClass('mark_all');
-                mark_all.attr('href', obj.read_url);
-                mark_all.text('mark all as read');
-                header.append(mark_all);
+		mark_all.addClass('mark_all');
+		mark_all.attr('href', obj.read_url);
+		mark_all.text('mark all as read');
+		header.append(mark_all);
 
 		main.append(header);
 
@@ -494,7 +494,7 @@ function reloadEntries() {
 
 function loadSubCategory(container) {
 	var list = $('<ul>');
-    container = container.closest('.folder');
+	container = container.closest('.folder');
 	$.get(container.attr('data-feed-url'), function(obj) {
 		for (i=0; i<obj.categories.length; i++) {
 			makeCategory(list, obj.categories[i]);
@@ -508,13 +508,13 @@ function loadSubCategory(container) {
 }
 
 function selectFeed(feed) {
-    var feedlist = $('[role=navigation] .feedlist');
-    feedlist.find('.current').removeClass('current');
-    feed.closest('.feed').addClass('current');
+	var feedlist = $('[role=navigation] .feedlist');
+	feedlist.find('.current').removeClass('current');
+	feed.closest('.feed').addClass('current');
 }
 
 function enterFeed(feed) {
-    selectFeed(feed);
+	selectFeed(feed);
 
 	if (feed.hasClass('closed')) {
 		feed.removeClass('closed');
@@ -531,47 +531,47 @@ function enterFeed(feed) {
 function clickFeed(event) {
 	var target = $(event.target);
 	var feedlist = $('[role=navigation] .feedlist');
-    var feed = target.closest('.feed');
+	var feed = target.closest('.feed');
 
-    //set current marker
-    selectFeed(feed);
+	//set current marker
+	selectFeed(feed);
 
-    if (target.closest('.toggle').length) {
-        feed.toggleClass('closed');
-        if (feed.siblings('.fold').length === 0) {
-            loadSubCategory(feed);
-        }
-        return;
-    }
+	if (target.closest('.toggle').length) {
+		feed.toggleClass('closed');
+		if (feed.siblings('.fold').length === 0) {
+			loadSubCategory(feed);
+		}
+		return;
+	}
 
-    enterFeed(feed);
+	enterFeed(feed);
 }
 
 function selectEntry(entry) {
-    var main = $('[role=main]');
+	var main = $('[role=main]');
 
-    entry = $(entry).closest('.entry');
-    main.find('.current').removeClass('current');
-    entry.addClass('current');
-    $(window).scrollTop(entry.position().top);
+	entry = $(entry).closest('.entry');
+	main.find('.current').removeClass('current');
+	entry.addClass('current');
+	$(window).scrollTop(entry.position().top);
 }
 
 function toggleEntryCollapse(entry) {
-    var entry_url;
-    var content;
-    var entry_title;
+	var entry_url;
+	var content;
+	var entry_title;
 	var main = $('[role=main]');
 
-    entry = entry.closest('.entry');
-    entry_url = entry.attr('data-entries');
-    entry_title = entry.find('.entry-title');
-    content = entry.find('.entry-content');
+	entry = entry.closest('.entry');
+	entry_url = entry.attr('data-entries');
+	entry_title = entry.find('.entry-title');
+	content = entry.find('.entry-content');
 
-    // close content
-    if (content.length) {
-        content.remove();
-        return;
-    }
+	// close content
+	if (content.length) {
+		content.remove();
+		return;
+	}
 
 	$.get(entry_url, function(obj) {
 		var i;
@@ -613,7 +613,7 @@ function toggleEntryCollapse(entry) {
 		});
 
 		//set current marker
-        selectEntry(entry);
+		selectEntry(entry);
 
 	}).fail(printError);
 }
@@ -621,7 +621,7 @@ function toggleEntryCollapse(entry) {
 function clickEntry(event) {
 	var entry = $(event.target).closest('.entry');
 
-    toggleEntryCollapse(entry);
+	toggleEntryCollapse(entry);
 }
 
 function refreshFeed() {
@@ -635,15 +635,15 @@ function refreshFeed() {
 }
 
 function markAllRead() {
-    var target = $('[role=main] .mark_all');
-    var url = target.attr('href');
+	var target = $('[role=main] .mark_all');
+	var url = target.attr('href');
 
-    target.addClass('requesting');
-    $.ajax(url, {'type': 'PUT'})
-        .done(function() {
-            target.removeClass('requesting');
-            $('.entry-title').addClass('read');
-        });
+	target.addClass('requesting');
+	$.ajax(url, {'type': 'PUT'})
+		.done(function() {
+			target.removeClass('requesting');
+			$('.entry-title').addClass('read');
+		});
 }
 
 function clickLink(event) {
@@ -667,17 +667,17 @@ function keyboardShortcut(event) {
 	var feedlist = $('[role=navigation] .feedlist');
 
 	var nextEntry = function nextEntry(open) {
-        var first;
+		var first;
 		var entry = main.find('.current').first();
 		if (entry.length === 0) {
-            first = main.find('.entry').first();
-            if (first.length === 0) {
-                return;
-            }
-            selectEntry(first);
-            if (open) {
-                toggleEntryCollapse(first);
-            }
+			first = main.find('.entry').first();
+			if (first.length === 0) {
+				return;
+			}
+			selectEntry(first);
+			if (open) {
+				toggleEntryCollapse(first);
+			}
 			return;
 		}
 		var next = entry.next().first();
@@ -685,11 +685,11 @@ function keyboardShortcut(event) {
 			return;
 		}
 
-        if (open) {
-            toggleEntryCollapse(next);
-        } else {
-            selectEntry(next);
-        }
+		if (open) {
+			toggleEntryCollapse(next);
+		} else {
+			selectEntry(next);
+		}
 	};
 
 	var prevEntry = function prevEntry(open) {
@@ -702,11 +702,11 @@ function keyboardShortcut(event) {
 			return;
 		}
 
-        if (open) {
-            toggleEntryCollapse(prev);
-        } else {
-            selectEntry(prev);
-        }
+		if (open) {
+			toggleEntryCollapse(prev);
+		} else {
+			selectEntry(prev);
+		}
 	};
 
 	var nextFeed = function nextFeed() {
@@ -747,8 +747,8 @@ function keyboardShortcut(event) {
 	};
 
 	var toggleEntry = function closeEntry() {
-        var entry = main.find('.current');
-        toggleEntryCollapse(entry);
+		var entry = main.find('.current');
+		toggleEntryCollapse(entry);
 	};
 
 	var toggleFolding = function toggleFolding() {
@@ -757,31 +757,31 @@ function keyboardShortcut(event) {
 
 	switch (event.keyCode) {
 		case 13: // return
-        case 79:
+		case 79:
 			toggleEntry();
 			break;
 		case 27: // esc
 			closeManual();
 			break;
 		case 74: //j
-            if (event.shiftKey) {
-                nextFeed();
-            } else {
-                nextEntry(true);
-            }
+			if (event.shiftKey) {
+				nextFeed();
+			} else {
+				nextEntry(true);
+			}
 			break;
 		case 75: //k
-            if (event.shiftKey) {
-                prevFeed();
-            } else {
-                prevEntry(true);
-            }
+			if (event.shiftKey) {
+				prevFeed();
+			} else {
+				prevEntry(true);
+			}
 			break;
 		case 78: //n
-            nextEntry();
+			nextEntry();
 			break;
 		case 80: //p
-            prevEntry();
+			prevEntry();
 			break;
 		case 82: //r
 			reloadEntries();
@@ -790,12 +790,12 @@ function keyboardShortcut(event) {
 			toggleStarCurrent();
 			break;
 		case 85: //u
-        case 77: //m
+		case 77: //m
 			unreadCurrent();
 			break;
-        case 86: //v
-            openInNewTab();
-            break;
+		case 86: //v
+			openInNewTab();
+			break;
 		case 88: // x
 			if (event.shiftKey) {
 				toggleFolding();
@@ -848,7 +848,7 @@ $(function () {
 	main.on('click', '.entry-title', clickEntry);
 	main.on('click', '.nextPage', loadNextPage);
 	main.on('click', '.refresh', refreshFeed);
-        main.on('click', '.mark_all', markAllRead);
+	main.on('click', '.mark_all', markAllRead);
 
 	var side = $('[role=complementary]');
 	side.on('click', '[data-action]', clickComplementaryMenu);
@@ -864,19 +864,19 @@ $(function () {
 	$('#manual').click(closeManual);
 
 	//FIXME: clean it
-    var animationEnd;
-    if (document.body.style.animation !== undefined) {
-        animationEnd = 'animationend';
-    } else if (document.body.style.MozAnimation !== undefined) {
-        animationEnd = 'animaionend';
-    } else if (document.body.style.webkitAnimation !== undefined) {
-        animationEnd = 'webkitAnimationEnd';
-    } else if (document.body.style.OAnimtion !== undefined) {
-        animationEnd = 'oAnimationEnd';
-    } else if (document.body.style.msAnimation !== undefined) {
-        animationEnd = 'MSAnimaionEnd';
-    }
-    $(document.body).on(animationEnd, resizer);
+	var animationEnd;
+	if (document.body.style.animation !== undefined) {
+		animationEnd = 'animationend';
+	} else if (document.body.style.MozAnimation !== undefined) {
+		animationEnd = 'animaionend';
+	} else if (document.body.style.webkitAnimation !== undefined) {
+		animationEnd = 'webkitAnimationEnd';
+	} else if (document.body.style.OAnimtion !== undefined) {
+		animationEnd = 'oAnimationEnd';
+	} else if (document.body.style.msAnimation !== undefined) {
+		animationEnd = 'MSAnimaionEnd';
+	}
+	$(document.body).on(animationEnd, resizer);
 
 	$('[role=navigation] .persistent .unread').addClass('current');
 	$('[role=navigation] .feedlist .allfeed.header').addClass('current');
@@ -890,3 +890,5 @@ $(function () {
 		.delay('slow')
 		.fadeIn('fast');
 });
+
+/* vim: noet:ts=4 */
