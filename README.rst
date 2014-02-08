@@ -182,8 +182,10 @@ Version 0.2.0
 To be released.
 
 - ``earthreader crawl`` command adds new options:
+
   - ``-f``/``--feed-id`` crawls only the specified feed if present.
   - ``-v``/``--verbose`` shows more detail information.
+
 - Categories are folded at first.
 - Keyboard shortcut for toggle folding category.
 - Expand categories when click feed for mobile layout.
