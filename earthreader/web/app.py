@@ -549,11 +549,15 @@ def feed_entries(category_id, feed_id):
         )
         r.status_code = 404
         return r
-    if request.if_modified_since and feed.__revision__:
-        if_modified_since = request.if_modified_since.replace(tzinfo=utc)
-        last_modified = feed.__revision__.updated_at.replace(microsecond=0)
-        if if_modified_since >= last_modified:
-            return '', 304, {}  # Not Modified
+    if feed.__revision__:
+        updated_at = feed.__revision__.updated_at
+        if request.if_modified_since:
+            if_modified_since = request.if_modified_since.replace(tzinfo=utc)
+            last_modified = updated_at.replace(microsecond=0)
+            if if_modified_since >= last_modified:
+                return '', 304, {}  # Not Modified
+    else:
+        updated_at = None
     url_token, entry_after, read, starred = get_optional_args()
     generator = None
     if url_token:
@@ -575,7 +579,11 @@ def feed_entries(category_id, feed_id):
             return jsonify(
                 title=generator.feed_title,
                 entries=[],
-                next_url=None
+                next_url=None,
+                read_url=url_for('read_all_entries',
+                                 feed_id=feed_id,
+                                 last_updated=(updated_at or now()).isoformat(),
+                                 _external=True)
             )
     save_entry_generators(url_token, generator)
     tidy_generators_up()
@@ -596,10 +604,14 @@ def feed_entries(category_id, feed_id):
     response = jsonify(
         title=text_type(feed.title),
         entries=entries,
-        next_url=next_url
+        next_url=next_url,
+        read_url=url_for('read_all_entries',
+                         feed_id=feed_id,
+                         last_updated=(updated_at or now()).isoformat(),
+                         _external=True)
     )
     if feed.__revision__:
-        response.last_modified = feed.__revision__.updated_at
+        response.last_modified = updated_at
     return response
 
 
@@ -728,9 +740,8 @@ def category_entries(category_id):
     codec = Rfc3339()
     last_updated_at = ''
     if len(entries) and not entry_after:
-        last_updated_at = codec.encode(max(map(
-            lambda x: codec.decode(x['updated']), entries
-        )))
+        last_updated_at = max(codec.decode(x['updated'])
+                              for x in entries).isoformat()
     return jsonify(
         title=category_id.split('/')[-1][1:] or app.config['ALLFEED'],
         entries=entries,

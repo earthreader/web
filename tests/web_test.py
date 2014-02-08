@@ -766,9 +766,15 @@ def test_entry_read_unread(xmls, fx_test_stage):
             assert not stage.feeds[feed_three_id].entries[0].read
 
 
-def test_mark_all_as_read(xmls, fx_test_stage):
+@mark.parametrize(('list_url', 'feed_id'), [
+    (get_url('category_entries'), None),
+    (get_url('feed_entries',
+             feed_id=get_hash('http://feedone.com/feed/atom/')),
+     get_hash('http://feedone.com/feed/atom/'))
+])
+def test_category_mark_all(list_url, feed_id, xmls, fx_test_stage):
     with app.test_client() as client:
-        r = client.get('/entries/')
+        r = client.get(list_url)
         assert r.status_code == 200
         result = json.loads(r.data)
 
@@ -776,7 +782,12 @@ def test_mark_all_as_read(xmls, fx_test_stage):
         assert r.status_code == 200
 
         with fx_test_stage as stage:
-            for sub in stage.subscriptions.recursive_subscriptions:
+            subscriptions = stage.subscriptions.recursive_subscriptions
+            if feed_id:
+                subscriptions = [sub
+                                 for sub in subscriptions
+                                 if sub.feed_id == feed_id]
+            for sub in subscriptions:
                 for entry in stage.feeds[sub.feed_id].entries:
                     assert entry.read
 
