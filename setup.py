@@ -38,7 +38,7 @@ install_requires = [
     'waitress'
 ]
 if sys.version_info < (2, 7):
-    install_requires.append('argparse >= 1.2.1')
+    install_requires.append('argparse >= 1.1')
 
 
 setup(
