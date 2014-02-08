@@ -199,8 +199,8 @@ Version 0.1.2
 
 Might be released.
 
-- Entry list is cached by browser using :mailheader:`Last-Modified` and
-  :mailheader:`If-Modified-Since` headers.
+- Entry list is cached by browser using ``Last-Modified`` and
+  ``If-Modified-Since`` headers.
 
 
 Version 0.1.1
