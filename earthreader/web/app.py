@@ -756,8 +756,7 @@ def find_feed_and_entry(category_id, feed_id, entry_id):
     for entry in feed.entries:
         entry_permalink = None
         for link in entry.links:
-            if link.relation == 'alternate'\
-               and link.mimetype == 'text/html':
+            if link.relation == 'alternate':
                 entry_permalink = link.uri
         if not entry_permalink:
             entry_permalink = entry.id
