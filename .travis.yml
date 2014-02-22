@@ -5,7 +5,7 @@ python:
 - 2.7
 - 3.3
 install:
-- pip install pytest
+- pip install pytest 'libsass>=0.3.0'
 - if [ `python -c 'from platform import *; print(python_implementation())'` != 'PyPy' ]; then
     pip install pytest pytest-cov pep8 coveralls;
   fi
