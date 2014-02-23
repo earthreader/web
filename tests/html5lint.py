@@ -1,4 +1,5 @@
 import contextlib
+import traceback
 try:
     import urllib2
 except ImportError:
@@ -21,8 +22,11 @@ request = urllib2.Request(
     headers={'Content-Type': content_type}
 )
 
-with contextlib.closing(urllib2.urlopen(request)) as response:
-    message = response.read()
-    failed = message.rstrip().endswith(b'There were errors.')
-    print(message)
-    raise SystemExit(int(failed))
+try:
+    with contextlib.closing(urllib2.urlopen(request)) as response:
+        message = response.read()
+        failed = message.rstrip().endswith(b'There were errors.')
+        print(message)
+        raise SystemExit(int(failed))
+except IOError:
+    traceback.print_exc()
