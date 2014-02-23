@@ -23,6 +23,6 @@ request = urllib2.Request(
 
 with contextlib.closing(urllib2.urlopen(request)) as response:
     message = response.read()
-    failed = message.rstrip().endswith('There were errors.')
+    failed = message.rstrip().endswith(b'There were errors.')
     print(message)
     raise SystemExit(int(failed))
