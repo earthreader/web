@@ -83,9 +83,9 @@ function unreadCurrent() {
 	var url = current.attr('data-read-url');
 	var method = 'DELETE';
 
-    if (!url) {
-        return;
-    }
+	if (!url) {
+		return;
+	}
 
 	$.ajax(url, {
 		'type': method,
@@ -101,9 +101,9 @@ function toggleStarCurrent() {
 	var url = current.attr('data-star-url');
 	var method;
 
-    if (!url) {
-        return;
-    }
+	if (!url) {
+		return;
+	}
 
 	if (current.length === 0) {
 		return;
@@ -280,7 +280,7 @@ var makeFeed = function(parentObj, obj) {
 function makeFeedList(obj, target) {
 	var feedList;
 	var i;
-  
+
 	if (target && target.length !== 0) {
 		feedList = target;
 	} else {
@@ -330,7 +330,7 @@ function dropToHeader(event) {
 function moveOutline(url) {
 	$.ajax({
 		url: url,
-		type: 'put'
+	type: 'put'
 	}).done(function(){
 		refreshFeedList();
 	}).fail(printError);
@@ -346,7 +346,7 @@ function getAllEntries() {
 
 function appendEntry(entry) {
 	var main = $('[role=main]');
-	
+
 	var article = $('<article>');
 	var header = $('<div>');
 	var time = $('<time>');
@@ -608,7 +608,7 @@ function keyboardShortcut(event) {
 	}
 
 	if (event.ctrlKey || event.metaKey) {
-	    return;
+		return;
 	}
 
 	var main = $('[role=main]');
@@ -710,7 +710,7 @@ function keyboardShortcut(event) {
 			toggleStarCurrent();
 			break;
 		case 85: //u
-        case 77: //m
+		case 77: //m
 			unreadCurrent();
 			break;
 		case 191: // /
@@ -775,19 +775,19 @@ $(function () {
 	$('#manual').click(closeManual);
 
 	//FIXME: clean it
-    var animationEnd;
-    if (document.body.style.animation !== undefined) {
-        animationEnd = 'animationend';
-    } else if (document.body.style.MozAnimation !== undefined) {
-        animationEnd = 'animaionend';
-    } else if (document.body.style.webkitAnimation !== undefined) {
-        animationEnd = 'webkitAnimationEnd';
-    } else if (document.body.style.OAnimtion !== undefined) {
-        animationEnd = 'oAnimationEnd';
-    } else if (document.body.style.msAnimation !== undefined) {
-        animationEnd = 'MSAnimaionEnd';
-    }
-    $(document.body).on(animationEnd, resizer);
+	var animationEnd;
+	if (document.body.style.animation !== undefined) {
+		animationEnd = 'animationend';
+	} else if (document.body.style.MozAnimation !== undefined) {
+		animationEnd = 'animaionend';
+	} else if (document.body.style.webkitAnimation !== undefined) {
+		animationEnd = 'webkitAnimationEnd';
+	} else if (document.body.style.OAnimtion !== undefined) {
+		animationEnd = 'oAnimationEnd';
+	} else if (document.body.style.msAnimation !== undefined) {
+		animationEnd = 'MSAnimaionEnd';
+	}
+	$(document.body).on(animationEnd, resizer);
 
 	$('[role=navigation] .persistent .unread').addClass('current');
 	$('[role=navigation] .feedlist .allfeed.header').addClass('current');
