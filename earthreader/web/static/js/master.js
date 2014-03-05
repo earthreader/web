@@ -673,6 +673,10 @@ function keyboardShortcut(event) {
 		return;
 	}
 
+	if (event.ctrlKey || event.metaKey) {
+	    return;
+	}
+
 	var main = $('[role=main]');
 	var feedlist = $('[role=navigation] .feedlist');
 
