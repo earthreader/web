@@ -674,7 +674,7 @@ function keyboardShortcut(event) {
 	}
 
 	if (event.ctrlKey || event.metaKey) {
-	    return;
+		return;
 	}
 
 	var main = $('[role=main]');
