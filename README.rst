@@ -192,8 +192,11 @@ To be released.
 - Google reader style shortcuts.
 - Mark all as read function [`#28`__]
 - Fix a bug that "crawl now" button didn't work.
+- Relative directory path on command line.
+  [`#36`__]
 
 __ https://github.com/earthreader/web/issues/28
+__ https://github.com/earthreader/web/issues/36
 
 
 Version 0.1.2

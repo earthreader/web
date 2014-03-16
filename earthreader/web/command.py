@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 import argparse
+import os
 import sys
 import traceback
 try:
@@ -146,7 +147,8 @@ def main():
 
     url = urlparse.urlparse(args.repository)
     if url.scheme == '':
-        args.repository = urlparse.urljoin('file://', args.repository)
+        args.repository = urlparse.urljoin(
+            'file://', os.path.join(os.getcwd(), args.repository))
 
     args.function(args)
 
