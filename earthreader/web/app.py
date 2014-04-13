@@ -736,7 +736,7 @@ def category_entries(category_id):
             starred
         )
 
-    #FIXME: use Entry.updated_at instead of from json data.
+    # FIXME: use Entry.updated_at instead of from json data.
     codec = Rfc3339()
     last_updated_at = ''
     if len(entries) and not entry_after:
