@@ -36,11 +36,22 @@ def server():
     serve(app, host=host, port=port)
 
 
+def open_webbrowser():
+    webbrowser.open('http://{}:{}'.format(host, port))
+
+
 if __name__ == "__main__":
     root = tk.Tk()
     root.withdraw()
+
+    menubar = tk.Menu(root)
+    filemenu = tk.Menu(menubar)
+    filemenu.add_command(label="Open Browser", command=open_webbrowser)
+    menubar.add_cascade(label="File", menu=filemenu)
+    root.config(menu=menubar)
+
     proc = threading.Thread(target=server)
     proc.daemon = True
     proc.start()
-    webbrowser.open('http://{}:{}'.format(host, port))
+    open_webbrowser()
     root.mainloop()
