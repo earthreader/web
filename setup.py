@@ -59,6 +59,7 @@ setup(
             'earthreader = earthreader.web.command:main'
         ]
     },
+    app=['app.py'],
     license='AGPLv3 or later',
     packages=find_packages(exclude=['tests']),
     package_data={
