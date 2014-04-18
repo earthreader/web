@@ -13,7 +13,10 @@ import Tkinter as tk
 import os.path
 import socket
 import threading
-import urlparse
+try:
+    from urllib import parse as urlparse
+except ImportError:
+    import urlparse
 import webbrowser
 
 from earthreader.web.app import app, spawn_worker
