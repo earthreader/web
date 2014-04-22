@@ -47,7 +47,7 @@ if __name__ == "__main__":
     menubar = tk.Menu(root)
     filemenu = tk.Menu(menubar)
     filemenu.add_command(label="Open Browser",
-                         command= lambda: open_webbrowser(port))
+                         command=lambda: open_webbrowser(port))
     menubar.add_cascade(label="File", menu=filemenu)
     root.config(menu=menubar)
     root.withdraw()
