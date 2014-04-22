@@ -179,7 +179,7 @@ Changelog
 Version 0.2.0
 ~~~~~~~~~~~~~
 
-To be released.
+Released on April 22, 2014.
 
 - ``earthreader crawl`` command adds new options:
 
@@ -194,9 +194,11 @@ To be released.
 - Fix a bug that "crawl now" button didn't work.
 - Relative directory path on command line.
   [`#36`__]
+- GUI launcher for OS X. [`#38`__]
 
 __ https://github.com/earthreader/web/issues/28
 __ https://github.com/earthreader/web/issues/36
+__ https://github.com/earthreader/web/issues/38
 
 
 Version 0.1.2
