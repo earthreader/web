@@ -4,6 +4,7 @@ python:
 - 2.6
 - 2.7
 - 3.3
+- 3.4
 install:
 - pip install pytest 'libsass>=0.3.0'
 - if [ `python -c 'from platform import *; print(python_implementation())'` != 'PyPy' ]; then
