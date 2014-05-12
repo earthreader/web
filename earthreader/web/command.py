@@ -19,6 +19,7 @@ from sassutils.wsgi import SassMiddleware
 from waitress import serve
 
 from .app import app, spawn_worker
+from .util import autofix_repo_url
 
 __all__ = 'crawl', 'main', 'server'
 
@@ -145,10 +146,7 @@ def main():
         parser.print_help()
         exit(1)
 
-    url = urlparse.urlparse(args.repository)
-    if url.scheme == '':
-        args.repository = urlparse.urljoin(
-            'file://', os.path.join(os.getcwd(), args.repository))
+    args.repository = autofix_repo_url(args.repository)
 
     args.function(args)
 

@@ -28,6 +28,7 @@ from libearth.tz import now, utc
 from libearth.version import VERSION_INFO as LIBEARTH_VERSION_INFO
 from werkzeug.exceptions import HTTPException
 
+from .util import autofix_repo_url
 from .wsgi import MethodRewriteMiddleware
 
 
@@ -48,6 +49,11 @@ try:
     app.config['REPOSITORY'] = os.environ['EARTHREADER_REPOSITORY']
 except KeyError:
     pass
+
+
+@app.before_first_request
+def initialize():
+    app.config['REPOSITORY'] = autofix_repo_url(app.config['REPOSITORY'])
 
 
 def crawl_category():
