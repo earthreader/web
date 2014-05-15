@@ -444,7 +444,7 @@ def get_permalink(data):
             return max(candidates, key=lambda pair: pair[1])[0].uri
         return
     link = data.links.permalink
-    return link and link.uri
+    return link and link.uri or data.id
 
 
 def make_next_url(category_id, url_token, entry_after, read, starred,
