@@ -53,7 +53,8 @@ except KeyError:
 
 @app.before_first_request
 def initialize():
-    app.config['REPOSITORY'] = autofix_repo_url(app.config['REPOSITORY'])
+    if 'REPOSITORY' in app.config:
+        app.config['REPOSITORY'] = autofix_repo_url(app.config['REPOSITORY'])
 
 
 def crawl_category():
