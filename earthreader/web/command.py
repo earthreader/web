@@ -4,10 +4,6 @@ import argparse
 import os
 import sys
 import traceback
-try:
-    from urllib import parse as urlparse
-except ImportError:
-    import urlparse
 
 from libearth.compat.parallel import cpu_count
 from libearth.crawler import crawl, CrawlError
