@@ -1,5 +1,8 @@
 import os
-import urlparse
+try:
+    from urllib import parse as urlparse
+except ImportError:
+    import urlparse
 
 
 def autofix_repo_url(urlstr):
