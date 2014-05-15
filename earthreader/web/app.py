@@ -779,20 +779,9 @@ def find_feed_and_entry(category_id, feed_id, entry_id):
             feed = stage.feeds[feed_id]
     except KeyError:
         raise FeedNotFound('The feed is not reachable')
-    feed_permalink = None
-    for link in feed.links:
-        if link.relation == 'alternate'\
-           and link.mimetype == 'text/html':
-            feed_permalink = link.uri
-        if not feed_permalink:
-            feed_permalink = feed.id
+    feed_permalink = get_permalink(feed)
     for entry in feed.entries:
-        entry_permalink = None
-        for link in entry.links:
-            if link.relation == 'alternate':
-                entry_permalink = link.uri
-        if not entry_permalink:
-            entry_permalink = entry.id
+        entry_permalink = get_permalink(entry)
         if entry_id == get_hash(entry.id):
             return feed, feed_permalink, entry, entry_permalink
     raise EntryNotFound('The entry is not reachable')
