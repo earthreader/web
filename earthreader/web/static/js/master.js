@@ -395,13 +395,17 @@ function processEntries(obj, queryUrl) {
 	h2.text(feed_title);
 	header.append(h2);
 
+	refresh.attr('role', 'button');
 	if (obj.crawl_url !== null) {
-		refresh.addClass('refresh');
-		refresh.attr('role', 'button');
+		refresh.addClass('crawl');
 		refresh.attr('href', obj.crawl_url);
 		refresh.text('crawl now');
-		header.append(refresh);
+	} else {
+		refresh.addClass('refresh');
+		refresh.attr('href', queryUrl);
+		refresh.text('Refresh');
 	}
+	header.append(refresh);
 
 	mark_all.addClass('mark_all');
 	mark_all.attr('href', obj.read_url);
@@ -636,8 +640,8 @@ function clickEntry(event) {
 	toggleEntryCollapse(entry);
 }
 
-function refreshFeed() {
-	var target = $('[role=main] .refresh');
+function crawlFeed() {
+	var target = $('[role=main] .crawl');
 	var url = target.attr('href');
 	target.text('requesting...');
 	$.ajax(url, {'type': 'PUT'})
@@ -863,7 +867,8 @@ $(function () {
 	var main = $('[role=main]');
 	main.on('click', '.entry-title', clickEntry);
 	main.on('click', '.nextPage', loadNextPage);
-	main.on('click', '.refresh', refreshFeed);
+	main.on('click', '.refresh', reloadEntries);
+	main.on('click', '.crawl', crawlFeed);
 	main.on('click', '.mark_all', markAllRead);
 
 	var side = $('[role=complementary]');
