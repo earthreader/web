@@ -605,7 +605,9 @@ def feed_entries(category_id, feed_id):
                 read_url=url_for('read_all_entries',
                                  feed_id=feed_id,
                                  last_updated=(updated_at or now()).isoformat(),
-                                 _external=True)
+                                 _external=True),
+                crawl_url=url_for('update_entries',
+                                  category_id=category_id, feed_id=feed_id)
             )
     save_entry_generators(url_token, generator)
     tidy_generators_up()
@@ -630,7 +632,9 @@ def feed_entries(category_id, feed_id):
         read_url=url_for('read_all_entries',
                          feed_id=feed_id,
                          last_updated=(updated_at or now()).isoformat(),
-                         _external=True)
+                         _external=True),
+        crawl_url=url_for('update_entries',
+                          category_id=category_id, feed_id=feed_id)
     )
     if feed.__revision__:
         response.last_modified = updated_at
@@ -770,6 +774,7 @@ def category_entries(category_id):
         read_url=url_for('read_all_entries', category_id=category_id,
                          last_updated=last_updated_at,
                          _external=True),
+        crawl_url=url_for('update_entries', category_id=category_id),
         next_url=next_url
     )
 
