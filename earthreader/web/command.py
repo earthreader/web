@@ -14,7 +14,7 @@ from libearth.stage import Stage
 from sassutils.wsgi import SassMiddleware
 from waitress import serve
 
-from .app import app, spawn_worker
+from .app import app
 from .util import autofix_repo_url
 
 __all__ = 'crawl', 'main', 'server'
@@ -82,7 +82,6 @@ def server_command(args):
             print('Profiler (linesman) is available:',
                   'http://{0.host}:{0.port}/__profiler__/'.format(args))
         app.wsgi_app = make_linesman_middleware(app.wsgi_app)
-    spawn_worker()
     if args.debug:
         app.wsgi_app = SassMiddleware(app.wsgi_app, {
             'earthreader.web': ('static/scss/', 'static/css/')

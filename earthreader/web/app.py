@@ -42,6 +42,7 @@ app.config.update(
     SESSION_ID=None,
     PAGE_SIZE=20,
     CRAWLER_THREAD=4,
+    USE_WORKER=True,
 )
 
 # Load EARTHREADER_REPOSITORY environment variable if present.
@@ -92,6 +93,12 @@ def spawn_worker():
     worker = threading.Thread(target=crawl_category)
     worker.setDaemon(True)
     worker.start()
+
+
+@app.before_first_request
+def initialize():
+    if app.config['USE_WORKER']:
+        spawn_worker()
 
 
 class IteratorNotFound(ValueError):
