@@ -69,6 +69,8 @@ def server_command(args):
     repository = args.repository
     app.config.update(REPOSITORY=repository, SESSION_ID=args.session_id)
     app.debug = args.debug
+    if args.no_worker:
+        app.config.update(USE_WORKER=False)
     if args.profile:
         try:
             from linesman.middleware import make_linesman_middleware
@@ -117,6 +119,10 @@ server_parser.add_argument('-P', '--profile', '--linesman',
                            action='store_true',
                            help="profile using linesman.  it's available only "
                                 'when linesman is installed')
+server_parser.add_argument('-w', '--no-worker',
+                           default=False,
+                           action='store_true',
+                           help='Disable worker thread that crawl feeds')
 server_parser.add_argument('repository', help='repository for Earth Reader')
 
 crawl_parser = subparsers.add_parser('crawl', help='crawl feeds in the opml')
