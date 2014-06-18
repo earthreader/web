@@ -397,7 +397,7 @@ function processEntries(obj, queryUrl) {
 
 	refresh.addClass('refresh');
 	refresh.attr('role', 'button');
-	refresh.attr('href', queryUrl);
+	refresh.attr('href', obj.crawl_url);
 	refresh.text('crawl now');
 	header.append(refresh);
 
