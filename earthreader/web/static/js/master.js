@@ -395,11 +395,13 @@ function processEntries(obj, queryUrl) {
 	h2.text(feed_title);
 	header.append(h2);
 
-	refresh.addClass('refresh');
-	refresh.attr('role', 'button');
-	refresh.attr('href', obj.crawl_url);
-	refresh.text('crawl now');
-	header.append(refresh);
+	if (obj.crawl_url !== null) {
+		refresh.addClass('refresh');
+		refresh.attr('role', 'button');
+		refresh.attr('href', obj.crawl_url);
+		refresh.text('crawl now');
+		header.append(refresh);
+	}
 
 	mark_all.addClass('mark_all');
 	mark_all.attr('href', obj.read_url);

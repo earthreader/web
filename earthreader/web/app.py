@@ -580,6 +580,14 @@ def feed_entries(category_id, feed_id):
                 return '', 304, {}  # Not Modified
     else:
         updated_at = None
+
+    if app.config['WORKER_RUNNING']:
+        crawl_url = url_for('update_entries',
+                            category_id=category_id,
+                            feed_id=feed_id)
+    else:
+        crawl_url = None
+
     url_token, entry_after, read, starred = get_optional_args()
     generator = None
     if url_token:
@@ -606,8 +614,7 @@ def feed_entries(category_id, feed_id):
                                  feed_id=feed_id,
                                  last_updated=(updated_at or now()).isoformat(),
                                  _external=True),
-                crawl_url=url_for('update_entries',
-                                  category_id=category_id, feed_id=feed_id)
+                crawl_url=crawl_url
             )
     save_entry_generators(url_token, generator)
     tidy_generators_up()
@@ -633,8 +640,7 @@ def feed_entries(category_id, feed_id):
                          feed_id=feed_id,
                          last_updated=(updated_at or now()).isoformat(),
                          _external=True),
-        crawl_url=url_for('update_entries',
-                          category_id=category_id, feed_id=feed_id)
+        crawl_url=crawl_url
     )
     if feed.__revision__:
         response.last_modified = updated_at
@@ -768,13 +774,18 @@ def category_entries(category_id):
     if len(entries) and not entry_after:
         last_updated_at = max(codec.decode(x['updated'])
                               for x in entries).isoformat()
+
+    if app.config['WORKER_RUNNING']:
+        crawl_url = url_for('update_entries', category_id=category_id),
+    else:
+        crawl_url = None
     return jsonify(
         title=category_id.split('/')[-1][1:] or app.config['ALLFEED'],
         entries=entries,
         read_url=url_for('read_all_entries', category_id=category_id,
                          last_updated=last_updated_at,
                          _external=True),
-        crawl_url=url_for('update_entries', category_id=category_id),
+        crawl_url=crawl_url,
         next_url=next_url
     )
 
