@@ -43,6 +43,7 @@ app.config.update(
     PAGE_SIZE=20,
     CRAWLER_THREAD=4,
     USE_WORKER=True,
+    WORKER_RUNNING=False,
 )
 
 # Load EARTHREADER_REPOSITORY environment variable if present.
@@ -59,12 +60,12 @@ def initialize():
 
 
 def crawl_category():
-    running = True
-    while running:
+    app.config.update(WORKER_RUNNING=True)
+    while app.config['WORKER_RUNNING']:
         priority, arguments = crawling_queue.get()
         if priority == 0:
             if arguments == 'terminate':
-                running = False
+                app.config.update(WORKER_RUNNING=False)
             crawling_queue.task_done()
         elif priority == 1:
             cursor, feed_id = arguments
@@ -135,6 +136,13 @@ class EntryNotFound(ValueError, JsonException):
 
     error = 'entry-not-found'
     message = 'The entry you request does not exist'
+
+
+class WorkerNotRunning(ValueError, JsonException):
+    """Rise when the worker thread is not running."""
+
+    error = 'worker-not-running'
+    message = 'The worker thread that crawl feeds in background is not running.'
 
 
 class Cursor():
@@ -772,11 +780,14 @@ def category_entries(category_id):
 @app.route('/entries/', defaults={'category_id': ''}, methods=['PUT'])
 @app.route('/<path:category_id>/entries/', methods=['PUT'])
 def update_entries(category_id, feed_id=None):
-    cursor = Cursor(category_id)
-    crawling_queue.put((1, (cursor, feed_id)))
-    r = jsonify()
-    r.status_code = 202
-    return r
+    if app.config['WORKER_RUNNING']:
+        cursor = Cursor(category_id)
+        crawling_queue.put((1, (cursor, feed_id)))
+        r = jsonify()
+        r.status_code = 202
+        return r
+    else:
+        raise WorkerNotRunning('Worker thread is not running.')
 
 
 def find_feed_and_entry(category_id, feed_id, entry_id):
