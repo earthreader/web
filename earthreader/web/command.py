@@ -4,10 +4,6 @@ import argparse
 import os
 import sys
 import traceback
-try:
-    from urllib import parse as urlparse
-except ImportError:
-    import urlparse
 
 from libearth.compat.parallel import cpu_count
 from libearth.crawler import crawl, CrawlError
@@ -19,6 +15,7 @@ from sassutils.wsgi import SassMiddleware
 from waitress import serve
 
 from .app import app, spawn_worker
+from .util import autofix_repo_url
 
 __all__ = 'crawl', 'main', 'server'
 
@@ -145,10 +142,7 @@ def main():
         parser.print_help()
         exit(1)
 
-    url = urlparse.urlparse(args.repository)
-    if url.scheme == '':
-        args.repository = urlparse.urljoin(
-            'file://', os.path.join(os.getcwd(), args.repository))
+    args.repository = autofix_repo_url(args.repository)
 
     args.function(args)
 

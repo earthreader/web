@@ -28,6 +28,7 @@ from libearth.tz import now, utc
 from libearth.version import VERSION_INFO as LIBEARTH_VERSION_INFO
 from werkzeug.exceptions import HTTPException
 
+from .util import autofix_repo_url
 from .wsgi import MethodRewriteMiddleware
 
 
@@ -48,6 +49,12 @@ try:
     app.config['REPOSITORY'] = os.environ['EARTHREADER_REPOSITORY']
 except KeyError:
     pass
+
+
+@app.before_first_request
+def initialize():
+    if 'REPOSITORY' in app.config:
+        app.config['REPOSITORY'] = autofix_repo_url(app.config['REPOSITORY'])
 
 
 def crawl_category():
@@ -437,7 +444,7 @@ def get_permalink(data):
             return max(candidates, key=lambda pair: pair[1])[0].uri
         return
     link = data.links.permalink
-    return link and link.uri
+    return link and link.uri or data.id
 
 
 def make_next_url(category_id, url_token, entry_after, read, starred,
@@ -773,20 +780,9 @@ def find_feed_and_entry(category_id, feed_id, entry_id):
             feed = stage.feeds[feed_id]
     except KeyError:
         raise FeedNotFound('The feed is not reachable')
-    feed_permalink = None
-    for link in feed.links:
-        if link.relation == 'alternate'\
-           and link.mimetype == 'text/html':
-            feed_permalink = link.uri
-        if not feed_permalink:
-            feed_permalink = feed.id
+    feed_permalink = get_permalink(feed)
     for entry in feed.entries:
-        entry_permalink = None
-        for link in entry.links:
-            if link.relation == 'alternate':
-                entry_permalink = link.uri
-        if not entry_permalink:
-            entry_permalink = entry.id
+        entry_permalink = get_permalink(entry)
         if entry_id == get_hash(entry.id):
             return feed, feed_permalink, entry, entry_permalink
     raise EntryNotFound('The entry is not reachable')

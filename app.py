@@ -32,6 +32,14 @@ def open_webbrowser(port):
 
 
 if __name__ == "__main__":
+    root = tk.Tk()
+    menubar = tk.Menu(root)
+    filemenu = tk.Menu(menubar)
+    filemenu.add_command(label="Open Browser",
+                         command=lambda: open_webbrowser(port))
+    menubar.add_cascade(label="File", menu=filemenu)
+    root.config(menu=menubar)
+    root.withdraw()
     directory = os.path.expanduser('~/.earthreader')
     repository = urlparse.urljoin('file://', directory)
     session_id = Session().identifier
@@ -43,12 +51,4 @@ if __name__ == "__main__":
     proc.daemon = True
     proc.start()
     open_webbrowser(port)
-    root = tk.Tk()
-    menubar = tk.Menu(root)
-    filemenu = tk.Menu(menubar)
-    filemenu.add_command(label="Open Browser",
-                         command= lambda: open_webbrowser(port))
-    menubar.add_cascade(label="File", menu=filemenu)
-    root.config(menu=menubar)
-    root.withdraw()
     root.mainloop()

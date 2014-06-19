@@ -176,6 +176,20 @@ Continuous integration (Travis)
 Changelog
 ---------
 
+Version 0.2.1
+~~~~~~~~~~~~~
+
+Might be released.
+
+- Relative directory path on WSGI app.
+  [`#42`__]
+- Give correct permalink.
+  [`#43`__]
+
+__ https://github.com/earthreader/web/issues/42
+__ https://github.com/earthreader/web/issues/43
+
+
 Version 0.2.0
 ~~~~~~~~~~~~~
 
