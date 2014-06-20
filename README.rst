@@ -173,6 +173,13 @@ Continuous integration (Travis)
       :target: https://travis-ci.org/earthreader/web
 
 
+Demo
+----
+
+You can try Earth Reader web here:
+http://try.earthreader.org/
+
+
 Changelog
 ---------
 
