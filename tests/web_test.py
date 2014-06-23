@@ -707,6 +707,7 @@ def fx_xml_for_update(xmls, request):
 def test_update_feed_entries(fx_xml_for_update, fx_test_stage,
                              fx_crawling_queue):
     with app.test_client() as client:
+        worker.start_worker()
         feed_two_id = get_hash('http://feedtwo.com/feed/atom/')
         with fx_test_stage as stage:
             assert len(stage.feeds[feed_two_id].entries) == 1
@@ -720,12 +721,21 @@ def test_update_feed_entries(fx_xml_for_update, fx_test_stage,
             )
         )
         assert r.status_code == 202
-        assert worker.qsize() == 1
+        worker.kill_worker()
+        r = client.put(
+            get_url(
+                'update_entries',
+                category_id='-categoryone/-categorytwo',
+                feed_id=feed_two_id
+            )
+        )
+        assert r.status_code == 404
 
 
 def test_update_category_entries(fx_xml_for_update, fx_test_stage,
                                  fx_crawling_queue):
     with app.test_client() as client:
+        worker.start_worker()
         feed_two_id = get_hash('http://feedtwo.com/feed/atom/')
         feed_three_id = get_hash('http://feedthree.com/feed/atom/')
         with fx_test_stage as stage:
@@ -733,7 +743,15 @@ def test_update_category_entries(fx_xml_for_update, fx_test_stage,
             assert len(stage.feeds[feed_three_id].entries) == 1
         r = client.put('/entries/')
         assert r.status_code == 202
-        assert worker.qsize() == 1
+        worker.kill_worker()
+        r = client.put(
+            get_url(
+                'update_entries',
+                category_id='-categoryone/-categorytwo',
+                feed_id=feed_two_id
+            )
+        )
+        assert r.status_code == 404
 
 
 def test_entry_read_unread(xmls, fx_test_stage):

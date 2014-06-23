@@ -70,7 +70,12 @@ class Worker(object):
 
     def start_worker(self):
         if not self.worker.isAlive():
-            self.worker.start()
+            try:
+                self.worker.start()
+            except RuntimeError:
+                self.worker = threading.Thread(target=self.crawl_category)
+                self.worker.setDaemon(True)
+                self.worker.start()
 
     def kill_worker(self):
         if self.worker.isAlive():
