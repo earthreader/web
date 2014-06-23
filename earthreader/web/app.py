@@ -88,6 +88,7 @@ def crawl_category():
                 except StopIteration:
                     break
             crawling_queue.task_done()
+    app.config['WORKER_RUNNING'] = False
 
 
 def spawn_worker():
