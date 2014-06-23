@@ -35,7 +35,6 @@ from .wsgi import MethodRewriteMiddleware
 app = Flask(__name__)
 app.wsgi_app = MethodRewriteMiddleware(app.wsgi_app)
 
-crawling_queue = Queue.Queue()
 
 app.config.update(
     ALLFEED='All Feeds',
@@ -43,8 +42,8 @@ app.config.update(
     PAGE_SIZE=20,
     CRAWLER_THREAD=4,
     USE_WORKER=True,
-    WORKER_RUNNING=False,
 )
+
 
 # Load EARTHREADER_REPOSITORY environment variable if present.
 try:
@@ -58,49 +57,70 @@ def initialize():
     if 'REPOSITORY' in app.config:
         app.config['REPOSITORY'] = autofix_repo_url(app.config['REPOSITORY'])
 
-
-def crawl_category():
-    app.config.update(WORKER_RUNNING=True)
-    while app.config['WORKER_RUNNING']:
-        priority, arguments = crawling_queue.get()
-        if priority == 0:
-            if arguments == 'terminate':
-                app.config.update(WORKER_RUNNING=False)
-            crawling_queue.task_done()
-        elif priority == 1:
-            cursor, feed_id = arguments
-            urls = {}
-            if not feed_id:
-                urls = dict((sub.feed_uri, sub.feed_id)
-                            for sub in cursor.recursive_subscriptions)
-            else:
-                urls = dict((sub.feed_uri, sub.feed_id)
-                            for sub in cursor.recursive_subscriptions
-                            if sub.feed_id == feed_id)
-            iterator = iter(crawl(urls, app.config['CRAWLER_THREAD']))
-            while True:
-                try:
-                    feed_url, feed_data, crawler_hints = next(iterator)
-                    with get_stage() as stage:
-                        stage.feeds[urls[feed_url]] = feed_data
-                except CrawlError:
-                    continue
-                except StopIteration:
-                    break
-            crawling_queue.task_done()
-    app.config['WORKER_RUNNING'] = False
-
-
-def spawn_worker():
-    worker = threading.Thread(target=crawl_category)
-    worker.setDaemon(True)
-    worker.start()
-
-
-@app.before_first_request
-def initialize():
     if app.config['USE_WORKER']:
-        spawn_worker()
+        worker.start_worker()
+
+
+class Worker(object):
+
+    def __init__(self):
+        self.crawling_queue = Queue.Queue()
+        self.worker = threading.Thread(target=self.crawl_category)
+        self.worker.setDaemon(True)
+
+    def start_worker(self):
+        if not self.worker.isAlive():
+            self.worker.start()
+
+    def kill_worker(self):
+        if self.worker.isAlive():
+            self.crawling_queue.put((0, 'terminate'))
+            self.worker.join()
+
+    def is_running(self):
+        return self.worker.isAlive()
+
+    def add_job(self, cursor, feed_id):
+        self.crawling_queue.put((1, (cursor, feed_id)))
+
+    def empty_queue(self):
+        with self.crawling_queue.mutex:
+            self.crawling_queue.queue.clear()
+
+    def qsize(self):
+        return self.crawling_queue.qsize()
+
+    def crawl_category(self):
+        running = True
+        while running:
+            priority, arguments = self.crawling_queue.get()
+            if priority == 0:
+                if arguments == 'terminate':
+                    running = False
+                self.crawling_queue.task_done()
+            elif priority == 1:
+                cursor, feed_id = arguments
+                urls = {}
+                if not feed_id:
+                    urls = dict((sub.feed_uri, sub.feed_id)
+                                for sub in cursor.recursive_subscriptions)
+                else:
+                    urls = dict((sub.feed_uri, sub.feed_id)
+                                for sub in cursor.recursive_subscriptions
+                                if sub.feed_id == feed_id)
+                iterator = iter(crawl(urls, app.config['CRAWLER_THREAD']))
+                while True:
+                    try:
+                        feed_url, feed_data, crawler_hints = next(iterator)
+                        with get_stage() as stage:
+                            stage.feeds[urls[feed_url]] = feed_data
+                    except CrawlError:
+                        continue
+                    except StopIteration:
+                        break
+                self.crawling_queue.task_done()
+
+worker = Worker()
 
 
 class IteratorNotFound(ValueError):
@@ -582,7 +602,7 @@ def feed_entries(category_id, feed_id):
     else:
         updated_at = None
 
-    if app.config['WORKER_RUNNING']:
+    if worker.is_running():
         crawl_url = url_for('update_entries',
                             category_id=category_id,
                             feed_id=feed_id)
@@ -776,7 +796,7 @@ def category_entries(category_id):
         last_updated_at = max(codec.decode(x['updated'])
                               for x in entries).isoformat()
 
-    if app.config['WORKER_RUNNING']:
+    if worker.is_running():
         crawl_url = url_for('update_entries', category_id=category_id),
     else:
         crawl_url = None
@@ -797,9 +817,9 @@ def category_entries(category_id):
 @app.route('/entries/', defaults={'category_id': ''}, methods=['PUT'])
 @app.route('/<path:category_id>/entries/', methods=['PUT'])
 def update_entries(category_id, feed_id=None):
-    if app.config['WORKER_RUNNING']:
+    if worker.is_running():
         cursor = Cursor(category_id)
-        crawling_queue.put((1, (cursor, feed_id)))
+        worker.add_job(cursor, feed_id)
         r = jsonify()
         r.status_code = 202
         return r
