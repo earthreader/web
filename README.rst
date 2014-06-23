@@ -183,6 +183,12 @@ http://try.earthreader.org/
 Changelog
 ---------
 
+Version 0.3.0
+~~~~~~~~~~~~~
+
+- Run crawler thread by default.
+
+
 Version 0.2.1
 ~~~~~~~~~~~~~
 

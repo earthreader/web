@@ -25,8 +25,7 @@ from libearth.tz import utc
 from pytest import fixture, mark, raises
 from werkzeug.urls import url_encode
 
-from earthreader.web.app import (app, crawling_queue, get_hash, spawn_worker,
-                                 entry_generators)
+from earthreader.web.app import app, get_hash, worker, entry_generators
 
 
 @app.errorhandler(400)
@@ -223,26 +222,17 @@ def xmls(request, fx_test_stage):
         stage.subscriptions = subscriptions
 
 
-def empty_queue():
-    with crawling_queue.mutex:
-        crawling_queue.queue.clear()
-
-
 @fixture
 def fx_crawler(request):
-    empty_queue()
-    spawn_worker()
+    worker.start_worker()
+    worker.empty_queue()
 
-    def terminate():
-        empty_queue()
-        crawling_queue.put((0, 'terminate'))
-
-    request.addfinalizer(terminate)
+    request.addfinalizer(worker.kill_worker)
 
 
 @fixture
 def fx_crawling_queue(request):
-    request.addfinalizer(empty_queue)
+    request.addfinalizer(worker.empty_queue)
 
 
 def test_all_feeds(xmls):
@@ -717,11 +707,12 @@ def fx_xml_for_update(xmls, request):
 def test_update_feed_entries(fx_xml_for_update, fx_test_stage,
                              fx_crawling_queue):
     with app.test_client() as client:
+        worker.start_worker()
         feed_two_id = get_hash('http://feedtwo.com/feed/atom/')
         with fx_test_stage as stage:
             assert len(stage.feeds[feed_two_id].entries) == 1
 
-        assert crawling_queue.qsize() == 0
+        assert worker.qsize() == 0
         r = client.put(
             get_url(
                 'update_entries',
@@ -730,12 +721,21 @@ def test_update_feed_entries(fx_xml_for_update, fx_test_stage,
             )
         )
         assert r.status_code == 202
-        assert crawling_queue.qsize() == 1
+        worker.kill_worker()
+        r = client.put(
+            get_url(
+                'update_entries',
+                category_id='-categoryone/-categorytwo',
+                feed_id=feed_two_id
+            )
+        )
+        assert r.status_code == 404
 
 
 def test_update_category_entries(fx_xml_for_update, fx_test_stage,
                                  fx_crawling_queue):
     with app.test_client() as client:
+        worker.start_worker()
         feed_two_id = get_hash('http://feedtwo.com/feed/atom/')
         feed_three_id = get_hash('http://feedthree.com/feed/atom/')
         with fx_test_stage as stage:
@@ -743,7 +743,15 @@ def test_update_category_entries(fx_xml_for_update, fx_test_stage,
             assert len(stage.feeds[feed_three_id].entries) == 1
         r = client.put('/entries/')
         assert r.status_code == 202
-        assert crawling_queue.qsize() == 1
+        worker.kill_worker()
+        r = client.put(
+            get_url(
+                'update_entries',
+                category_id='-categoryone/-categorytwo',
+                feed_id=feed_two_id
+            )
+        )
+        assert r.status_code == 404
 
 
 def test_entry_read_unread(xmls, fx_test_stage):
