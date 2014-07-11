@@ -35,6 +35,7 @@ class pytest(test):
 install_requires = [
     'Flask >= 0.10',
     'libearth >= 0.1.1',
+    'six',
     'waitress'
 ]
 if sys.version_info < (2, 7):

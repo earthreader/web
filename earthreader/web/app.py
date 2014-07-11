@@ -2,18 +2,8 @@ import datetime
 import hashlib
 import os
 import threading
-try:
-    import Queue
-except ImportError:
-    import queue as Queue
-try:
-    import urllib2
-except ImportError:
-    import urllib.request as urllib2
-try:
-    from urllib import parse as urlparse
-except ImportError:
-    import urlparse
+from six.moves import queue
+from six.moves import urllib
 
 from flask import Flask, jsonify, render_template, request, url_for
 from libearth.codecs import Rfc3339
@@ -33,7 +23,7 @@ from .wsgi import MethodRewriteMiddleware
 app = Flask(__name__)
 app.wsgi_app = MethodRewriteMiddleware(app.wsgi_app)
 
-crawling_queue = Queue.Queue()
+crawling_queue = queue.Queue()
 
 app.config.update(
     ALLFEED='All Feeds',
@@ -213,7 +203,7 @@ def get_stage():
             session_id = '{0}.{1}'.format(session_id, os.getpid())
 
         session = Session(session_id)
-        url = urlparse.urlparse(app.config['REPOSITORY'])
+        url = urllib.parse.urlparse(app.config['REPOSITORY'])
         if url.scheme == 'file':
             repository = FileSystemRepository(
                 url.path,
@@ -268,7 +258,7 @@ def add_feed(category_id):
     cursor = Cursor(category_id)
     url = request.form['url']
     try:
-        f = urllib2.urlopen(url)
+        f = urllib.request.urlopen(url)
         document = f.read()
         f.close()
     except Exception:
