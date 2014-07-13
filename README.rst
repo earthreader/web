@@ -185,6 +185,7 @@ Might be released.
   [`#42`__]
 - Give correct permalink.
   [`#43`__]
+- Workaround libearth 0.3.0 incompatibility.
 
 __ https://github.com/earthreader/web/issues/42
 __ https://github.com/earthreader/web/issues/43
