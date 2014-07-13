@@ -181,10 +181,8 @@ Version 0.2.1
 
 Might be released.
 
-- Relative directory path on WSGI app.
-  [`#42`__]
-- Give correct permalink.
-  [`#43`__]
+- Relative directory path on WSGI app.  [`#42`__]
+- Give correct permalink.  [`#43`__]
 - Workaround libearth 0.3.0 incompatibility.
 
 __ https://github.com/earthreader/web/issues/42
@@ -205,10 +203,9 @@ Released on April 22, 2014.
 - Keyboard shortcut for toggle folding category.
 - Expand categories when click feed for mobile layout.
 - Google reader style shortcuts.
-- Mark all as read function [`#28`__]
-- Fix a bug that "crawl now" button didn't work.
-- Relative directory path on command line.
-  [`#36`__]
+- Mark all as read function. [`#28`__]
+- Fixed a bug that "crawl now" button didn't work.
+- Relative directory path on command line.  [`#36`__]
 - GUI launcher for OS X. [`#38`__]
 
 __ https://github.com/earthreader/web/issues/28
