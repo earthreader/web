@@ -9,7 +9,10 @@ You can build it using py2app_::
 .. _py2app: https://pypi.python.org/pypi/py2app/
 
 """
-import Tkinter as tk
+try:
+    import Tkinter as tk
+except ImportError:
+    import tkinter as tk
 import os.path
 import threading
 try:
