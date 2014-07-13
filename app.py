@@ -21,7 +21,7 @@ except ImportError:
     import urlparse
 import webbrowser
 
-from earthreader.web.app import app, spawn_worker
+from earthreader.web.app import app
 from libearth.session import Session
 from waitress.server import create_server
 
@@ -46,10 +46,10 @@ if __name__ == "__main__":
     directory = os.path.expanduser('~/.earthreader')
     repository = urlparse.urljoin('file://', directory)
     session_id = Session().identifier
-    app.config.update(REPOSITORY=repository, SESSION_ID=session_id)
+    app.config.update(REPOSITORY=repository, SESSION_ID=session_id,
+                      USE_WORKER=True)
     server = create_server(app, port=0)
     port = server.effective_port
-    spawn_worker()
     proc = threading.Thread(target=serve)
     proc.daemon = True
     proc.start()
