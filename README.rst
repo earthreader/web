@@ -186,6 +186,8 @@ Changelog
 Version 0.3.0
 ~~~~~~~~~~~~~
 
+To be released.
+
 - Run crawler thread by default.
 
 
