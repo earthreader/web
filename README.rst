@@ -189,6 +189,8 @@ Version 0.3.0
 To be released.
 
 - Run crawler thread by default.
+- Error code ``circular-refernce``, which is a typo, was renamed to
+  ``circular-reference``.
 
 
 Version 0.2.1

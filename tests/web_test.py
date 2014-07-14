@@ -1186,12 +1186,13 @@ def test_move_to_root(xmls, fx_test_stage):
         assert r.status_code == 200
     with fx_test_stage as stage:
         subscriptions = stage.subscriptions
-        for child in subscriptions.categories['categoryone'].children:
+        for child in subscriptions.categories['categoryone']:
             assert child.label != 'Feed One'
-        assert len(subscriptions.children) == 4
+        assert len(subscriptions) == 4
 
 
 def test_move_category_circular(xmls):
     with app.test_client() as client:
         r = client.put('/-categoryone/-categorytwo/feeds/?from=-categoryone')
         assert r.status_code == 400
+        assert json.loads(r.data)['error'] == 'circular-reference'

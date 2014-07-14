@@ -414,7 +414,7 @@ def move_outline(category_id):
     if isinstance(target, Category) and \
             (category_id).startswith(source_path + '/'):
         r = jsonify(
-            error='circular-refernce',
+            error='circular-reference',
             message='Cannot move into child element.'
         )
         r.status_code = 400
