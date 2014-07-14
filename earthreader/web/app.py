@@ -369,9 +369,7 @@ def move_outline(category_id):
         target = source.target_child
 
     dest = Cursor(category_id)
-    # TODO: use SubscriptionSet.contains() after releasing libearth 0.2
-    if isinstance(target, Category) and \
-            (category_id).startswith(source_path + '/'):
+    if isinstance(target, Category) and target.contains(dest.value):
         r = jsonify(
             error='circular-refernce',
             message='Cannot move into child element.'
