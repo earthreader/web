@@ -179,7 +179,7 @@ Changelog
 Version 0.2.1
 ~~~~~~~~~~~~~
 
-Might be released.
+Released on July 16, 2014.
 
 - Relative directory path on WSGI app.  [`#42`__]
 - Give correct permalink.  [`#43`__]
