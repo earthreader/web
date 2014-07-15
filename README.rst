@@ -184,6 +184,8 @@ Might be released.
 - Relative directory path on WSGI app.  [`#42`__]
 - Give correct permalink.  [`#43`__]
 - Workaround libearth 0.3.0 incompatibility.
+- Entry list is cached by browser using ``Last-Modified`` and
+  ``If-Modified-Since`` headers.
 
 __ https://github.com/earthreader/web/issues/42
 __ https://github.com/earthreader/web/issues/43
@@ -211,15 +213,6 @@ Released on April 22, 2014.
 __ https://github.com/earthreader/web/issues/28
 __ https://github.com/earthreader/web/issues/36
 __ https://github.com/earthreader/web/issues/38
-
-
-Version 0.1.2
-~~~~~~~~~~~~~
-
-Might be released.
-
-- Entry list is cached by browser using ``Last-Modified`` and
-  ``If-Modified-Since`` headers.
 
 
 Version 0.1.1
