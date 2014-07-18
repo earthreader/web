@@ -191,6 +191,7 @@ To be released.
 - Run crawler thread by default.
 - Error code ``circular-refernce``, which is a typo, was renamed to
   ``circular-reference``.
+- Fixed auto scroll when entry has images.
 
 
 Version 0.2.1

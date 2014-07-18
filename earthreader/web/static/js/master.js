@@ -564,6 +564,9 @@ function selectEntry(entry) {
 	entry = $(entry).closest('.entry');
 	main.find('.current').removeClass('current');
 	entry.addClass('current');
+	entry.find('img').on('load', function() {
+		$(window).scrollTop(entry.position().top);
+	});
 	$(window).scrollTop(entry.position().top);
 }
 
