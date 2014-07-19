@@ -1,4 +1,4 @@
-"""GUI launcher for OS X
+""":mod:`earthreader.web.osx` --- GUI launcher for OS X
 
 You can build it using py2app_::
 
@@ -9,32 +9,31 @@ You can build it using py2app_::
 .. _py2app: https://pypi.python.org/pypi/py2app/
 
 """
+import os.path
+import threading
+import webbrowser
 try:
     import Tkinter as tk
 except ImportError:
     import tkinter as tk
-import os.path
-import threading
 try:
     from urllib import parse as urlparse
 except ImportError:
     import urlparse
-import webbrowser
 
-from earthreader.web.app import app
 from libearth.session import Session
 from waitress.server import create_server
 
-
-def serve():
-    server.run()
+from .app import app
 
 
 def open_webbrowser(port):
+    """Opens default web browser to localhost with given port."""
     webbrowser.open('http://0.0.0.0:{}'.format(port))
 
 
-if __name__ == "__main__":
+def main():
+    """Entrypoint for OS X."""
     root = tk.Tk()
     menubar = tk.Menu(root)
     filemenu = tk.Menu(menubar)
@@ -50,8 +49,12 @@ if __name__ == "__main__":
                       USE_WORKER=True)
     server = create_server(app, port=0)
     port = server.effective_port
-    proc = threading.Thread(target=serve)
+    proc = threading.Thread(target=server.run)
     proc.daemon = True
     proc.start()
     open_webbrowser(port)
     root.mainloop()
+
+
+if __name__ == "__main__":
+    main()

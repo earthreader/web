@@ -1,6 +1,5 @@
 import os.path
 import sys
-
 try:
     from setuptools import find_packages, setup
 except ImportError:
@@ -8,6 +7,7 @@ except ImportError:
     use_setuptools()
     from setuptools import find_packages, setup
 from setuptools.command.test import test
+
 from earthreader.web.version import VERSION
 
 
@@ -60,7 +60,7 @@ setup(
             'earthreader = earthreader.web.command:main'
         ]
     },
-    app=['app.py'],
+    app=['earthreader/web/osx.py'],
     license='AGPLv3 or later',
     packages=find_packages(exclude=['tests']),
     package_data={
