@@ -192,6 +192,7 @@ To be released.
 - Error code ``circular-refernce``, which is a typo, was renamed to
   ``circular-reference``.
 - Fixed auto scroll when entry has images.
+- Became to need libearth 0.3.1 or later.
 
 
 Version 0.2.1

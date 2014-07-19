@@ -1171,8 +1171,7 @@ def test_move_category(xmls, fx_test_stage):
         assert r.status_code == 200
     with fx_test_stage as stage:
         subscriptions = stage.subscriptions
-        with raises(KeyError):
-            subscriptions.categories['categoryone']
+        assert 'categoryone' not in subscriptions.categories
         category_three = subscriptions.categories['categorythree']
         assert len(category_three) == 2
         category_one = category_three.categories['categoryone']
