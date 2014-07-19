@@ -1160,9 +1160,9 @@ def test_move_feed(xmls, fx_test_stage):
         assert r.status_code == 200
     with fx_test_stage as stage:
         subscriptions = stage.subscriptions
-        for child in subscriptions.children:
+        for child in subscriptions:
             assert child.label != 'Feed Three'
-        assert len(subscriptions.categories['categoryone'].children) == 3
+        assert len(subscriptions.categories['categoryone']) == 3
 
 
 def test_move_category(xmls, fx_test_stage):
@@ -1174,9 +1174,9 @@ def test_move_category(xmls, fx_test_stage):
         with raises(KeyError):
             subscriptions.categories['categoryone']
         category_three = subscriptions.categories['categorythree']
-        assert len(category_three.children) == 2
+        assert len(category_three) == 2
         category_one = category_three.categories['categoryone']
-        assert len(category_one.children) == 2
+        assert len(category_one) == 2
 
 
 def test_move_to_root(xmls, fx_test_stage):

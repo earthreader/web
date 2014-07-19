@@ -496,11 +496,13 @@ function reloadEntries() {
 	currentFeed.addClass('loading');
 
 	$.get(url, function (obj) {
-		currentFeed.removeClass('loading');
 		if (currentFeed.hasClass('current')) {
 			processEntries(obj, url);
 		}
-	}).fail(printError);
+	}).always(function() {
+		currentFeed.removeClass('loading');
+	})
+	.fail(printError);
 }
 
 function loadSubCategory(container) {
@@ -598,8 +600,6 @@ function toggleEntryCollapse(entry) {
 			contents[i].parentElement.removeChild(contents[i]);
 		}
 
-		entry.removeClass('loading');
-
 		var wrapper = $('<div>');
 		var title = $('<h1>');
 		var content = $('<div>');
@@ -634,7 +634,10 @@ function toggleEntryCollapse(entry) {
 		//set current marker
 		selectEntry(entry);
 
-	}).fail(printError);
+	}).always(function() {
+		entry.removeClass('loading');
+	})
+	.fail(printError);
 }
 
 function clickEntry(event) {

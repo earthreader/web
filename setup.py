@@ -38,7 +38,8 @@ setup_requires = [
 
 install_requires = [
     'Flask >= 0.10',
-    'libearth >= 0.2.0',
+    'libearth >= 0.2.0, != 0.3.0',
+    'six',
     'waitress'
 ]
 if sys.version_info < (2, 7):

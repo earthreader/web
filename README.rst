@@ -197,12 +197,13 @@ To be released.
 Version 0.2.1
 ~~~~~~~~~~~~~
 
-Might be released.
+Released on July 16, 2014.
 
-- Relative directory path on WSGI app.
-  [`#42`__]
-- Give correct permalink.
-  [`#43`__]
+- Relative directory path on WSGI app.  [`#42`__]
+- Give correct permalink.  [`#43`__]
+- Workaround libearth 0.3.0 incompatibility.
+- Entry list is cached by browser using ``Last-Modified`` and
+  ``If-Modified-Since`` headers.
 
 __ https://github.com/earthreader/web/issues/42
 __ https://github.com/earthreader/web/issues/43
@@ -222,24 +223,14 @@ Released on April 22, 2014.
 - Keyboard shortcut for toggle folding category.
 - Expand categories when click feed for mobile layout.
 - Google reader style shortcuts.
-- Mark all as read function [`#28`__]
-- Fix a bug that "crawl now" button didn't work.
-- Relative directory path on command line.
-  [`#36`__]
+- Mark all as read function. [`#28`__]
+- Fixed a bug that "crawl now" button didn't work.
+- Relative directory path on command line.  [`#36`__]
 - GUI launcher for OS X. [`#38`__]
 
 __ https://github.com/earthreader/web/issues/28
 __ https://github.com/earthreader/web/issues/36
 __ https://github.com/earthreader/web/issues/38
-
-
-Version 0.1.2
-~~~~~~~~~~~~~
-
-Might be released.
-
-- Entry list is cached by browser using ``Last-Modified`` and
-  ``If-Modified-Since`` headers.
 
 
 Version 0.1.1
