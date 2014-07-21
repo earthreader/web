@@ -45,6 +45,7 @@ class Worker(object):
         return self.crawling_queue.qsize()
 
     def crawl_category(self):
+        from . import get_stage
         running = True
         while running:
             priority, arguments = self.crawling_queue.get()
@@ -54,7 +55,6 @@ class Worker(object):
                 self.crawling_queue.task_done()
             elif priority == 1:
                 cursor, feed_id = arguments
-                urls = {}
                 if not feed_id:
                     urls = dict((sub.feed_uri, sub.feed_id)
                                 for sub in cursor.recursive_subscriptions)
