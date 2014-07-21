@@ -5,14 +5,12 @@
 import datetime
 import hashlib
 import os
-import threading
-from six.moves import queue
 from six.moves import urllib
 
 from flask import Flask, jsonify, render_template, request, url_for
 from libearth.codecs import Rfc3339
 from libearth.compat import binary, text_type
-from libearth.crawler import CrawlError, crawl
+from libearth.crawler import crawl
 from libearth.parser.autodiscovery import autodiscovery, FeedUrlNotFoundError
 from libearth.repository import FileSystemRepository, from_url
 from libearth.session import Session
@@ -24,6 +22,7 @@ from werkzeug.exceptions import HTTPException
 
 from .util import autofix_repo_url
 from .wsgi import MethodRewriteMiddleware
+from .worker import Worker
 
 
 app = Flask(__name__)
@@ -43,6 +42,7 @@ try:
     app.config['REPOSITORY'] = os.environ['EARTHREADER_REPOSITORY']
 except KeyError:
     pass
+worker = Worker(app)
 
 
 @app.before_first_request
@@ -52,73 +52,6 @@ def initialize():
 
     if app.config['USE_WORKER']:
         worker.start_worker()
-
-
-class Worker(object):
-
-    def __init__(self):
-        self.crawling_queue = queue.Queue()
-        self.worker = threading.Thread(target=self.crawl_category)
-        self.worker.setDaemon(True)
-
-    def start_worker(self):
-        if not self.worker.isAlive():
-            try:
-                self.worker.start()
-            except RuntimeError:
-                self.worker = threading.Thread(target=self.crawl_category)
-                self.worker.setDaemon(True)
-                self.worker.start()
-
-    def kill_worker(self):
-        if self.worker.isAlive():
-            self.crawling_queue.put((0, 'terminate'))
-            self.worker.join()
-
-    def is_running(self):
-        return self.worker.isAlive()
-
-    def add_job(self, cursor, feed_id):
-        self.crawling_queue.put((1, (cursor, feed_id)))
-
-    def empty_queue(self):
-        with self.crawling_queue.mutex:
-            self.crawling_queue.queue.clear()
-
-    def qsize(self):
-        return self.crawling_queue.qsize()
-
-    def crawl_category(self):
-        running = True
-        while running:
-            priority, arguments = self.crawling_queue.get()
-            if priority == 0:
-                if arguments == 'terminate':
-                    running = False
-                self.crawling_queue.task_done()
-            elif priority == 1:
-                cursor, feed_id = arguments
-                urls = {}
-                if not feed_id:
-                    urls = dict((sub.feed_uri, sub.feed_id)
-                                for sub in cursor.recursive_subscriptions)
-                else:
-                    urls = dict((sub.feed_uri, sub.feed_id)
-                                for sub in cursor.recursive_subscriptions
-                                if sub.feed_id == feed_id)
-                iterator = iter(crawl(urls, app.config['CRAWLER_THREAD']))
-                while True:
-                    try:
-                        feed_url, feed_data, crawler_hints = next(iterator)
-                        with get_stage() as stage:
-                            stage.feeds[urls[feed_url]] = feed_data
-                    except CrawlError:
-                        continue
-                    except StopIteration:
-                        break
-                self.crawling_queue.task_done()
-
-worker = Worker()
 
 
 class IteratorNotFound(ValueError):
