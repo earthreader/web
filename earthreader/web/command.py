@@ -16,7 +16,7 @@ from waitress import serve
 from . import app
 from .util import autofix_repo_url
 
-__all__ = 'crawl', 'main', 'server'
+__all__ = 'crawl', 'main'
 
 
 def crawl_command(args):
@@ -87,7 +87,8 @@ def server_command(args):
         app.wsgi_app = SassMiddleware(app.wsgi_app, {
             'earthreader.web': ('static/scss/', 'static/css/')
         })
-        app.run(host=args.host, port=args.port, debug=args.debug, threaded=True)
+        app.run(host=args.host, port=args.port, debug=args.debug,
+                threaded=True)
     else:
         serve(app, host=args.host, port=args.port)
 
@@ -104,7 +105,8 @@ server_parser.add_argument('-H', '--host',
 server_parser.add_argument('-p', '--port',
                            type=int,
                            default=5000,
-                           help='port number to listen. [default: %(default)s]')
+                           help='port number to listen.'
+                                '[default: %(default)s]')
 server_parser.add_argument('-d', '--debug',
                            default=False,
                            action='store_true',
@@ -132,8 +134,8 @@ crawl_parser.add_argument('-n', '--threads',
 crawl_parser.add_argument('-i', '--session-id',
                           default=Session().identifier,
                           help='session identifier.  [default: %(default)s]')
-crawl_parser.add_argument('-v', '--verbose', default=False, action='store_true',
-                          help='verbose mode')
+crawl_parser.add_argument('-v', '--verbose', default=False,
+                          action='store_true', help='verbose mode')
 crawl_parser.add_argument('-f', '--feed-id',
                           help='crawl only the specified feed.  '
                                'crawl all subscriptions by default')

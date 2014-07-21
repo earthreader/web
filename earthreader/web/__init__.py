@@ -94,7 +94,8 @@ class WorkerNotRunning(ValueError, JsonException):
     """Rise when the worker thread is not running."""
 
     error = 'worker-not-running'
-    message = 'The worker thread that crawl feeds in background is not running.'
+    message = 'The worker thread that crawl feeds in background is not' \
+              'running.'
 
 
 class Cursor():
@@ -449,7 +450,7 @@ class FeedEntryGenerator():
 
     def set_iterator(self, entry_after=None):
         while not self.entry or (entry_after and
-                                         get_hash(self.entry.id) != entry_after):
+                                 get_hash(self.entry.id) != entry_after):
             self.entry = next(self.it)
         while self.skip_if_id(entry_after) or self.skip_if_filters():
             self.entry = next(self.it)
@@ -552,7 +553,8 @@ def feed_entries(category_id, feed_id):
         feed_title = text_type(feed.title)
         feed_permalink = get_permalink(feed)
         generator = FeedEntryGenerator(category_id, feed_id, feed_title,
-                                       feed_permalink, it, now(), read, starred)
+                                       feed_permalink, it, now(), read,
+                                       starred)
         try:
             generator.set_iterator(entry_after)
         except StopIteration:
@@ -562,7 +564,8 @@ def feed_entries(category_id, feed_id):
                 next_url=None,
                 read_url=url_for('read_all_entries',
                                  feed_id=feed_id,
-                                 last_updated=(updated_at or now()).isoformat(),
+                                 last_updated=(updated_at or
+                                               now()).isoformat(),
                                  _external=True),
                 crawl_url=crawl_url
             )
@@ -613,7 +616,7 @@ class CategoryEntryGenerator():
 
     def sort_generators(self):
         self.generators = sorted(self.generators, key=lambda generator:
-        generator.entry.updated_at, reverse=True)
+                                 generator.entry.updated_at, reverse=True)
 
     def remove_if_iterator_ends(self, generator):
         try:
@@ -624,12 +627,11 @@ class CategoryEntryGenerator():
     def set_generators(self, entry_after, time_after):
         empty_generators = []
         for generator in self.generators:
-            while (
-                            not generator.entry or
-                            (time_after and
-                                     generator.entry.updated_at > Rfc3339().decode(time_after)) or
-                        generator.skip_if_id(entry_after)
-            ):
+            skip_if_id = generator.skip_if_id(entry_after)
+            is_time_after = generator.entry.updated_at > \
+                Rfc3339().decode(time_after)
+            while (not generator.entry or (time_after and is_time_after)
+                   or skip_if_id):
                 try:
                     generator.find_next_entry()
                 except StopIteration:
@@ -710,13 +712,10 @@ def category_entries(category_id):
         if not entries:
             remove_entry_generator(url_token)
     else:
-        next_url = make_next_url(
-            category_id,
-            url_token,
-            encode_entry_after(entries[-1]['entry_id'], entries[-1]['updated']),
-            read,
-            starred
-        )
+        next_url = make_next_url(category_id, url_token,
+                                 encode_entry_after(entries[-1]['entry_id'],
+                                                    entries[-1]['updated']),
+                                 read, starred)
 
     # FIXME: use Entry.updated_at instead of from json data.
     codec = Rfc3339()
@@ -834,7 +833,8 @@ def unread_entry(category_id, feed_id, entry_id):
 
 
 @app.route('/feeds/<feed_id>/entries/read/', methods=['PUT'])
-@app.route('/<path:category_id>/feeds/<feed_id>/entries/read/', methods=['PUT'])
+@app.route('/<path:category_id>/feeds/<feed_id>/entries/read/',
+           methods=['PUT'])
 @app.route('/entries/read/', methods=['PUT'])
 @app.route('/<path:category_id>/entries/read/', methods=['PUT'])
 def read_all_entries(category_id='', feed_id=None):
@@ -855,7 +855,7 @@ def read_all_entries(category_id='', feed_id=None):
             with get_stage() as stage:
                 feed = stage.feeds[feed_id]
                 for entry in feed.entries:
-                    if last_updated is None or entry.updated_at <= last_updated:
+                    if not last_updated or entry.updated_at <= last_updated:
                         entry.read = True
                 stage.feeds[feed_id] = feed
         except KeyError:
