@@ -17,7 +17,6 @@ from libearth.session import Session
 from libearth.stage import Stage
 from libearth.subscribe import Category, Subscription, SubscriptionList
 from libearth.tz import now, utc
-from libearth.version import VERSION_INFO as LIBEARTH_VERSION_INFO
 from werkzeug.exceptions import HTTPException
 
 from .util import autofix_repo_url
@@ -399,16 +398,6 @@ def remove_entry_generator(url_token):
 
 
 def get_permalink(data):
-    if LIBEARTH_VERSION_INFO < (0, 2, 0):
-        candidates = []
-        for link in data.links:
-            html = link.mimetype in ('text/html', 'application/xhtml+xml')
-            alternate = link.relation == 'alternate'
-            if html or alternate:
-                candidates.append((link, (html, alternate)))
-        if candidates:
-            return max(candidates, key=lambda pair: pair[1])[0].uri
-        return
     link = data.links.permalink
     return link and link.uri or data.id
 
