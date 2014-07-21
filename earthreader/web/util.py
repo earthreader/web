@@ -1,3 +1,7 @@
+""":mod:`earthreader.web.util --- Utility functions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+"""
 import os
 try:
     from urllib import parse as urlparse

@@ -1,3 +1,7 @@
+""":mod:`earthreader.web.command` --- Command interface
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+"""
 from __future__ import print_function
 
 import argparse

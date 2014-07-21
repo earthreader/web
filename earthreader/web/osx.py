@@ -1,4 +1,5 @@
 """:mod:`earthreader.web.osx` --- GUI launcher for OS X
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You can build it using py2app_::
 
