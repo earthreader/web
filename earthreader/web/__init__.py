@@ -29,8 +29,6 @@ from .wsgi import MethodRewriteMiddleware
 app = Flask(__name__)
 app.wsgi_app = MethodRewriteMiddleware(app.wsgi_app)
 
-crawling_queue = queue.Queue()
-
 app.config.update(
     ALLFEED='All Feeds',
     SESSION_ID=None,
