@@ -8,8 +8,6 @@ except ImportError:
     from setuptools import find_packages, setup
 from setuptools.command.test import test
 
-from earthreader.web.version import VERSION
-
 
 def readme():
     try:
@@ -49,7 +47,7 @@ install_requires.extend(setup_requires)
 
 setup(
     name='EarthReader-Web',
-    version=VERSION,
+    version='0.3.0',
     description='Earth Reader for Web',
     long_description=readme(),
     url='http://earthreader.org/',
