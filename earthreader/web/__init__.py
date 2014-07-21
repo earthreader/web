@@ -627,11 +627,10 @@ class CategoryEntryGenerator():
     def set_generators(self, entry_after, time_after):
         empty_generators = []
         for generator in self.generators:
-            skip_if_id = generator.skip_if_id(entry_after)
-            is_time_after = generator.entry.updated_at > \
-                Rfc3339().decode(time_after)
-            while (not generator.entry or (time_after and is_time_after)
-                   or skip_if_id):
+            while (not generator.entry or
+                   (time_after and generator.entry.updated_at
+                       > Rfc3339().decode(time_after)) or
+                   generator.skip_if_id(entry_after)):
                 try:
                     generator.find_next_entry()
                 except StopIteration:
