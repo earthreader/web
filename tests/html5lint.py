@@ -5,7 +5,7 @@ try:
 except ImportError:
     from urllib import request as urllib2
 
-from earthreader.web.app import app
+from earthreader.web import app
 
 
 # See also http://wiki.whatwg.org/wiki/Validator.nu_Web_Service_Interface

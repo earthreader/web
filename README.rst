@@ -63,7 +63,7 @@ WSGI server
 
 Earth Reader for Web is actually an ordinary WSGI_-compliant web application,
 so you can run it using your preferred WSGI server e.g. Gunicorn_, `mod_wsgi`_.
-The WSGI endpoint is ``earthreader.web.app:app``.  Note that you can provide
+The WSGI endpoint is ``earthreader.web:app``.  Note that you can provide
 the path of repository by setting ``EARTHREADER_REPOSITORY`` environment
 variable.
 
@@ -77,7 +77,7 @@ For example, you can run it on Gunicorn:
 .. code-block:: console
 
    $ export EARTHREADER_REPOSITORY=/path/to/repository/dir
-   $ gunicorn earthreader.web.app:app
+   $ gunicorn earthreader.web:app
 
 Or you can attach Earth Reader to Apache with mod_wsgi like this:
 
@@ -107,7 +107,7 @@ Or you can attach Earth Reader to Apache with mod_wsgi like this:
    #!/usr/bin/env python
    #/var/wsgi/earthreader.wsgi
    import sys
-   from earthreader.web.app import app as application
+   from earthreader.web import app as application
 
    application.config.update(
        REPOSITORY='/path/to/repository/dir'

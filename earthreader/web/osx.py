@@ -24,7 +24,7 @@ except ImportError:
 from libearth.session import Session
 from waitress.server import create_server
 
-from .app import app
+from . import app
 
 
 def open_webbrowser(port):

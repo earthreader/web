@@ -13,7 +13,7 @@ from libearth.stage import Stage
 from sassutils.wsgi import SassMiddleware
 from waitress import serve
 
-from .app import app
+from . import app
 from .util import autofix_repo_url
 
 __all__ = 'crawl', 'main', 'server'
