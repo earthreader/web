@@ -7,7 +7,7 @@ from werkzeug.exceptions import HTTPException
 
 
 class IteratorNotFound(ValueError):
-    """Rise when the iterator does not exist"""
+    """Raised when the iterator does not exist"""
 
 
 class JsonException(HTTPException):
@@ -22,28 +22,28 @@ class JsonException(HTTPException):
 
 
 class InvalidCategoryID(ValueError, JsonException):
-    """Rise when the category ID is not valid."""
+    """Raised when the category ID is not valid."""
 
     error = 'category-id-invalid'
     message = 'Given category id is not valid'
 
 
 class FeedNotFound(ValueError, JsonException):
-    """Rise when the feed is not reachable."""
+    """Raised when the feed is not reachable."""
 
     error = 'feed-not-found'
     message = 'The feed you request does not exsist'
 
 
 class EntryNotFound(ValueError, JsonException):
-    """Rise when the entry is not reachable."""
+    """Raised when the entry is not reachable."""
 
     error = 'entry-not-found'
     message = 'The entry you request does not exist'
 
 
 class WorkerNotRunning(ValueError, JsonException):
-    """Rise when the worker thread is not running."""
+    """Raised when the worker thread is not running."""
 
     error = 'worker-not-running'
     message = 'The worker thread that crawl feeds in background is not' \
