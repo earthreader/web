@@ -17,10 +17,11 @@ from libearth.session import Session
 from libearth.stage import Stage
 from libearth.subscribe import Category, Subscription, SubscriptionList
 from libearth.tz import now, utc
-from werkzeug.exceptions import HTTPException
 
 from .util import autofix_repo_url
 from .wsgi import MethodRewriteMiddleware
+from .exceptions import (InvalidCategoryID, IteratorNotFound, WorkerNotRunning,
+                         FeedNotFound, EntryNotFound)
 from .worker import Worker
 
 
@@ -51,50 +52,6 @@ def initialize():
 
     if app.config['USE_WORKER']:
         worker.start_worker()
-
-
-class IteratorNotFound(ValueError):
-    """Rise when the iterator does not exist"""
-
-
-class JsonException(HTTPException):
-    """Base exception to return json response when raised.
-    Exceptions inherit this class must declare `error` and `message`.
-
-    """
-    def get_response(self, environ):
-        r = jsonify(error=self.error, message=self.message)
-        r.status_code = 404
-        return r
-
-
-class InvalidCategoryID(ValueError, JsonException):
-    """Rise when the category ID is not valid."""
-
-    error = 'category-id-invalid'
-    message = 'Given category id is not valid'
-
-
-class FeedNotFound(ValueError, JsonException):
-    """Rise when the feed is not reachable."""
-
-    error = 'feed-not-found'
-    message = 'The feed you request does not exsist'
-
-
-class EntryNotFound(ValueError, JsonException):
-    """Rise when the entry is not reachable."""
-
-    error = 'entry-not-found'
-    message = 'The entry you request does not exist'
-
-
-class WorkerNotRunning(ValueError, JsonException):
-    """Rise when the worker thread is not running."""
-
-    error = 'worker-not-running'
-    message = 'The worker thread that crawl feeds in background is not' \
-              'running.'
 
 
 class Cursor():
