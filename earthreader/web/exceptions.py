@@ -15,7 +15,7 @@ class JsonException(HTTPException):
     Exceptions inherit this class must declare `error` and `message`.
 
     """
-    def get_response(self, environ):
+    def get_response(self, environ=None):
         r = jsonify(error=self.error, message=self.message)
         r.status_code = 404
         return r
