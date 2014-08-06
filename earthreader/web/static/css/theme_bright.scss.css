@@ -1,0 +1,40 @@
+body {
+  background: white; }
+
+.site-header {
+  background: white; }
+
+[role=navigation], [role=complementary] {
+  background: #fcfcff; }
+
+[role=main] {
+  background: white; }
+
+.form {
+  background: rgba(0, 120, 245, 0.1); }
+
+[role=navigation] input[type=submit], [role=navigation] input[type=button], [role=navigation] button {
+  background: #8fb6dc; }
+
+[role=naigation] .header, [role=complementary] .header {
+  background: #f5f5ff; }
+
+[role=navigation] a {
+  color: black; }
+
+[role=main] article .entry-title {
+  background: #fdfdfd; }
+
+[role=main] article.current .entry-title {
+  background: #f3f3fd; }
+
+[role=main] article .entry-content {
+  background: white; }
+
+@media all and (min-width: 800px) {
+  [role=navigation] li:not(.folder):hover, [role=navigation] .header:hover {
+    background: #e6e6fd; }
+  [role=main] article .entry-title:hover {
+    background: #f5f5ff; } }
+
+/*# sourceMappingURL=theme_bright.scss.css.map */
