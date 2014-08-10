@@ -6,6 +6,7 @@ python:
 - 3.3
 - 3.4
 install:
+- sudo apt-get install ack-grep
 - pip install pytest 'libsass>=0.3.0'
 - if [ `python -c 'from platform import *; print(python_implementation())'` != 'PyPy' ]; then
     pip install pytest pytest-cov pep8 coveralls;
@@ -19,6 +20,7 @@ script:
     py.test --cov earthreader --durations=10 &&
     pep8 ||
     exit $?;
+    if [[ $(ack-grep '\t') ]]; then echo 'Do not use hardtabs'; exit 1; fi;
   else
     py.test --durations=10;
   fi
