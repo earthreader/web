@@ -192,7 +192,10 @@ To be released.
 - Error code ``circular-refernce``, which is a typo, was renamed to
   ``circular-reference``.
 - Fixed auto scroll when entry has images.
+- Fixed a bug that raises ``BuildError``.  [`#49`__]
 - Became to need libearth 0.3.1 or later.
+
+__ https://github.com/earthreader/web/issues/49
 
 
 Version 0.2.1

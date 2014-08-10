@@ -94,28 +94,36 @@ class Cursor():
 
 def add_urls(data, keys, category_id, feed_id=None, entry_id=None):
     APIS = {
-        'entries_url': 'feed_entries' if feed_id else 'category_entries',
-        'entry_url': 'feed_entry',
-        'remove_feed_url': 'delete_feed',
+        'entries_url': 'category_entries',
         'feeds_url': 'feeds',
         'add_feed_url': 'add_feed',
         'add_category_url': 'add_category',
         'remove_category_url': 'delete_category',
         'move_url': 'move_outline',
-        'read_url': 'read_entry',
-        'unread_url': 'unread_entry',
-        'star_url': 'star_entry',
-        'unstar_url': 'unstar_entry'
     }
+    if feed_id is not None:
+        APIS.update(
+            entries_url='feed_entries',  # overwrite
+            remove_feed_url='delete_feed',
+        )
+        if entry_id is not None:
+            APIS.update(
+                entry_url='feed_entry',
+                read_url='read_entry',
+                unread_url='unread_entry',
+                star_url='star_entry',
+                unstar_url='unstar_entry',
+            )
     urls = {}
     for key in keys:
-        urls[key] = url_for(
-            APIS[key],
-            category_id=category_id,
-            feed_id=feed_id,
-            entry_id=entry_id,
-            _external=True
-        )
+        if key in APIS:
+            urls[key] = url_for(
+                APIS[key],
+                category_id=category_id,
+                feed_id=feed_id,
+                entry_id=entry_id,
+                _external=True
+            )
     data.update(urls)
 
 
