@@ -178,7 +178,7 @@ def feeds(category_id):
     feeds = []
     categories = []
     for child in cursor:
-        data = {'title': child._title}
+        data = {'title': child.label}
         if isinstance(child, Subscription):
             url_keys = ['entries_url', 'remove_feed_url']
             add_urls(data, url_keys, cursor.category_id, child.feed_id)
@@ -187,8 +187,8 @@ def feeds(category_id):
         elif isinstance(child, Category):
             url_keys = ['feeds_url', 'entries_url', 'add_feed_url',
                         'add_category_url', 'remove_category_url', 'move_url']
-            add_urls(data, url_keys, cursor.join_id(child._title))
-            add_path_data(data, cursor.join_id(child._title))
+            add_urls(data, url_keys, cursor.join_id(child.label))
+            add_path_data(data, cursor.join_id(child.label))
             categories.append(data)
     return jsonify(feeds=feeds, categories=categories)
 
@@ -233,7 +233,7 @@ def add_feed(category_id):
 def add_category(category_id):
     cursor = Cursor(category_id)
     title = request.form['title']
-    outline = Category(label=title, _title=title)
+    outline = Category(label=title)
     cursor.add(outline)
     with get_stage() as stage:
         stage.subscriptions = cursor.subscriptionlist
