@@ -15,7 +15,7 @@ install:
 - npm install -g jshint
 script:
 - python -m libearth.version
-- python -m earthreader.web.version
+- python setup.py --version
 - if [ `python -c 'from platform import *; print(python_implementation())'` != 'PyPy' ]; then
     py.test --cov earthreader --durations=10 &&
     pep8 ||
