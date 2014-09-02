@@ -14,7 +14,6 @@ from libearth.repository import from_url
 from libearth.schema import SchemaError
 from libearth.session import Session
 from libearth.stage import Stage
-from sassutils.wsgi import SassMiddleware
 from waitress import serve
 
 from . import app
@@ -88,6 +87,7 @@ def server_command(args):
                   'http://{0.host}:{0.port}/__profiler__/'.format(args))
         app.wsgi_app = make_linesman_middleware(app.wsgi_app)
     if args.debug:
+        from sassutils.wsgi import SassMiddleware
         app.wsgi_app = SassMiddleware(app.wsgi_app, {
             'earthreader.web': ('static/scss/', 'static/css/')
         })
