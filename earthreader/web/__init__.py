@@ -422,7 +422,6 @@ class FeedEntryGenerator():
 @app.route('/feeds/<feed_id>/entries/', defaults={'category_id': ''})
 @app.route('/<path:category_id>/feeds/<feed_id>/entries/')
 def feed_entries(category_id, feed_id):
-    Cursor(category_id)
     try:
         with stage:
             feed = stage.feeds[feed_id]
