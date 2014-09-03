@@ -3,13 +3,12 @@
 
 """
 import datetime
-import hashlib
 import os
 from six.moves import urllib
 
 from flask import Flask, jsonify, render_template, request, url_for
 from libearth.codecs import Rfc3339
-from libearth.compat import binary, text_type
+from libearth.compat import text_type
 from libearth.crawler import crawl
 from libearth.parser.autodiscovery import autodiscovery, FeedUrlNotFoundError
 from libearth.repository import FileSystemRepository, from_url
@@ -18,7 +17,7 @@ from libearth.stage import Stage
 from libearth.subscribe import Category, Subscription, SubscriptionList
 from libearth.tz import now, utc
 
-from .util import autofix_repo_url
+from .util import autofix_repo_url, get_hash
 from .wsgi import MethodRewriteMiddleware
 from .exceptions import (InvalidCategoryID, IteratorNotFound, WorkerNotRunning,
                          FeedNotFound, EntryNotFound)
@@ -168,10 +167,6 @@ def get_stage():
         )
         app.config['STAGE'] = stage
         return stage
-
-
-def get_hash(name):
-    return hashlib.sha1(binary(name)).hexdigest()
 
 
 @app.route('/', methods=['GET'])
@@ -614,14 +609,6 @@ class CategoryEntryGenerator():
         return entries
 
 
-def encode_entry_after(id_after, time_after):
-    return id_after + '@' + time_after
-
-
-def decode_entry_after(entry_after):
-    return entry_after.split('@')
-
-
 @app.route('/entries/', defaults={'category_id': ''})
 @app.route('/<path:category_id>/entries/')
 def category_entries(category_id):
@@ -639,7 +626,7 @@ def category_entries(category_id):
         subscriptions = cursor.recursive_subscriptions
         generator = CategoryEntryGenerator()
         if entry_after:
-            id_after, time_after = decode_entry_after(entry_after)
+            id_after, time_after = entry_after.split('@')
         else:
             time_after = None
             id_after = None
@@ -665,10 +652,9 @@ def category_entries(category_id):
         if not entries:
             remove_entry_generator(url_token)
     else:
-        next_url = make_next_url(category_id, url_token,
-                                 encode_entry_after(entries[-1]['entry_id'],
-                                                    entries[-1]['updated']),
-                                 read, starred)
+        entry_after = entries[-1]['entry_id'] + '@' + entries[-1]['updated']
+        next_url = make_next_url(category_id, url_token, entry_after, read,
+                                 starred)
 
     # FIXME: use Entry.updated_at instead of from json data.
     codec = Rfc3339()
