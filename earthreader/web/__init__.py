@@ -655,8 +655,7 @@ def update_entries(category_id, feed_id=None):
         raise WorkerNotRunning('Worker thread is not running.')
 
 
-def find_feed_and_entry(category_id, feed_id, entry_id):
-    Cursor(category_id)
+def find_feed_and_entry(feed_id, entry_id):
     try:
         with stage:
             feed = stage.feeds[feed_id]
