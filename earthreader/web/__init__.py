@@ -11,9 +11,6 @@ from libearth.codecs import Rfc3339
 from libearth.compat import text_type
 from libearth.crawler import crawl
 from libearth.parser.autodiscovery import autodiscovery, FeedUrlNotFoundError
-from libearth.repository import FileSystemRepository, from_url
-from libearth.session import Session
-from libearth.stage import Stage
 from libearth.subscribe import Category, Subscription, SubscriptionList
 from libearth.tz import now, utc
 
@@ -22,6 +19,7 @@ from .wsgi import MethodRewriteMiddleware
 from .exceptions import (InvalidCategoryID, IteratorNotFound, WorkerNotRunning,
                          FeedNotFound, EntryNotFound)
 from .worker import Worker
+from .stage import stage
 
 
 app = Flask(__name__)
@@ -56,7 +54,7 @@ def initialize():
 class Cursor():
 
     def __init__(self, category_id, return_parent=False):
-        with get_stage() as stage:
+        with stage:
             self.subscriptionlist = (stage.subscriptions if stage.subscriptions
                                      else SubscriptionList())
         self.value = self.subscriptionlist
@@ -135,40 +133,6 @@ def add_path_data(data, category_id, feed_id=''):
     data.update({'path': path})
 
 
-def get_stage():
-    try:
-        return app.config['STAGE']
-    except KeyError:
-        session_id = app.config['SESSION_ID']
-        if request.environ['wsgi.multiprocess']:
-            # Stage doesn't offer safe synchronization between multiprocess.
-            # Unique session identifiers are actually needed to distinguish
-            # different "installations" which technically means "processes,"
-            # hence we append pid to the session identifier configured by
-            # the user to make them unique.
-            # Note that it probably causes N times more disk usage
-            # where N = the number of processes.  So we should discourage
-            # using web servers of prefork/worker model in the docs.
-            session_id = '{0}.{1}'.format(session_id, os.getpid())
-
-        session = Session(session_id)
-        url = urllib.parse.urlparse(app.config['REPOSITORY'])
-        if url.scheme == 'file':
-            repository = FileSystemRepository(
-                url.path,
-                atomic=request.environ['wsgi.multithread']
-            )
-        else:
-            repository = from_url(app.config['REPOSITORY'])
-
-        stage = Stage(
-            session,
-            repository
-        )
-        app.config['STAGE'] = stage
-        return stage
-
-
 @app.route('/', methods=['GET'])
 def index():
     return render_template('index.html')
@@ -199,7 +163,6 @@ def feeds(category_id):
 @app.route('/feeds/', methods=['POST'], defaults={'category_id': ''})
 @app.route('/<path:category_id>/feeds/', methods=['POST'])
 def add_feed(category_id):
-    stage = get_stage()
     cursor = Cursor(category_id)
     url = request.form['url']
     try:
@@ -238,7 +201,7 @@ def add_category(category_id):
     title = request.form['title']
     outline = Category(label=title)
     cursor.add(outline)
-    with get_stage() as stage:
+    with stage:
         stage.subscriptions = cursor.subscriptionlist
     return feeds(category_id)
 
@@ -247,7 +210,7 @@ def add_category(category_id):
 def delete_category(category_id):
     cursor = Cursor(category_id, True)
     cursor.remove(cursor.target_child)
-    with get_stage() as stage:
+    with stage:
         stage.subscriptions = cursor.subscriptionlist
     index = category_id.rfind('/')
     if index == -1:
@@ -275,7 +238,7 @@ def delete_feed(category_id, feed_id):
         )
         r.status_code = 400
         return r
-    with get_stage() as stage:
+    with stage:
         stage.subscriptions = cursor.subscriptionlist
     return feeds(category_id)
 
@@ -304,11 +267,11 @@ def move_outline(category_id):
         r.status_code = 400
         return r
     source.discard(target)
-    with get_stage() as stage:
+    with stage:
         stage.subscriptions = source.subscriptionlist
     dest = Cursor(category_id)
     dest.add(target)
-    with get_stage() as stage:
+    with stage:
         stage.subscriptions = dest.subscriptionlist
     return jsonify()
 
@@ -459,7 +422,6 @@ class FeedEntryGenerator():
 @app.route('/feeds/<feed_id>/entries/', defaults={'category_id': ''})
 @app.route('/<path:category_id>/feeds/<feed_id>/entries/')
 def feed_entries(category_id, feed_id):
-    stage = get_stage()
     Cursor(category_id)
     try:
         with stage:
@@ -632,7 +594,7 @@ def category_entries(category_id):
             id_after = None
         for subscription in subscriptions:
             try:
-                with get_stage() as stage:
+                with stage:
                     feed = stage.feeds[subscription.feed_id]
             except KeyError:
                 continue
@@ -695,7 +657,6 @@ def update_entries(category_id, feed_id=None):
 
 
 def find_feed_and_entry(category_id, feed_id, entry_id):
-    stage = get_stage()
     Cursor(category_id)
     try:
         with stage:
@@ -754,7 +715,7 @@ def feed_entry(category_id, feed_id, entry_id):
 def read_entry(category_id, feed_id, entry_id):
     feed, _, entry, _ = find_feed_and_entry(category_id, feed_id, entry_id)
     entry.read = True
-    with get_stage() as stage:
+    with stage:
         stage.feeds[feed_id] = feed
     return jsonify()
 
@@ -766,7 +727,7 @@ def read_entry(category_id, feed_id, entry_id):
 def unread_entry(category_id, feed_id, entry_id):
     feed, _, entry, _ = find_feed_and_entry(category_id, feed_id, entry_id)
     entry.read = False
-    with get_stage() as stage:
+    with stage:
         stage.feeds[feed_id] = feed
     return jsonify()
 
@@ -791,7 +752,7 @@ def read_all_entries(category_id='', feed_id=None):
 
     for feed_id in feed_ids:
         try:
-            with get_stage() as stage:
+            with stage:
                 feed = stage.feeds[feed_id]
                 for entry in feed.entries:
                     if not last_updated or entry.updated_at <= last_updated:
@@ -817,7 +778,7 @@ def read_all_entries(category_id='', feed_id=None):
 def star_entry(category_id, feed_id, entry_id):
     feed, _, entry, _ = find_feed_and_entry(category_id, feed_id, entry_id)
     entry.starred = True
-    with get_stage() as stage:
+    with stage:
         stage.feeds[feed_id] = feed
     return jsonify()
 
@@ -829,6 +790,6 @@ def star_entry(category_id, feed_id, entry_id):
 def unstar_entry(category_id, feed_id, entry_id):
     feed, _, entry, _ = find_feed_and_entry(category_id, feed_id, entry_id)
     entry.starred = False
-    with get_stage() as stage:
+    with stage:
         stage.feeds[feed_id] = feed
     return jsonify()

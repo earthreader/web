@@ -7,6 +7,8 @@ from six.moves import queue
 
 from libearth.crawler import CrawlError, crawl
 
+from .stage import stage
+
 
 class Worker(object):
     """Crawl worker."""
@@ -45,7 +47,6 @@ class Worker(object):
         return self.crawling_queue.qsize()
 
     def crawl_category(self):
-        from . import get_stage
         running = True
         while running:
             priority, arguments = self.crawling_queue.get()
@@ -66,7 +67,7 @@ class Worker(object):
                 while True:
                     try:
                         feed_url, feed_data, crawler_hints = next(iterator)
-                        with get_stage() as stage:
+                        with stage:
                             stage.feeds[urls[feed_url]] = feed_data
                     except CrawlError:
                         continue
