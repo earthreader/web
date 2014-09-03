@@ -13,15 +13,8 @@ You can build it using py2app_::
 import os.path
 import threading
 import webbrowser
-try:
-    import Tkinter as tk
-except ImportError:
-    import tkinter as tk
-try:
-    from urllib import parse as urlparse
-except ImportError:
-    import urlparse
 
+from six.moves import urllib, tkinter as tk
 from libearth.session import Session
 from waitress.server import create_server
 
@@ -44,7 +37,7 @@ def main():
     root.config(menu=menubar)
     root.withdraw()
     directory = os.path.expanduser('~/.earthreader')
-    repository = urlparse.urljoin('file://', directory)
+    repository = urllib.parse.urljoin('file://', directory)
     session_id = Session().identifier
     app.config.update(REPOSITORY=repository, SESSION_ID=session_id,
                       USE_WORKER=True)

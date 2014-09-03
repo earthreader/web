@@ -3,17 +3,15 @@
 
 """
 import os
-try:
-    from urllib import parse as urlparse
-except ImportError:
-    import urlparse
 import hashlib
+
+from six.moves import urllib
 
 from libearth.compat import binary
 
 
 def autofix_repo_url(urlstr):
-    url = urlparse.urlparse(urlstr)
+    url = urllib.parse.urlparse(urlstr)
     if url.scheme == '':
         return urlparse.urljoin('file://', os.path.join(os.getcwd(), urlstr))
     return urlstr
