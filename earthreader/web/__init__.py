@@ -674,7 +674,7 @@ def find_feed_and_entry(feed_id, entry_id):
 @app.route('/<path:category_id>/feeds/<feed_id>/entries/<entry_id>/')
 def feed_entry(category_id, feed_id, entry_id):
     feed, feed_permalink, entry, entry_permalink = \
-        find_feed_and_entry(category_id, feed_id, entry_id)
+        find_feed_and_entry(feed_id, entry_id)
     content = entry.content or entry.summary
     if content is not None:
         content = content.sanitized_html
@@ -711,7 +711,7 @@ def feed_entry(category_id, feed_id, entry_id):
 @app.route('/<path:category_id>/feeds/<feed_id>/entries/<entry_id>/read/',
            methods=['PUT'])
 def read_entry(category_id, feed_id, entry_id):
-    feed, _, entry, _ = find_feed_and_entry(category_id, feed_id, entry_id)
+    feed, _, entry, _ = find_feed_and_entry(feed_id, entry_id)
     entry.read = True
     with stage:
         stage.feeds[feed_id] = feed
@@ -723,7 +723,7 @@ def read_entry(category_id, feed_id, entry_id):
 @app.route('/<path:category_id>/feeds/<feed_id>/entries/<entry_id>/read/',
            methods=['DELETE'])
 def unread_entry(category_id, feed_id, entry_id):
-    feed, _, entry, _ = find_feed_and_entry(category_id, feed_id, entry_id)
+    feed, _, entry, _ = find_feed_and_entry(feed_id, entry_id)
     entry.read = False
     with stage:
         stage.feeds[feed_id] = feed
@@ -774,7 +774,7 @@ def read_all_entries(category_id='', feed_id=None):
 @app.route('/<path:category_id>/feeds/<feed_id>/entries/<entry_id>/star/',
            methods=['PUT'])
 def star_entry(category_id, feed_id, entry_id):
-    feed, _, entry, _ = find_feed_and_entry(category_id, feed_id, entry_id)
+    feed, _, entry, _ = find_feed_and_entry(feed_id, entry_id)
     entry.starred = True
     with stage:
         stage.feeds[feed_id] = feed
@@ -786,7 +786,7 @@ def star_entry(category_id, feed_id, entry_id):
 @app.route('/<path:category_id>/feeds/<feed_id>/entries/<entry_id>/star/',
            methods=['DELETE'])
 def unstar_entry(category_id, feed_id, entry_id):
-    feed, _, entry, _ = find_feed_and_entry(category_id, feed_id, entry_id)
+    feed, _, entry, _ = find_feed_and_entry(feed_id, entry_id)
     entry.starred = False
     with stage:
         stage.feeds[feed_id] = feed
