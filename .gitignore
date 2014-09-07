@@ -46,7 +46,3 @@ desktop.ini
 
 # Linesman (profiler)
 sessions.db
-
-# CSS files compiled from SCSS
-earthreader/web/static/css/*.scss.css
-earthreader/web/static/css/*.scss.css.map

@@ -4,7 +4,6 @@
 You can build it using py2app_::
 
    $ pip install py2app
-   $ python setup.py build_sass
    $ python setup.py py2app
 
 .. _py2app: https://pypi.python.org/pypi/py2app/

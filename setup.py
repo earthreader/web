@@ -30,10 +30,6 @@ class pytest(test):
         raise SystemExit(errno)
 
 
-setup_requires = [
-    'libsass >= 0.3.0'
-]
-
 install_requires = [
     'Flask >= 0.10',
     'libearth >= 0.3.1',
@@ -42,7 +38,6 @@ install_requires = [
 ]
 if sys.version_info < (2, 7):
     install_requires.append('argparse >= 1.1')
-install_requires.extend(setup_requires)
 
 
 setup(
@@ -55,7 +50,7 @@ setup(
     author_email='earthreader' '@' 'librelist.com',
     entry_points={
         'console_scripts': [
-            'earthreader = earthreader.web.command:main'
+            'earthreader = earthreader.web.cli:cli'
         ]
     },
     app=['earthreader/web/osx.py'],
@@ -65,10 +60,6 @@ setup(
         'earthreader.web': ['templates/*.*', 'templates/*/*.*',
                             'static/*.*', 'static/*/*.*']
     },
-    sass_manifests={
-        'earthreader.web': ('static/scss/', 'static/css/')
-    },
-    setup_requires=setup_requires,
     install_requires=install_requires,
     dependency_links=[
         'https://github.com/earthreader/libearth/releases'

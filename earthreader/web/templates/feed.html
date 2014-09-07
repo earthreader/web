@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% block body %}
+    <h2>
+        <a href="{{ url_for('entries', feed_id=feed_id) }}">{{ feed }}</a>
+    </h2>
+    {% if feed.subtitle %}
+        <p>{{ feed.subtitle }}</p>
+    {% endif %}
+{% endblock %}

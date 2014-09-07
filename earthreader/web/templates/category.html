@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block body %}
+    <h2>{{ category.label }}</h2>
+    <ul>
+        {% for feed in category.children %}
+            <li>
+                <a href="{{ url_for('entries', feed_id=feed.feed_id) }}">{{ feed.label }}</a>
+            </li>
+        {% endfor %}
+    </ul>
+{% endblock %}
