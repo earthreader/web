@@ -27,9 +27,9 @@ def server_command(args):
             print('\tpip install linesman', file=sys.stderr)
             raise SystemExit
         else:
+            app.wsgi_app = make_linesman_middleware(app.wsgi_app)
             print('Profiler (linesman) is available:',
                   'http://{0.host}:{0.port}/__profiler__/'.format(args))
-        app.wsgi_app = make_linesman_middleware(app.wsgi_app)
     if args.debug:
         app.run(host=args.host, port=args.port, debug=True)
     else:
