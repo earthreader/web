@@ -4,7 +4,7 @@
     <ol>
         {% for entry in feed.entries %}
             <li>
-                <a href="{{ url_for('entry', feed_id=feed_id, entry_id=entry.id) }}">{{ entry }}</a>
+                <a href="{{ url_for('.entry', feed_id=feed_id, entry_id=entry.id) }}">{{ entry }}</a>
             </li>
         {% endfor %}
     </ol>

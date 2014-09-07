@@ -4,7 +4,7 @@
     <ul>
         {% for category in categories %}
             <li>
-                <a href="{{ url_for('category', category_id=category) }}">{{ category }}</a>
+                <a href="{{ url_for('.category', category_id=category) }}">{{ category }}</a>
             </li>
         {% endfor %}
     </ul>
@@ -12,7 +12,7 @@
     <ul>
         {% for feed in feeds %}
             <li>
-                <a href="{{ url_for('entries', feed_id=feed) }}">{{ feeds[feed] }}</a>
+                <a href="{{ url_for('.entries', feed_id=feed) }}">{{ feeds[feed] }}</a>
             </li>
         {% endfor %}
     </ul>

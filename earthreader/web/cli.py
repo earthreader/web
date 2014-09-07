@@ -12,13 +12,11 @@ from libearth.session import Session
 from six.moves import urllib
 from waitress import serve
 
-from . import app
+from . import create_app
 
 
 def server_command(args):
-    repository = args.repository
-    app.config.update(REPOSITORY=repository, SESSION_ID=args.session_id)
-    app.debug = args.debug
+    app = create_app(REPOSITORY=args.repository, SESSION_ID=args.session_id)
     if args.profile:
         try:
             from linesman.middleware import make_linesman_middleware
@@ -33,8 +31,7 @@ def server_command(args):
                   'http://{0.host}:{0.port}/__profiler__/'.format(args))
         app.wsgi_app = make_linesman_middleware(app.wsgi_app)
     if args.debug:
-        app.run(host=args.host, port=args.port, debug=args.debug,
-                threaded=True)
+        app.run(host=args.host, port=args.port, debug=True)
     else:
         serve(app, host=args.host, port=args.port)
 
