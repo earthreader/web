@@ -6,7 +6,6 @@ from __future__ import print_function
 
 import argparse
 import os
-import sys
 
 from libearth.session import Session
 from six.moves import urllib
@@ -19,18 +18,8 @@ def server_command(args):
     """Run EarthReader-Web server."""
     app = create_app(REPOSITORY=args.repository, SESSION_ID=args.session_id)
     if args.profile:
-        try:
-            from linesman.middleware import make_linesman_middleware
-        except ImportError:
-            print('-P/--profile/--linesman option is available only when '
-                  "linesman is installed", file=sys.stderr)
-            print('Try the following command:', file=sys.stderr)
-            print('\tpip install linesman', file=sys.stderr)
-            raise SystemExit
-        else:
-            app.wsgi_app = make_linesman_middleware(app.wsgi_app)
-            print('Profiler (linesman) is available:',
-                  'http://{0.host}:{0.port}/__profiler__/'.format(args))
+        from werkzeug.contrib.profiler import ProfilerMiddleware
+        app.wsgi_app = ProfilerMiddleware(app.wsgi_app)
     if args.debug:
         app.run(host=args.host, port=args.port, debug=True)
     else:
