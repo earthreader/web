@@ -1,5 +1,5 @@
-""":mod:`earthreader.web.command` --- Command interface
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+""":mod:`earthreader.web.cli` --- Command line interface
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 """
 from __future__ import print_function
@@ -16,6 +16,7 @@ from . import create_app
 
 
 def server_command(args):
+    """Run EarthReader-Web server."""
     app = create_app(REPOSITORY=args.repository, SESSION_ID=args.session_id)
     if args.profile:
         try:
@@ -57,6 +58,7 @@ server_parser.add_argument('repository', help='Earth Reader repository.')
 
 
 def cli():
+    """Command line interface."""
     args = parser.parse_args()
     url = urllib.parse.urlparse(args.repository)
     if not url.scheme:
