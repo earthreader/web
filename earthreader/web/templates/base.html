@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+    {% block head %}
+        <meta charset="utf-8">
+        <title>Earth Reader</title>
+    {% endblock %}
+</head>
+<body>
+<h1>
+    <a href="{{ url_for('.home') }}">Earth Reader</a>
+</h1>
+{% block body %}
+{% endblock %}
+</body>
+</html>

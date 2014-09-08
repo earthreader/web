@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block body %}
+    <h2>Categories</h2>
+    <ul>
+        {% for category in categories %}
+            <li>
+                <a href="{{ url_for('.category', category_id=category) }}">{{ category }}</a>
+            </li>
+        {% endfor %}
+    </ul>
+    <h2>Feeds</h2>
+    <ul>
+        {% for feed in feeds %}
+            <li>
+                <a href="{{ url_for('.entries', feed_id=feed) }}">{{ feeds[feed] }}</a>
+            </li>
+        {% endfor %}
+    </ul>
+{% endblock %}

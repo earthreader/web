@@ -1,0 +1,12 @@
+{% extends 'feed.html' %}
+{% block body %}
+    {{ super() }}
+    <h2>
+        <a href="{{ entry.id }}">{{ entry }}</a>
+    </h2>
+    {% if entry.content %}
+        {{ entry.content }}
+    {% else %}
+        {{ entry.summary }}
+    {% endif %}
+{% endblock %}

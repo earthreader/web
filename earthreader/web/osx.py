@@ -4,7 +4,6 @@
 You can build it using py2app_::
 
    $ pip install py2app
-   $ python setup.py build_sass
    $ python setup.py py2app
 
 .. _py2app: https://pypi.python.org/pypi/py2app/
@@ -18,7 +17,7 @@ from six.moves import urllib, tkinter as tk
 from libearth.session import Session
 from waitress.server import create_server
 
-from . import app
+from . import create_app
 
 
 def open_webbrowser(port):
@@ -39,8 +38,7 @@ def main():
     directory = os.path.expanduser('~/.earthreader')
     repository = urllib.parse.urljoin('file://', directory)
     session_id = Session().identifier
-    app.config.update(REPOSITORY=repository, SESSION_ID=session_id,
-                      USE_WORKER=True)
+    app = create_app(REPOSITORY=repository, SESSION_ID=session_id)
     server = create_server(app, port=0)
     port = server.effective_port
     proc = threading.Thread(target=server.run)
@@ -48,7 +46,3 @@ def main():
     proc.start()
     open_webbrowser(port)
     root.mainloop()
-
-
-if __name__ == "__main__":
-    main()
