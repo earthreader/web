@@ -170,8 +170,9 @@ def add_feed(category_id):
         rq = urllib.request.Request(url)
         rq.add_header('User-Agent', '{0}/{1}'.format(version.__package__,
                                                      version.VERSION))
-        with urllib.request.urlopen(rq) as f:
-            document = f.read()
+        f = urllib.request.urlopen(rq):
+        document = f.read()
+        f.close()
     except Exception:
         r = jsonify(
             error='unreachable-url',
