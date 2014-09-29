@@ -605,15 +605,26 @@ function toggleEntryCollapse(entry) {
         var content = $('<div>');
         var bottom_bar = $('<div>');
         var read_on_web = $('<a>');
+        var goTop = $('<a>');
 
         title.html(obj.title.link(obj.permalink));
         content.html(obj.content);
 
         bottom_bar.addClass('bottom-bar');
+
         read_on_web.attr('href', obj.permalink);
-        read_on_web.addClass('read-on-web');
+        read_on_web.addClass('bottom-button');
         read_on_web.text("Read on web");
         bottom_bar.append(read_on_web);
+
+        goTop.attr('href', '#');
+        goTop.text('Go to top');
+        goTop.addClass('bottom-button');
+        goTop.click(function(event) {
+            event.preventDefault();
+            $(window).scrollTop(entry_title.position().top);
+        });
+        bottom_bar.append(goTop);
 
         wrapper.addClass('entry-content');
         wrapper.append(title);
