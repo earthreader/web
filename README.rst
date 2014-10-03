@@ -176,6 +176,15 @@ Continuous integration (Travis)
 Changelog
 ---------
 
+Version 0.2.2
+~~~~~~~~~~~~~
+
+To be released.
+
+- Fixed a bug that enters a infinite loop when initilize
+  :class:`~earthreader.web.CategoryEntryGenerator`
+
+
 Version 0.2.1
 ~~~~~~~~~~~~~
 
