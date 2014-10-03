@@ -545,6 +545,7 @@ class CategoryEntryGenerator():
                     generator.find_next_entry()
                 except StopIteration:
                     empty_generators.append(generator)
+                    break
         for generator in empty_generators:
             self.generators.remove(generator)
         self.sort_generators()
