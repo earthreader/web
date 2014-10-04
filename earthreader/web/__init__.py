@@ -348,11 +348,13 @@ class FeedEntryGenerator():
         self.feed_permalink = feed_permalink
         self.it = it
         self.time_used = time_used
-        self.entry = None
 
         self.filters = 'read', 'starred'
         self.read = read
         self.starred = starred
+
+        self.entry = None
+        self.find_next_entry()
 
     def next(self):
         return next(self.it)
@@ -361,28 +363,30 @@ class FeedEntryGenerator():
         return next(self.it)
 
     def set_iterator(self, entry_after=None):
-        while not self.entry or (entry_after and
-                                 get_hash(self.entry.id) != entry_after):
-            self.entry = next(self.it)
-        while self.skip_if_id(entry_after) or self.skip_if_filters():
-            self.entry = next(self.it)
+        if entry_after:
+            self.skip_to_next_entry(entry_after)
+        self.skip_until_filter_matched()
 
-    def find_next_entry(self):
+    def skip_to_next_entry(self, latest_entry_id):
+        while latest_entry_id and get_hash(self.entry.id) != latest_entry_id:
+            self.entry = next(self.it)
         self.entry = next(self.it)
-        while self.skip_if_filters():
+
+    def skip_until_filter_matched(self):
+        while self.filter_not_matched():
             self.entry = next(self.it)
 
-    def skip_if_id(self, entry_after=None):
-        if not entry_after or get_hash(self.entry.id) != entry_after:
-            return False
-        return True
-
-    def skip_if_filters(self):
+    def filter_not_matched(self):
         for filter in self.filters:
             arg = getattr(self, filter)
             if arg and to_bool(arg) != bool(getattr(self.entry, filter)):
                 return True
         return False
+
+    def find_next_entry(self):
+        self.entry = next(self.it)
+        while self.filter_not_matched():
+            self.entry = next(self.it)
 
     def get_entry_data(self):
         if not self.entry:
@@ -462,14 +466,14 @@ def feed_entries(category_id, feed_id):
         it = iter(feed.entries)
         feed_title = text_type(feed.title)
         feed_permalink = get_permalink(feed)
-        generator = FeedEntryGenerator(category_id, feed_id, feed_title,
-                                       feed_permalink, it, now(), read,
-                                       starred)
         try:
+            generator = FeedEntryGenerator(category_id, feed_id, feed_title,
+                                           feed_permalink, it, now(), read,
+                                           starred)
             generator.set_iterator(entry_after)
         except StopIteration:
             return jsonify(
-                title=generator.feed_title,
+                title=feed_title,
                 entries=[],
                 next_url=None,
                 read_url=url_for('read_all_entries',
@@ -537,17 +541,23 @@ class CategoryEntryGenerator():
     def set_generators(self, entry_after, time_after):
         empty_generators = []
         for generator in self.generators:
-            while (not generator.entry or
-                   (time_after and generator.entry.updated_at
-                       > Rfc3339().decode(time_after)) or
-                   generator.skip_if_id(entry_after)):
+            while (self.entry_newer_than_timestamp(generator, time_after) or
+                   self.entry_same_as_latest_entry(generator, entry_after)):
                 try:
                     generator.find_next_entry()
                 except StopIteration:
                     empty_generators.append(generator)
+                    break
         for generator in empty_generators:
             self.generators.remove(generator)
         self.sort_generators()
+
+    def entry_newer_than_timestamp(self, generator, time_after):
+        return (time_after and
+                generator.entry.updated_at > Rfc3339().decode(time_after))
+
+    def entry_same_as_latest_entry(self, generator, entry_id):
+        return generator.entry.id == entry_id
 
     def find_next_generator(self):
         while self.generators:
@@ -600,9 +610,12 @@ def category_entries(category_id):
             feed_title = text_type(feed.title)
             it = iter(feed.entries)
             feed_permalink = get_permalink(feed)
-            child = FeedEntryGenerator(category_id, subscription.feed_id,
-                                       feed_title, feed_permalink, it, now(),
-                                       read, starred)
+            try:
+                child = FeedEntryGenerator(category_id, subscription.feed_id,
+                                           feed_title, feed_permalink, it, now(),
+                                           read, starred)
+            except StopIteration:
+                continue
             generator.add(child)
         generator.set_generators(id_after, time_after)
     save_entry_generators(url_token, generator)
