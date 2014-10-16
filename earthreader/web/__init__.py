@@ -53,70 +53,6 @@ def initialize():
         worker.start_worker()
 
 
-class Cursor():
-
-    def __init__(self, category_id, return_parent=False):
-        with stage:
-            self.subscriptionlist = (stage.subscriptions if stage.subscriptions
-                                     else SubscriptionList())
-        self.value = self.subscriptionlist
-        self.path = ['/']
-        self.category_id = None
-
-        target_name = None
-        self.target_child = None
-
-        try:
-            if category_id:
-                self.category_id = category_id
-                self.path = [key[1:] for key in category_id.split('/')]
-                if return_parent:
-                    target_name = self.path.pop(-1)
-                for key in self.path:
-                    self.value = self.value.categories[key]
-                if target_name:
-                    self.target_child = self.value.categories[target_name]
-        except Exception:
-            raise InvalidCategoryID('The given category ID is not valid')
-
-    def __getattr__(self, attr):
-        return getattr(self.value, attr)
-
-    def __iter__(self):
-        return iter(self.value)
-
-    def join_id(self, append):
-        if self.category_id:
-            return self.category_id + '/-' + append
-        return '-' + append
-
-
-def get_subscription_list():
-    with stage:
-        return (stage.subscriptions if stage.subscriptions
-                else SubscriptionList())
-
-
-def get_category(subscription_list, category_id):
-    category = subscription_list
-    if category_id:
-        path = get_category_path(category_id)
-        for key in path:
-            try:
-                category = category.categories[key]
-            except KeyError:
-                raise InvalidCategoryID('The given category ID is not valid')
-    return category
-
-
-def get_category_path(category_id):
-    return [key[1:] for key in category_id.split('/')]
-
-
-def get_parent_category_id(category_id):
-    return '/'.join(category_id.split('/')[:-1])
-
-
 def join_category_id(base, append):
     if base:
         return base + '/-' + append
@@ -469,7 +405,7 @@ class FeedEntryGenerator():
 @app.route('/<path:category_id>/feeds/<feed_id>/entries/')
 def feed_entries(category_id, feed_id):
     try:
-        Cursor(category_id)
+        SubscriptionTransaction().get_category(category_id)
     except InvalidCategoryID:
         r = jsonify(
             error='category-id-invalid',
@@ -634,7 +570,7 @@ class CategoryEntryGenerator():
 @app.route('/entries/', defaults={'category_id': ''})
 @app.route('/<path:category_id>/entries/')
 def category_entries(category_id):
-    cursor = Cursor(category_id)
+    category = SubscriptionTransaction().get_category(category_id)
     generator = None
     url_token, entry_after, read, starred = get_optional_args()
     if url_token:
@@ -645,7 +581,7 @@ def category_entries(category_id):
     else:
         url_token = text_type(now())
     if not generator:
-        subscriptions = cursor.recursive_subscriptions
+        subscriptions = category.recursive_subscriptions
         generator = CategoryEntryGenerator()
         if entry_after:
             id_after, time_after = entry_after.split('@')
@@ -710,8 +646,8 @@ def category_entries(category_id):
 @app.route('/<path:category_id>/entries/', methods=['PUT'])
 def update_entries(category_id, feed_id=None):
     if worker.is_running():
-        cursor = Cursor(category_id)
-        worker.add_job(cursor, feed_id)
+        category = SubscriptionTransaction().get_category(category_id)
+        worker.add_job(category, feed_id)
         r = jsonify()
         r.status_code = 202
         return r
@@ -803,8 +739,8 @@ def read_all_entries(category_id='', feed_id=None):
     if feed_id:
         feed_ids = [feed_id]
     else:
-        cursor = Cursor(category_id)
-        feed_ids = [sub.feed_id for sub in cursor.recursive_subscriptions]
+        category = SubscriptionTransaction().get_category(category_id)
+        feed_ids = [sub.feed_id for sub in category.recursive_subscriptions]
 
     try:
         codec = Rfc3339()
