@@ -89,6 +89,30 @@ class Cursor():
         return '-' + append
 
 
+def get_category(category_id):
+    with stage:
+        category = (stage.subscriptions if stage.subscriptions
+                    else SubscriptionList())
+    if category_id:
+        path = get_category_path(category_id)
+        for key in path:
+            try:
+                category = category.categories[key]
+            except KeyError:
+                raise InvalidCategoryID('The given category ID is not valid')
+    return category
+
+
+def get_category_path(category_id):
+    return [key[1:] for key in category_id.split('/')]
+
+
+def join_category_id(base, append):
+    if base:
+        return base + '/-' + append
+    return '-' + append
+
+
 def add_urls(data, keys, category_id, feed_id=None, entry_id=None):
     APIS = {
         'entries_url': 'category_entries',
