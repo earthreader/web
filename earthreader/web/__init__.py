@@ -16,7 +16,8 @@ from libearth.tz import now, utc
 
 from .util import autofix_repo_url, get_hash
 from .wsgi import MethodRewriteMiddleware
-from .exceptions import (InvalidCategoryID, IteratorNotFound, WorkerNotRunning,
+from .exceptions import (AutodiscoveryFailed, DocumentNotFound,
+                         InvalidCategoryID, IteratorNotFound, WorkerNotRunning,
                          FeedNotFound, EntryNotFound)
 from .worker import Worker
 from .stage import stage
@@ -204,33 +205,32 @@ def add_feed(category_id):
     subscription_list = get_subscription_list()
     category = get_category(subscription_list, category_id)
     url = request.form['url']
+    document = get_document(url)
+    feed_links = get_feed_links(document, url)
+    feed_url = feed_links[0].url
+    feed_url, feed, hints = next(iter(crawl([feed_url], 1)))
+    with stage:
+        subscription = category.subscribe(feed)
+        stage.subscriptions = subscription_list
+        stage.feeds[subscription.feed_id] = feed
+    return list_in_category(category_id)
+
+
+def get_document(url):
     try:
         f = urllib.request.urlopen(url)
         document = f.read()
         f.close()
+        return document
     except Exception:
-        r = jsonify(
-            error='unreachable-url',
-            message='Cannot connect to given url'
-        )
-        r.status_code = 400
-        return r
+        raise DocumentNotFound
+
+
+def get_feed_links(document, url):
     try:
-        feed_links = autodiscovery(document, url)
+        return autodiscovery(document, url)
     except FeedUrlNotFoundError:
-        r = jsonify(
-            error='unreachable-feed-url',
-            message='Cannot find feed url'
-        )
-        r.status_code = 400
-        return r
-    feed_url = feed_links[0].url
-    feed_url, feed, hints = next(iter(crawl([feed_url], 1)))
-    with stage:
-        sub = category.subscribe(feed)
-        stage.subscriptions = category.subscriptionlist
-        stage.feeds[sub.feed_id] = feed
-    return list_in_category(category_id)
+        raise FeedUrlNotFoundError
 
 
 @app.route('/', methods=['POST'], defaults={'category_id': ''})
