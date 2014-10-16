@@ -52,6 +52,6 @@ class SubscriptionTransaction(object):
     def save(self):
         with stage:
             stage.subscriptions = self.subscriptions
-            for feed_id, feed in self.feeds.iteritems():
+            for feed_id, feed in self.feeds.items():
                 stage.feeds[feed_id] = feed
             self.subscriptions = stage.subscriptions
