@@ -427,6 +427,15 @@ class FeedEntryGenerator():
 @app.route('/<path:category_id>/feeds/<feed_id>/entries/')
 def feed_entries(category_id, feed_id):
     try:
+        Cursor(category_id)
+    except InvalidCategoryID:
+        r = jsonify(
+            error='category-id-invalid',
+            message='Given category does not exist'
+        )
+        r.status_code = 404
+        return r
+    try:
         with stage:
             feed = stage.feeds[feed_id]
     except KeyError:
