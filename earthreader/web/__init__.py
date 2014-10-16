@@ -252,10 +252,13 @@ def add_category(category_id):
 
 @app.route('/<path:category_id>/', methods=['DELETE'])
 def delete_category(category_id):
-    cursor = Cursor(category_id, True)
-    cursor.remove(cursor.target_child)
+    subscription_list = get_subscription_list()
+    parent_category_id = get_parent_category_id(category_id)
+    parent_category = get_category(subscription_list, parent_category_id)
+    target_category = get_category(subscription_list, category_id)
+    parent_category.remove(target_category)
     with stage:
-        stage.subscriptions = cursor.subscriptionlist
+        stage.subscriptions = subscription_list
     index = category_id.rfind('/')
     if index == -1:
         return list_in_category('')
