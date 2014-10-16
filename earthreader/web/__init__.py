@@ -91,7 +91,8 @@ class Cursor():
 
 def get_subscription_list():
     with stage:
-        return stage.subscriptions
+        return (stage.subscriptions if stage.subscriptions
+                else SubscriptionList())
 
 
 def get_category(category_id):
