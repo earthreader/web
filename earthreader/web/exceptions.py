@@ -62,3 +62,10 @@ class AutodiscoveryFailed(ValueError, JsonException):
 
     error = 'unreachable-feed-url',
     message = 'Cannot find feed url'
+
+
+class FeedNotFoundInCategory(ValueError, JsonException):
+    """Raised whan the feed does not exist in category"""
+
+    error = 'feed-not-found-in-path',
+    message = 'Given feed does not exist in the path'

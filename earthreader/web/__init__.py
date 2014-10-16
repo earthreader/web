@@ -18,7 +18,7 @@ from .util import autofix_repo_url, get_hash
 from .wsgi import MethodRewriteMiddleware
 from .exceptions import (AutodiscoveryFailed, DocumentNotFound,
                          InvalidCategoryID, IteratorNotFound, WorkerNotRunning,
-                         FeedNotFound, EntryNotFound)
+                         FeedNotFound, FeedNotFoundInCategory, EntryNotFound)
 from .worker import Worker
 from .stage import stage
 from .transaction import SubscriptionTransaction
@@ -212,12 +212,7 @@ def delete_feed(category_id, feed_id):
     if target:
         category.discard(target)
     else:
-        r = jsonify(
-            error='feed-not-found-in-path',
-            message='Given feed does not exist in the path'
-        )
-        r.status_code = 400
-        return r
+        raise FeedNotFoundInCategory
     transaction.save()
     return list_in_category(category_id)
 
