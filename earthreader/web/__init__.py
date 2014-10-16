@@ -165,7 +165,7 @@ def index():
 @app.route('/feeds/', defaults={'category_id': ''})
 @app.route('/<path:category_id>/feeds/')
 def feeds(category_id):
-    cursor = Cursor(category_id)
+    cursor = get_category(category_id)
     feeds = []
     categories = []
     for child in cursor:
