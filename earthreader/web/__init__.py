@@ -169,19 +169,29 @@ def feeds(category_id):
     feeds = []
     categories = []
     for child in cursor:
-        data = {'title': child.label}
         if isinstance(child, Subscription):
-            url_keys = ['entries_url', 'remove_feed_url']
-            add_urls(data, url_keys, cursor.category_id, child.feed_id)
-            add_path_data(data, cursor.category_id, child.feed_id)
-            feeds.append(data)
+            feeds.append(get_feed_data(category_id, child))
         elif isinstance(child, Category):
-            url_keys = ['feeds_url', 'entries_url', 'add_feed_url',
-                        'add_category_url', 'remove_category_url', 'move_url']
-            add_urls(data, url_keys, cursor.join_id(child.label))
-            add_path_data(data, cursor.join_id(child.label))
-            categories.append(data)
+            categories.append(get_category_data(category_id, child))
     return jsonify(feeds=feeds, categories=categories)
+
+
+def get_feed_data(base_category_id, subscription):
+    feed_data = {'title': subscription.label}
+    url_keys = ['entries_url', 'remove_feed_url']
+    add_urls(feed_data, url_keys, base_category_id, subscription.feed_id)
+    add_path_data(feed_data, base_category_id, subscription.feed_id)
+    return feed_data
+
+
+def get_category_data(base_category_id, category):
+    label = category.label
+    category_data = {'title': label}
+    url_keys = ['feeds_url', 'entries_url', 'add_feed_url',
+                'add_category_url', 'remove_category_url', 'move_url']
+    add_urls(category_data, url_keys, join_category_id(base_category_id, label))
+    add_path_data(category_data, join_category_id(base_category_id, label))
+    return category_data
 
 
 @app.route('/feeds/', methods=['POST'], defaults={'category_id': ''})
