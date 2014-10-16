@@ -54,3 +54,4 @@ class SubscriptionTransaction(object):
             stage.subscriptions = self.subscriptions
             for feed_id, feed in self.feeds.iteritems():
                 stage.feeds[feed_id] = feed
+            self.subscriptions = stage.subscriptions
