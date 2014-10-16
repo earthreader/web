@@ -53,12 +53,12 @@ class WorkerNotRunning(ValueError, JsonException):
 class DocumentNotFound(ValueError, JsonException):
     """Raised when the document is not reachable"""
 
-    error='unreachable-url',
-    message='Cannot connect to given url'
+    error = 'unreachable-url',
+    message = 'Cannot connect to given url'
 
 
 class AutodiscoveryFailed(ValueError, JsonException):
     """Raised when a feed url is not found"""
 
-    error='unreachable-feed-url',
-    message='Cannot find feed url'
+    error = 'unreachable-feed-url',
+    message = 'Cannot find feed url'
