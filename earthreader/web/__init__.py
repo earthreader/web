@@ -112,6 +112,10 @@ def get_category_path(category_id):
     return [key[1:] for key in category_id.split('/')]
 
 
+def get_parent_category_id(category_id):
+    return '/'.join(category_id.split('/')[:-1])
+
+
 def join_category_id(base, append):
     if base:
         return base + '/-' + append
