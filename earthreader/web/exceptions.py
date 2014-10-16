@@ -48,3 +48,17 @@ class WorkerNotRunning(ValueError, JsonException):
     error = 'worker-not-running'
     message = 'The worker thread that crawl feeds in background is not' \
               'running.'
+
+
+class DocumentNotFound(ValueError, JsonException):
+    """Raised when the document is not reachable"""
+
+    error='unreachable-url',
+    message='Cannot connect to given url'
+
+
+class AutodiscoveryFailed(ValueError, JsonException):
+    """Raised when a feed url is not found"""
+
+    error='unreachable-feed-url',
+    message='Cannot find feed url'
