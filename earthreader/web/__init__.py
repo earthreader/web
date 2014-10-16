@@ -165,10 +165,10 @@ def index():
 @app.route('/feeds/', defaults={'category_id': ''})
 @app.route('/<path:category_id>/feeds/')
 def list_in_category(category_id):
-    cursor = get_category(category_id)
+    category = get_category(category_id)
     feeds = []
     categories = []
-    for child in cursor:
+    for child in category:
         if isinstance(child, Subscription):
             feeds.append(get_feed_data(category_id, child))
         elif isinstance(child, Category):
