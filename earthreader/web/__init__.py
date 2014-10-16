@@ -21,6 +21,7 @@ from .exceptions import (AutodiscoveryFailed, DocumentNotFound,
                          FeedNotFound, EntryNotFound)
 from .worker import Worker
 from .stage import stage
+from .transaction import SubscriptionTransaction
 
 
 app = Flask(__name__)
@@ -174,7 +175,7 @@ def index():
 @app.route('/feeds/', defaults={'category_id': ''})
 @app.route('/<path:category_id>/feeds/')
 def list_in_category(category_id):
-    category = get_category(get_subscription_list(), category_id)
+    category = SubscriptionTransaction().get_category(category_id)
     feeds = []
     categories = []
     for child in category:
@@ -206,17 +207,15 @@ def get_category_data(base_category_id, category):
 @app.route('/feeds/', methods=['POST'], defaults={'category_id': ''})
 @app.route('/<path:category_id>/feeds/', methods=['POST'])
 def add_feed(category_id):
-    subscription_list = get_subscription_list()
-    category = get_category(subscription_list, category_id)
+    transaction = SubscriptionTransaction()
+    category = transaction.get_category(category_id)
     url = request.form['url']
     document = get_document(url)
     feed_links = get_feed_links(document, url)
     feed_url = feed_links[0].url
     feed_url, feed, hints = next(iter(crawl([feed_url], 1)))
-    with stage:
-        subscription = category.subscribe(feed)
-        stage.subscriptions = subscription_list
-        stage.feeds[subscription.feed_id] = feed
+    transaction.add_feed(category, feed)
+    transaction.save()
     return list_in_category(category_id)
 
 
@@ -240,25 +239,22 @@ def get_feed_links(document, url):
 @app.route('/', methods=['POST'], defaults={'category_id': ''})
 @app.route('/<path:category_id>/', methods=['POST'])
 def add_category(category_id):
-    subscription_list = get_subscription_list()
-    category = get_category(subscription_list, category_id)
+    transaction = SubscriptionTransaction()
+    category = transaction.get_category(category_id)
     title = request.form['title']
     outline = Category(label=title)
     category.add(outline)
-    with stage:
-        stage.subscriptions = subscription_list
+    transaction.save()
     return list_in_category(category_id)
 
 
 @app.route('/<path:category_id>/', methods=['DELETE'])
 def delete_category(category_id):
-    subscription_list = get_subscription_list()
-    parent_category_id = get_parent_category_id(category_id)
-    parent_category = get_category(subscription_list, parent_category_id)
-    target_category = get_category(subscription_list, category_id)
+    transaction = SubscriptionTransaction()
+    parent_category = transaction.get_parent_category(category_id)
+    target_category = transaction.get_category(category_id)
     parent_category.remove(target_category)
-    with stage:
-        stage.subscriptions = subscription_list
+    transaction.save()
     index = category_id.rfind('/')
     if index == -1:
         return list_in_category('')
@@ -270,14 +266,15 @@ def delete_category(category_id):
            defaults={'category_id': ''})
 @app.route('/<path:category_id>/feeds/<feed_id>/', methods=['DELETE'])
 def delete_feed(category_id, feed_id):
-    cursor = Cursor(category_id)
+    transaction = SubscriptionTransaction()
+    category = transaction.get_category(category_id)
     target = None
-    for subscription in cursor:
+    for subscription in category:
         if isinstance(subscription, Subscription):
             if feed_id == subscription.feed_id:
                 target = subscription
     if target:
-        cursor.discard(target)
+        category.discard(target)
     else:
         r = jsonify(
             error='feed-not-found-in-path',
@@ -285,28 +282,28 @@ def delete_feed(category_id, feed_id):
         )
         r.status_code = 400
         return r
-    with stage:
-        stage.subscriptions = cursor.subscriptionlist
+    transaction.save()
     return list_in_category(category_id)
 
 
 @app.route('/<path:category_id>/feeds/', methods=['PUT'])
 @app.route('/feeds/', methods=['PUT'], defaults={'category_id': ''})
 def move_outline(category_id):
+    transaction = SubscriptionTransaction()
     source_path = request.args.get('from')
     if '/feeds/' in source_path:
         parent_category_id, feed_id = source_path.split('/feeds/')
-        source = Cursor(parent_category_id)
+        source = transaction.get_category(parent_category_id)
         target = None
         for child in source:
             if child.feed_id == feed_id:
                 target = child
     else:
-        source = Cursor(source_path, True)
-        target = source.target_child
+        source = transaction.get_parent_category(source_path)
+        target = transaction.get_category(source_path)
 
-    dest = Cursor(category_id)
-    if isinstance(target, Category) and target.contains(dest.value):
+    dest = transaction.get_category(category_id)
+    if isinstance(target, Category) and target.contains(dest):
         r = jsonify(
             error='circular-reference',
             message='Cannot move into child element.'
@@ -314,12 +311,10 @@ def move_outline(category_id):
         r.status_code = 400
         return r
     source.discard(target)
-    with stage:
-        stage.subscriptions = source.subscriptionlist
-    dest = Cursor(category_id)
+    transaction.save()
+    dest = transaction.get_category(category_id)
     dest.add(target)
-    with stage:
-        stage.subscriptions = dest.subscriptionlist
+    transaction.save()
     return jsonify()
 
 
