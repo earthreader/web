@@ -19,7 +19,6 @@ class JsonException(HTTPException):
     def get_response(self, environ=None):
         r = jsonify(error=self.error, message=self.message)
         r.status_code = self.status_code
-        print r.error
         return r
 
 
@@ -77,4 +76,12 @@ class FeedNotFoundInCategory(ValueError, JsonException):
 
     error = 'feed-not-found-in-path'
     message = 'Given feed does not exist in the path'
+    status_code = 400
+
+
+class CategoryCircularReference(ValueError, JsonException):
+    """Raised when category structure does not make sense"""
+
+    error = 'circular-reference'
+    message = 'Cannot move into child element.'
     status_code = 400

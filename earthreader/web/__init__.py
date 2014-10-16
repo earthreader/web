@@ -16,9 +16,10 @@ from libearth.tz import now, utc
 
 from .util import autofix_repo_url, get_hash
 from .wsgi import MethodRewriteMiddleware
-from .exceptions import (AutodiscoveryFailed, DocumentNotFound,
-                         InvalidCategoryID, IteratorNotFound, WorkerNotRunning,
-                         FeedNotFound, FeedNotFoundInCategory, EntryNotFound)
+from .exceptions import (AutodiscoveryFailed, CategoryCircularReference,
+                         DocumentNotFound, InvalidCategoryID, IteratorNotFound,
+                         WorkerNotRunning, FeedNotFound, FeedNotFoundInCategory,
+                         EntryNotFound)
 from .worker import Worker
 from .stage import stage
 from .transaction import SubscriptionTransaction
@@ -235,12 +236,7 @@ def move_outline(category_id):
 
     dest = transaction.get_category(category_id)
     if isinstance(target, Category) and target.contains(dest):
-        r = jsonify(
-            error='circular-reference',
-            message='Cannot move into child element.'
-        )
-        r.status_code = 400
-        return r
+        raise CategoryCircularReference
     source.discard(target)
     transaction.save()
     dest = transaction.get_category(category_id)
@@ -399,25 +395,12 @@ class FeedEntryGenerator():
 @app.route('/feeds/<feed_id>/entries/', defaults={'category_id': ''})
 @app.route('/<path:category_id>/feeds/<feed_id>/entries/')
 def feed_entries(category_id, feed_id):
-    try:
-        SubscriptionTransaction().get_category(category_id)
-    except InvalidCategoryID:
-        r = jsonify(
-            error='category-id-invalid',
-            message='Given category does not exist'
-        )
-        r.status_code = 404
-        return r
+    SubscriptionTransaction().get_category(category_id)
     try:
         with stage:
             feed = stage.feeds[feed_id]
     except KeyError:
-        r = jsonify(
-            error='feed-not-found',
-            message='Given feed does not exist'
-        )
-        r.status_code = 404
-        return r
+        raise FeedNotFound
     if feed.__revision__:
         updated_at = feed.__revision__.updated_at
         if request.if_modified_since:
@@ -744,23 +727,15 @@ def read_all_entries(category_id='', feed_id=None):
         last_updated = None
 
     for feed_id in feed_ids:
-        try:
-            with stage:
+        with stage:
+            try:
                 feed = stage.feeds[feed_id]
-                for entry in feed.entries:
-                    if not last_updated or entry.updated_at <= last_updated:
-                        entry.read = True
-                stage.feeds[feed_id] = feed
-        except KeyError:
-            if feed_id:
-                r = jsonify(
-                    error='feed-not-found',
-                    message='Given feed does not exist'
-                )
-                r.status_code = 404
-                return r
-            else:
-                continue
+            except KeyError:
+                raise FeedNotFound
+            for entry in feed.entries:
+                if not last_updated or entry.updated_at <= last_updated:
+                    entry.read = True
+            stage.feeds[feed_id] = feed
     return jsonify()
 
 
