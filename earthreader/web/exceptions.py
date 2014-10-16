@@ -19,6 +19,7 @@ class JsonException(HTTPException):
     def get_response(self, environ=None):
         r = jsonify(error=self.error, message=self.message)
         r.status_code = self.status_code
+        print r.error
         return r
 
 
@@ -58,7 +59,7 @@ class WorkerNotRunning(ValueError, JsonException):
 class DocumentNotFound(ValueError, JsonException):
     """Raised when the document is not reachable"""
 
-    error = 'unreachable-url',
+    error = 'unreachable-url'
     message = 'Cannot connect to given url'
     status_code = 404
 
@@ -66,7 +67,7 @@ class DocumentNotFound(ValueError, JsonException):
 class AutodiscoveryFailed(ValueError, JsonException):
     """Raised when a feed url is not found"""
 
-    error = 'unreachable-feed-url',
+    error = 'unreachable-feed-url'
     message = 'Cannot find feed url'
     status_code = 404
 
@@ -74,6 +75,6 @@ class AutodiscoveryFailed(ValueError, JsonException):
 class FeedNotFoundInCategory(ValueError, JsonException):
     """Raised whan the feed does not exist in category"""
 
-    error = 'feed-not-found-in-path',
+    error = 'feed-not-found-in-path'
     message = 'Given feed does not exist in the path'
     status_code = 400
