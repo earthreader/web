@@ -95,10 +95,8 @@ def get_subscription_list():
                 else SubscriptionList())
 
 
-def get_category(category_id):
-    with stage:
-        category = (stage.subscriptions if stage.subscriptions
-                    else SubscriptionList())
+def get_category(subscription_list, category_id):
+    category = subscription_list
     if category_id:
         path = get_category_path(category_id)
         for key in path:
@@ -171,7 +169,7 @@ def index():
 @app.route('/feeds/', defaults={'category_id': ''})
 @app.route('/<path:category_id>/feeds/')
 def list_in_category(category_id):
-    category = get_category(category_id)
+    category = get_category(get_subscription_list(), category_id)
     feeds = []
     categories = []
     for child in category:
@@ -203,7 +201,8 @@ def get_category_data(base_category_id, category):
 @app.route('/feeds/', methods=['POST'], defaults={'category_id': ''})
 @app.route('/<path:category_id>/feeds/', methods=['POST'])
 def add_feed(category_id):
-    category = get_category(category_id)
+    subscription_list = get_subscription_list()
+    category = get_category(subscription_list, category_id)
     url = request.form['url']
     try:
         f = urllib.request.urlopen(url)
