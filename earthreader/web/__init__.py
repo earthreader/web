@@ -621,8 +621,8 @@ def category_entries(category_id):
             feed_permalink = get_permalink(feed)
             try:
                 child = FeedEntryGenerator(category_id, subscription.feed_id,
-                                           feed_title, feed_permalink, it, now(),
-                                           read, starred)
+                                           feed_title, feed_permalink, it,
+                                           now(), read, starred)
             except StopIteration:
                 continue
             generator.add(child)
