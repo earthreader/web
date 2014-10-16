@@ -116,7 +116,7 @@ def join_category_id(base, append):
 def add_urls(data, keys, category_id, feed_id=None, entry_id=None):
     APIS = {
         'entries_url': 'category_entries',
-        'feeds_url': 'feeds',
+        'feeds_url': 'list_in_category',
         'add_feed_url': 'add_feed',
         'add_category_url': 'add_category',
         'remove_category_url': 'delete_category',
@@ -164,7 +164,7 @@ def index():
 
 @app.route('/feeds/', defaults={'category_id': ''})
 @app.route('/<path:category_id>/feeds/')
-def feeds(category_id):
+def list_in_category(category_id):
     cursor = get_category(category_id)
     feeds = []
     categories = []
@@ -225,7 +225,7 @@ def add_feed(category_id):
         sub = cursor.subscribe(feed)
         stage.subscriptions = cursor.subscriptionlist
         stage.feeds[sub.feed_id] = feed
-    return feeds(category_id)
+    return list_in_category(category_id)
 
 
 @app.route('/', methods=['POST'], defaults={'category_id': ''})
@@ -237,7 +237,7 @@ def add_category(category_id):
     cursor.add(outline)
     with stage:
         stage.subscriptions = cursor.subscriptionlist
-    return feeds(category_id)
+    return list_in_category(category_id)
 
 
 @app.route('/<path:category_id>/', methods=['DELETE'])
@@ -248,9 +248,9 @@ def delete_category(category_id):
         stage.subscriptions = cursor.subscriptionlist
     index = category_id.rfind('/')
     if index == -1:
-        return feeds('')
+        return list_in_category('')
     else:
-        return feeds(category_id[:index])
+        return list_in_category(category_id[:index])
 
 
 @app.route('/feeds/<feed_id>/', methods=['DELETE'],
@@ -274,7 +274,7 @@ def delete_feed(category_id, feed_id):
         return r
     with stage:
         stage.subscriptions = cursor.subscriptionlist
-    return feeds(category_id)
+    return list_in_category(category_id)
 
 
 @app.route('/<path:category_id>/feeds/', methods=['PUT'])

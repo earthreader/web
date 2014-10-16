@@ -285,7 +285,7 @@ def test_all_feeds(xmls):
         category_url = root_categories[0]['feeds_url']
         assert category_url == \
             url_for(
-                'feeds',
+                'list_in_category',
                 category_id='-categoryone',
                 _external=True
             )
@@ -352,7 +352,7 @@ def test_all_feeds(xmls):
         category_url = one_categories[0]['feeds_url']
         assert category_url == \
             url_for(
-                'feeds',
+                'list_in_category',
                 category_id='-categoryone/-categorytwo',
                 _external=True
             )
@@ -391,7 +391,7 @@ def test_all_feeds(xmls):
         category_url = root_categories[1]['feeds_url']
         assert category_url == \
             url_for(
-                'feeds',
+                'list_in_category',
                 category_id='-categorythree',
                 _external=True
             )

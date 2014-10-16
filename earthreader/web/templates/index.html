@@ -7,7 +7,7 @@
           href="{{ url_for('static', filename='img/favicon_32.ico')}}"/>
     <script>
       URLS = {{ {
-        'feeds': url_for('feeds', _external=True),
+        'feeds': url_for('list_in_category', _external=True),
         'entries': url_for('category_entries', _external=True)
       }|tojson|safe }};
       THEMES = {{ {
