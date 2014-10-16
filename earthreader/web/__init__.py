@@ -89,6 +89,11 @@ class Cursor():
         return '-' + append
 
 
+def get_subscription_list():
+    with stage:
+        return stage.subscriptions
+
+
 def get_category(category_id):
     with stage:
         category = (stage.subscriptions if stage.subscriptions
