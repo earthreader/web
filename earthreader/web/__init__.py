@@ -7,6 +7,7 @@ import os
 from six.moves import urllib
 
 from flask import Flask, jsonify, render_template, request, url_for
+from libearth import version
 from libearth.codecs import Rfc3339
 from libearth.compat import text_type
 from libearth.crawler import crawl
@@ -166,7 +167,10 @@ def add_feed(category_id):
     cursor = Cursor(category_id)
     url = request.form['url']
     try:
-        f = urllib.request.urlopen(url)
+        rq = urllib.request.Request(url)
+        rq.add_header('User-Agent', '{0}/{1}'.format(version.__package__,
+                                                     version.VERSION))
+        f = urllib.request.urlopen(rq):
         document = f.read()
         f.close()
     except Exception:
