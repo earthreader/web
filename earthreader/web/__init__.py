@@ -236,12 +236,13 @@ def get_feed_links(document, url):
 @app.route('/', methods=['POST'], defaults={'category_id': ''})
 @app.route('/<path:category_id>/', methods=['POST'])
 def add_category(category_id):
-    cursor = Cursor(category_id)
+    subscription_list = get_subscription_list()
+    category = get_category(subscription_list, category_id)
     title = request.form['title']
     outline = Category(label=title)
-    cursor.add(outline)
+    category.add(outline)
     with stage:
-        stage.subscriptions = cursor.subscriptionlist
+        stage.subscriptions = subscription_list
     return list_in_category(category_id)
 
 
