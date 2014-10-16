@@ -197,7 +197,7 @@ def get_category_data(base_category_id, category):
 @app.route('/feeds/', methods=['POST'], defaults={'category_id': ''})
 @app.route('/<path:category_id>/feeds/', methods=['POST'])
 def add_feed(category_id):
-    cursor = Cursor(category_id)
+    category = get_category(category_id)
     url = request.form['url']
     try:
         f = urllib.request.urlopen(url)
@@ -222,8 +222,8 @@ def add_feed(category_id):
     feed_url = feed_links[0].url
     feed_url, feed, hints = next(iter(crawl([feed_url], 1)))
     with stage:
-        sub = cursor.subscribe(feed)
-        stage.subscriptions = cursor.subscriptionlist
+        sub = category.subscribe(feed)
+        stage.subscriptions = category.subscriptionlist
         stage.feeds[sub.feed_id] = feed
     return list_in_category(category_id)
 
