@@ -395,12 +395,7 @@ class FeedEntryGenerator():
 @app.route('/feeds/<feed_id>/entries/', defaults={'category_id': ''})
 @app.route('/<path:category_id>/feeds/<feed_id>/entries/')
 def feed_entries(category_id, feed_id):
-    SubscriptionTransaction().get_category(category_id)
-    try:
-        with stage:
-            feed = stage.feeds[feed_id]
-    except KeyError:
-        raise FeedNotFound
+    feed = SubscriptionTransaction().get_feed(feed_id, category_id)
     if feed.__revision__:
         updated_at = feed.__revision__.updated_at
         if request.if_modified_since:
@@ -548,7 +543,8 @@ class CategoryEntryGenerator():
 @app.route('/entries/', defaults={'category_id': ''})
 @app.route('/<path:category_id>/entries/')
 def category_entries(category_id):
-    category = SubscriptionTransaction().get_category(category_id)
+    transaction = SubscriptionTransaction()
+    category = transaction.get_category(category_id)
     generator = None
     url_token, entry_after, read, starred = get_optional_args()
     if url_token:
@@ -568,9 +564,8 @@ def category_entries(category_id):
             id_after = None
         for subscription in subscriptions:
             try:
-                with stage:
-                    feed = stage.feeds[subscription.feed_id]
-            except KeyError:
+                feed = transaction.get_feed(subscription.feed_id)
+            except FeedNotFound:
                 continue
             feed_title = text_type(feed.title)
             it = iter(feed.entries)
@@ -634,11 +629,7 @@ def update_entries(category_id, feed_id=None):
 
 
 def find_feed_and_entry(feed_id, entry_id):
-    try:
-        with stage:
-            feed = stage.feeds[feed_id]
-    except KeyError:
-        raise FeedNotFound('The feed is not reachable')
+    feed = SubscriptionTransaction().get_feed(feed_id)
     feed_permalink = get_permalink(feed)
     for entry in feed.entries:
         entry_permalink = get_permalink(entry)
@@ -714,10 +705,11 @@ def unread_entry(category_id, feed_id, entry_id):
 @app.route('/entries/read/', methods=['PUT'])
 @app.route('/<path:category_id>/entries/read/', methods=['PUT'])
 def read_all_entries(category_id='', feed_id=None):
+    transaction = SubscriptionTransaction()
     if feed_id:
         feed_ids = [feed_id]
     else:
-        category = SubscriptionTransaction().get_category(category_id)
+        category = transaction.get_category(category_id)
         feed_ids = [sub.feed_id for sub in category.recursive_subscriptions]
 
     try:
@@ -727,14 +719,11 @@ def read_all_entries(category_id='', feed_id=None):
         last_updated = None
 
     for feed_id in feed_ids:
+        feed = transaction.get_feed(feed_id)
+        for entry in feed.entries:
+            if not last_updated or entry.updated_at <= last_updated:
+                entry.read = True
         with stage:
-            try:
-                feed = stage.feeds[feed_id]
-            except KeyError:
-                raise FeedNotFound
-            for entry in feed.entries:
-                if not last_updated or entry.updated_at <= last_updated:
-                    entry.read = True
             stage.feeds[feed_id] = feed
     return jsonify()
 

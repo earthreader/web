@@ -4,7 +4,7 @@
 """
 from libearth.subscribe import SubscriptionList
 
-from .exceptions import InvalidCategoryID
+from .exceptions import InvalidCategoryID, FeedNotFound, FeedNotFoundInCategory
 from .stage import stage
 
 
@@ -23,6 +23,15 @@ class SubscriptionTransaction(object):
             self.subscriptions = (stage.subscriptions if stage.subscriptions
                                   else SubscriptionList())
         self.feeds_added = {}
+
+    def get_feed(self, feed_id, category_id=None):
+        if category_id:
+            self.get_category(category_id)
+        try:
+            with stage:
+                return stage.feeds[feed_id]
+        except KeyError:
+            raise FeedNotFound
 
     def add_feed(self, category, feed):
         subscription = category.subscribe(feed)
