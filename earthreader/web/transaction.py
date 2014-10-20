@@ -22,11 +22,11 @@ class SubscriptionTransaction(object):
         with stage:
             self.subscriptions = (stage.subscriptions if stage.subscriptions
                                   else SubscriptionList())
-            self.feeds = {}
+        self.feeds_added = {}
 
     def add_feed(self, category, feed):
         subscription = category.subscribe(feed)
-        self.feeds[subscription.feed_id] = feed
+        self.feeds_added[subscription.feed_id] = feed
 
     def get_parent_category(self, category_id):
         parent_category_path = self.get_path(category_id)[:-1]
@@ -52,6 +52,6 @@ class SubscriptionTransaction(object):
     def save(self):
         with stage:
             stage.subscriptions = self.subscriptions
-            for feed_id, feed in self.feeds.items():
+            for feed_id, feed in self.feeds_added.items():
                 stage.feeds[feed_id] = feed
             self.subscriptions = stage.subscriptions
