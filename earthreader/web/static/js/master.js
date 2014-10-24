@@ -660,7 +660,7 @@ function markAllRead() {
 }
 
 function clickLink(event) {
-	var target = event.target;
+    var target = $(event.target).closest('a')[0];
 
 	if (target.host === location.host) {
 		//FIXME: ajax request
