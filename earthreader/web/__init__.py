@@ -21,6 +21,7 @@ from .exceptions import (AutodiscoveryFailed, CategoryCircularReference,
                          WorkerNotRunning, FeedNotFound, FeedNotFoundInCategory,
                          EntryNotFound)
 from .worker import Worker
+from .stage import stage
 from .transaction import SubscriptionTransaction
 
 
@@ -681,9 +682,8 @@ def feed_entry(category_id, feed_id, entry_id):
 def read_entry(category_id, feed_id, entry_id):
     feed, _, entry, _ = find_feed_and_entry(feed_id, entry_id)
     entry.read = True
-    transaction = SubscriptionTransaction()
-    transaction.update_feed(feed_id, feed)
-    transaction.save()
+    with stage:
+        stage.feeds[feed_id] = feed
     return jsonify()
 
 
@@ -694,9 +694,8 @@ def read_entry(category_id, feed_id, entry_id):
 def unread_entry(category_id, feed_id, entry_id):
     feed, _, entry, _ = find_feed_and_entry(feed_id, entry_id)
     entry.read = False
-    transaction = SubscriptionTransaction()
-    transaction.update_feed(feed_id, feed)
-    transaction.save()
+    with stage:
+        stage.feeds[feed_id] = feed
     return jsonify()
 
 
@@ -724,8 +723,8 @@ def read_all_entries(category_id='', feed_id=None):
         for entry in feed.entries:
             if not last_updated or entry.updated_at <= last_updated:
                 entry.read = True
-        transaction.update_feed(feed_id, feed)
-        transaction.save()
+        with stage:
+            stage.feeds[feed_id] = feed
     return jsonify()
 
 
@@ -736,9 +735,8 @@ def read_all_entries(category_id='', feed_id=None):
 def star_entry(category_id, feed_id, entry_id):
     feed, _, entry, _ = find_feed_and_entry(feed_id, entry_id)
     entry.starred = True
-    transaction = SubscriptionTransaction()
-    transaction.update_feed(feed_id, feed)
-    transaction.save()
+    with stage:
+        stage.feeds[feed_id] = feed
     return jsonify()
 
 
@@ -749,7 +747,6 @@ def star_entry(category_id, feed_id, entry_id):
 def unstar_entry(category_id, feed_id, entry_id):
     feed, _, entry, _ = find_feed_and_entry(feed_id, entry_id)
     entry.starred = False
-    transaction = SubscriptionTransaction()
-    transaction.update_feed(feed_id, feed)
-    transaction.save()
+    with stage:
+        stage.feeds[feed_id] = feed
     return jsonify()
