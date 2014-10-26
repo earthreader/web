@@ -6,13 +6,14 @@ import datetime
 import os
 from six.moves import urllib
 
-from flask import Flask, jsonify, render_template, request, url_for
+from flask import Flask, g, jsonify, render_template, request, url_for
 from libearth.codecs import Rfc3339
 from libearth.compat import text_type
 from libearth.crawler import crawl
 from libearth.parser.autodiscovery import autodiscovery, FeedUrlNotFoundError
 from libearth.subscribe import Category, Subscription, SubscriptionList
 from libearth.tz import now, utc
+from werkzeug.local import LocalProxy
 
 from .util import autofix_repo_url, get_hash
 from .wsgi import MethodRewriteMiddleware
@@ -51,6 +52,14 @@ def initialize():
 
     if app.config['USE_WORKER']:
         worker.start_worker()
+
+
+@app.before_request
+def before_request():
+    g.transaction = SubscriptionTransaction()
+
+
+transaction = LocalProxy(lambda: g.transaction)
 
 
 def join_category_id(base, append):
@@ -111,7 +120,7 @@ def index():
 @app.route('/feeds/', defaults={'category_id': ''})
 @app.route('/<path:category_id>/feeds/')
 def list_in_category(category_id):
-    category = SubscriptionTransaction().get_category(category_id)
+    category = transaction.get_category(category_id)
     feeds = []
     categories = []
     for child in category:
@@ -143,7 +152,6 @@ def get_category_data(base_category_id, category):
 @app.route('/feeds/', methods=['POST'], defaults={'category_id': ''})
 @app.route('/<path:category_id>/feeds/', methods=['POST'])
 def add_feed(category_id):
-    transaction = SubscriptionTransaction()
     category = transaction.get_category(category_id)
     url = request.form['url']
     document = get_document(url)
@@ -175,7 +183,6 @@ def get_feed_links(document, url):
 @app.route('/', methods=['POST'], defaults={'category_id': ''})
 @app.route('/<path:category_id>/', methods=['POST'])
 def add_category(category_id):
-    transaction = SubscriptionTransaction()
     category = transaction.get_category(category_id)
     title = request.form['title']
     outline = Category(label=title)
@@ -186,7 +193,6 @@ def add_category(category_id):
 
 @app.route('/<path:category_id>/', methods=['DELETE'])
 def delete_category(category_id):
-    transaction = SubscriptionTransaction()
     parent_category = transaction.get_parent_category(category_id)
     target_category = transaction.get_category(category_id)
     parent_category.remove(target_category)
@@ -202,7 +208,6 @@ def delete_category(category_id):
            defaults={'category_id': ''})
 @app.route('/<path:category_id>/feeds/<feed_id>/', methods=['DELETE'])
 def delete_feed(category_id, feed_id):
-    transaction = SubscriptionTransaction()
     category = transaction.get_category(category_id)
     target = None
     for subscription in category:
@@ -220,7 +225,6 @@ def delete_feed(category_id, feed_id):
 @app.route('/<path:category_id>/feeds/', methods=['PUT'])
 @app.route('/feeds/', methods=['PUT'], defaults={'category_id': ''})
 def move_outline(category_id):
-    transaction = SubscriptionTransaction()
     source_path = request.args.get('from')
     if '/feeds/' in source_path:
         parent_category_id, feed_id = source_path.split('/feeds/')
@@ -394,7 +398,7 @@ class FeedEntryGenerator():
 @app.route('/feeds/<feed_id>/entries/', defaults={'category_id': ''})
 @app.route('/<path:category_id>/feeds/<feed_id>/entries/')
 def feed_entries(category_id, feed_id):
-    feed = SubscriptionTransaction().get_feed(feed_id, category_id)
+    feed = transaction.get_feed(feed_id, category_id)
     if feed.__revision__:
         updated_at = feed.__revision__.updated_at
         if request.if_modified_since:
@@ -542,7 +546,6 @@ class CategoryEntryGenerator():
 @app.route('/entries/', defaults={'category_id': ''})
 @app.route('/<path:category_id>/entries/')
 def category_entries(category_id):
-    transaction = SubscriptionTransaction()
     category = transaction.get_category(category_id)
     generator = None
     url_token, entry_after, read, starred = get_optional_args()
@@ -618,7 +621,7 @@ def category_entries(category_id):
 @app.route('/<path:category_id>/entries/', methods=['PUT'])
 def update_entries(category_id, feed_id=None):
     if worker.is_running():
-        category = SubscriptionTransaction().get_category(category_id)
+        category = transaction.get_category(category_id)
         worker.add_job(category, feed_id)
         r = jsonify()
         r.status_code = 202
@@ -628,7 +631,7 @@ def update_entries(category_id, feed_id=None):
 
 
 def find_feed_and_entry(feed_id, entry_id):
-    feed = SubscriptionTransaction().get_feed(feed_id)
+    feed = transaction.get_feed(feed_id)
     feed_permalink = get_permalink(feed)
     for entry in feed.entries:
         entry_permalink = get_permalink(entry)
@@ -681,7 +684,6 @@ def feed_entry(category_id, feed_id, entry_id):
 def read_entry(category_id, feed_id, entry_id):
     feed, _, entry, _ = find_feed_and_entry(feed_id, entry_id)
     entry.read = True
-    transaction = SubscriptionTransaction()
     transaction.update_feed(feed_id, feed)
     transaction.save()
     return jsonify()
@@ -694,7 +696,6 @@ def read_entry(category_id, feed_id, entry_id):
 def unread_entry(category_id, feed_id, entry_id):
     feed, _, entry, _ = find_feed_and_entry(feed_id, entry_id)
     entry.read = False
-    transaction = SubscriptionTransaction()
     transaction.update_feed(feed_id, feed)
     transaction.save()
     return jsonify()
@@ -706,7 +707,6 @@ def unread_entry(category_id, feed_id, entry_id):
 @app.route('/entries/read/', methods=['PUT'])
 @app.route('/<path:category_id>/entries/read/', methods=['PUT'])
 def read_all_entries(category_id='', feed_id=None):
-    transaction = SubscriptionTransaction()
     if feed_id:
         feed_ids = [feed_id]
     else:
@@ -736,7 +736,6 @@ def read_all_entries(category_id='', feed_id=None):
 def star_entry(category_id, feed_id, entry_id):
     feed, _, entry, _ = find_feed_and_entry(feed_id, entry_id)
     entry.starred = True
-    transaction = SubscriptionTransaction()
     transaction.update_feed(feed_id, feed)
     transaction.save()
     return jsonify()
@@ -749,7 +748,6 @@ def star_entry(category_id, feed_id, entry_id):
 def unstar_entry(category_id, feed_id, entry_id):
     feed, _, entry, _ = find_feed_and_entry(feed_id, entry_id)
     entry.starred = False
-    transaction = SubscriptionTransaction()
     transaction.update_feed(feed_id, feed)
     transaction.save()
     return jsonify()
