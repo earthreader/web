@@ -56,6 +56,8 @@ def initialize():
 
 @app.before_request
 def before_request():
+    if request.path == '/':
+        return
     g.transaction = SubscriptionTransaction()
 
 
