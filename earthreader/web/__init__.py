@@ -55,7 +55,11 @@ def initialize():
 
 @app.before_request
 def before_request():
-    if request.path == '/' and request.method == 'GET':
+
+    def is_index_page():
+        return request.path == '/' and request.method == 'GET'
+
+    if is_index_page():
         return
     g.transaction = SubscriptionTransaction()
 
