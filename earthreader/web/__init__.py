@@ -83,10 +83,11 @@ class Cursor():
     def __iter__(self):
         return iter(self.value)
 
-    def join_id(self, append):
-        if self.category_id:
-            return self.category_id + '/-' + append
-        return '-' + append
+
+def join_id(base, append):
+    if base:
+        return base + '/-' + append
+    return '-' + append
 
 
 def add_urls(data, keys, category_id, feed_id=None, entry_id=None):
@@ -154,8 +155,9 @@ def feeds(category_id):
         elif isinstance(child, Category):
             url_keys = ['feeds_url', 'entries_url', 'add_feed_url',
                         'add_category_url', 'remove_category_url', 'move_url']
-            add_urls(data, url_keys, cursor.join_id(child.label))
-            add_path_data(data, cursor.join_id(child.label))
+            joined_category_id = join_id(cursor.category_id, child.label)
+            add_urls(data, url_keys, joined_category_id)
+            add_path_data(data, joined_category_id)
             categories.append(data)
     return jsonify(feeds=feeds, categories=categories)
 
