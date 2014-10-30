@@ -63,6 +63,12 @@ def before_request():
 transaction = LocalProxy(lambda: g.transaction)
 
 
+@app.after_request
+def save_transaction_staged(response):
+    transaction.save()
+    return response
+
+
 def join_id(base, append):
     if base:
         return base + '/-' + append
@@ -169,7 +175,6 @@ def add_feed(category_id):
     feed_url = feed_links[0].url
     feed_url, feed, hints = next(iter(crawl([feed_url], 1)))
     transaction.add_feed(category, feed)
-    transaction.save()
     return feeds(category_id)
 
 
@@ -180,7 +185,6 @@ def add_category(category_id):
     title = request.form['title']
     outline = Category(label=title)
     category.add(outline)
-    transaction.save()
     return feeds(category_id)
 
 
@@ -189,7 +193,6 @@ def delete_category(category_id):
     parent_category = transaction.get_parent_category(category_id)
     target_category = transaction.get_category(category_id)
     parent_category.remove(target_category)
-    transaction.save()
     index = category_id.rfind('/')
     if index == -1:
         return feeds('')
@@ -216,7 +219,6 @@ def delete_feed(category_id, feed_id):
         )
         r.status_code = 400
         return r
-    transaction.save()
     return feeds(category_id)
 
 
@@ -244,10 +246,10 @@ def move_outline(category_id):
         r.status_code = 400
         return r
     source.discard(target)
+    # Need to save change before adding outline. libearth issue #64
     transaction.save()
     dest = transaction.get_category(category_id)
     dest.add(target)
-    transaction.save()
     return jsonify()
 
 
@@ -707,7 +709,6 @@ def read_entry(category_id, feed_id, entry_id):
     feed, _, entry, _ = find_feed_and_entry(feed_id, entry_id)
     entry.read = True
     transaction.update_feed(feed_id, feed)
-    transaction.save()
     return jsonify()
 
 
@@ -719,7 +720,6 @@ def unread_entry(category_id, feed_id, entry_id):
     feed, _, entry, _ = find_feed_and_entry(feed_id, entry_id)
     entry.read = False
     transaction.update_feed(feed_id, feed)
-    transaction.save()
     return jsonify()
 
 
@@ -748,7 +748,6 @@ def read_all_entries(category_id='', feed_id=None):
                 if not last_updated or entry.updated_at <= last_updated:
                     entry.read = True
             transaction.update_feed(feed_id, feed)
-            transaction.save()
         except KeyError:
             if feed_id:
                 r = jsonify(
@@ -770,7 +769,6 @@ def star_entry(category_id, feed_id, entry_id):
     feed, _, entry, _ = find_feed_and_entry(feed_id, entry_id)
     entry.starred = True
     transaction.update_feed(feed_id, feed)
-    transaction.save()
     return jsonify()
 
 
@@ -782,5 +780,4 @@ def unstar_entry(category_id, feed_id, entry_id):
     feed, _, entry, _ = find_feed_and_entry(feed_id, entry_id)
     entry.starred = False
     transaction.update_feed(feed_id, feed)
-    transaction.save()
     return jsonify()
