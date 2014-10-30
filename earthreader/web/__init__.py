@@ -11,7 +11,7 @@ from libearth.codecs import Rfc3339
 from libearth.compat import text_type
 from libearth.crawler import crawl
 from libearth.parser.autodiscovery import autodiscovery, FeedUrlNotFoundError
-from libearth.subscribe import Category, Subscription, SubscriptionList
+from libearth.subscribe import Category, Subscription
 from libearth.tz import now, utc
 from werkzeug.local import LocalProxy
 
