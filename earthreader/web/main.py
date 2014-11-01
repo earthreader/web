@@ -29,6 +29,10 @@ def entry(feed_id, entry_id):
     with stage:
         feed = stage.feeds[feed_id]
     entry = get_entry(feed, entry_id)
+    if not entry.read:
+        entry.read = True
+        with stage:
+            stage.feeds[feed_id] = feed
     return render_template('entry.html', feed=feed, feed_id=feed_id,
                            entry=entry)
 
