@@ -48,6 +48,13 @@ def entry(feed_id, entry_id):
         entry.read = True
         with stage:
             stage.feeds[feed_id] = feed
+    if request_wants_json():
+        entry = {
+            'id': entry.id,
+            'summary': entry.summary,
+            'content': entry.content
+        }
+        return jsonify(entry=entry)
     return render_template('entry.html', feed=feed, feed_id=feed_id,
                            entry=entry)
 
