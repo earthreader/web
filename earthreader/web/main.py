@@ -2,9 +2,10 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 """
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, jsonify
 
 from .stage import stage
+from .util import request_wants_json
 
 
 bp = Blueprint(__name__, 'main')
@@ -15,6 +16,16 @@ def home():
     with stage:
         subscriptions = stage.subscriptions
     return render_template('home.html', subscriptions=subscriptions)
+
+
+@bp.route('/feeds/')
+def feeds():
+    with stage:
+        feeds = stage.subscriptions.recursive_subscriptions
+    if request_wants_json():
+        feeds = [{'id': feed.feed_id, 'label': feed.label} for feed in feeds]
+        return jsonify(feeds=feeds)
+    return render_template('feeds.html', feeds=feeds)
 
 
 @bp.route('/<feed_id>/')

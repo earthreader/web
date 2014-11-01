@@ -11,13 +11,12 @@
             </li>
         {% endfor %}
     </ul>
-    <h2>Feeds</h2>
+    <h2><a href="{{ url_for('.feeds') }}">Feeds</a></h2>
     <ul>
-        {% for subscription in subscriptions.recursive_subscriptions %}
+        {% for feed in subscriptions.recursive_subscriptions %}
             <li>
-                <a href="{{ url_for('.entries',
-                            feed_id=subscription.feed_id) }}">
-                    {{ subscription.label }}
+                <a href="{{ url_for('.entries', feed_id=feed.feed_id) }}">
+                    {{ feed.label }}
                 </a>
             </li>
         {% endfor %}
