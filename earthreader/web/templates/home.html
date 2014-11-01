@@ -2,17 +2,23 @@
 {% block body %}
     <h2>Categories</h2>
     <ul>
-        {% for category in categories %}
+        {% for category in subscriptions if category.children %}
             <li>
-                <a href="{{ url_for('.category', category_id=category) }}">{{ category }}</a>
+                <a href="{{ url_for('.category',
+                            category_label=category.label) }}">
+                    {{ category.label }}
+                </a>
             </li>
         {% endfor %}
     </ul>
     <h2>Feeds</h2>
     <ul>
-        {% for feed in feeds %}
+        {% for subscription in subscriptions.recursive_subscriptions %}
             <li>
-                <a href="{{ url_for('.entries', feed_id=feed) }}">{{ feeds[feed] }}</a>
+                <a href="{{ url_for('.entries',
+                            feed_id=subscription.feed_id) }}">
+                    {{ subscription.label }}
+                </a>
             </li>
         {% endfor %}
     </ul>
