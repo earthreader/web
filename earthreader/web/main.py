@@ -32,6 +32,10 @@ def feeds():
 def entries(feed_id):
     with stage:
         feed = stage.feeds[feed_id]
+    if request_wants_json():
+        entries = [{'id': entry.id, 'title': entry.title}
+                   for entry in feed.entries]
+        return jsonify(entries=entries)
     return render_template('entries.html', feed=feed, feed_id=feed_id)
 
 
