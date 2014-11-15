@@ -4,8 +4,14 @@ python:
 - 2.6
 - 2.7
 - 3.3
+before_install:
+- sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+- sudo apt-get update -qq
 install:
-- pip install pytest 'libsass>=0.3.0'
+- sudo apt-get install -qq gcc-4.8 g++-4.8 libstdc++-4.8-dev
+- sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 20
+- sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 20
+- pip install pytest 'libsass>=0.6.1'
 - if [ `python -c 'from platform import *; print(python_implementation())'` != 'PyPy' ]; then
     pip install pytest pytest-cov pep8 coveralls;
   fi
