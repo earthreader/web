@@ -4,12 +4,11 @@
 """
 import datetime
 import os
-from six.moves import urllib
 
 from flask import Flask, jsonify, render_template, request, url_for
 from libearth.codecs import Rfc3339
 from libearth.compat import text_type
-from libearth.crawler import crawl
+from libearth.crawler import crawl, open_url
 from libearth.parser.autodiscovery import autodiscovery, FeedUrlNotFoundError
 from libearth.subscribe import Category, Subscription, SubscriptionList
 from libearth.tz import now, utc
@@ -166,7 +165,7 @@ def add_feed(category_id):
     cursor = Cursor(category_id)
     url = request.form['url']
     try:
-        f = urllib.request.urlopen(url)
+        f = open_url(url)
         document = f.read()
         f.close()
     except Exception:
