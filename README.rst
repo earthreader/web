@@ -194,6 +194,7 @@ To be released.
 - Fixed auto scroll when entry has images.
 - Fixed a bug that raises ``BuildError``.  [`#49`__]
 - Became to need libearth 0.3.1 or later.
+- "Go to top" button on bottom.
 
 __ https://github.com/earthreader/web/issues/49
 
