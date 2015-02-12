@@ -843,6 +843,18 @@ function changeTheme(name) {
 
     var theme = $('style.theme');
     theme.html("@import url('" + THEMES[name] + "');");
+
+    if (localStorage !== undefined) {
+        localStorage.theme = name;
+    }
+}
+
+function loadTheme() {
+    if (localStorage === undefined) {
+        return;
+    }
+
+    changeTheme(localStorage.theme);
 }
 
 function openManual() {
@@ -904,6 +916,8 @@ $(function () {
         animationEnd = 'MSAnimaionEnd';
     }
     $(document.body).on(animationEnd, resizer);
+
+    loadTheme();
 
     $('[role=navigation] .persistent .unread').addClass('current');
     $('[role=navigation] .feedlist .allfeed.header').addClass('current');
