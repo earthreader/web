@@ -1145,7 +1145,7 @@ def test_move_feed(xmls, fx_test_stage):
     with fx_test_stage as stage:
         subscriptions = stage.subscriptions
         for child in subscriptions.children:
-            assert child.label != 'Feed Three'
+            assert child.label != 'Feed Three' or child.deleted
         assert len(subscriptions.categories['categoryone'].children) == 3
 
 
@@ -1171,7 +1171,7 @@ def test_move_to_root(xmls, fx_test_stage):
     with fx_test_stage as stage:
         subscriptions = stage.subscriptions
         for child in subscriptions.categories['categoryone'].children:
-            assert child.label != 'Feed One'
+            assert child.label != 'Feed One' or child.deleted
         assert len(subscriptions.children) == 4
 
 
