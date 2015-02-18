@@ -184,6 +184,7 @@ Might be released.
 - Entry list is cached by browser using :mailheader:`Last-Modified` and
   :mailheader:`If-Modified-Since` headers.
 - Fix malformed session id on multi process.
+- Fix error log when crawling.
 
 
 Version 0.1.1

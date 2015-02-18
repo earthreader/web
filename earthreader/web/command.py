@@ -48,7 +48,8 @@ def crawl_command(args):
                 feed_id = id_map[feed_url]
                 stage.feeds[feed_id] = feed_data
         except (CrawlError, SchemaError) as e:
-            print('Something went wrong with', feed_url, file=sys.stderr)
+            if isinstance(e, CrawlError):
+                print('Something went wrong with', e.feed_uri, file=sys.stderr)
             if args.verbose:
                 traceback.print_exc()
             else:
