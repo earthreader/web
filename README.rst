@@ -186,7 +186,7 @@ Changelog
 Version 0.3.0
 ~~~~~~~~~~~~~
 
-To be released.
+Released on February 24, 2015.
 
 - Run crawler thread by default.
 - Error code ``circular-refernce``, which is a typo, was renamed to
@@ -196,6 +196,7 @@ To be released.
 - Became to need libearth 0.3.1 or later.
 - Save theme setting.
 - "Go to top" button on bottom.
+- And a lot of changes (`Version 0.2.2`_).
 
 __ https://github.com/earthreader/web/issues/49
 
