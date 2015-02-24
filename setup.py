@@ -47,7 +47,7 @@ install_requires.extend(setup_requires)
 
 setup(
     name='EarthReader-Web',
-    version='0.3.0',
+    version='0.3.1',
     description='Earth Reader for Web',
     long_description=readme(),
     url='http://earthreader.org/',
