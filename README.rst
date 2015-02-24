@@ -185,6 +185,8 @@ Might be released.
   :mailheader:`If-Modified-Since` headers.
 - Fix malformed session id on multi process.
 - Fix error log when crawling.
+- Force MIME type "test/html" when not given.
+- Fix shortcut key.
 
 
 Version 0.1.1
