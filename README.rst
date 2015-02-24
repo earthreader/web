@@ -179,7 +179,7 @@ Changelog
 Version 0.1.2
 ~~~~~~~~~~~~~
 
-Might be released.
+Released on February 24, 2015.
 
 - Entry list is cached by browser using :mailheader:`Last-Modified` and
   :mailheader:`If-Modified-Since` headers.
