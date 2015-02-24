@@ -2,6 +2,7 @@ import datetime
 import hashlib
 import os
 import threading
+import uuid
 from six.moves import queue
 from six.moves import urllib
 
@@ -208,7 +209,9 @@ def get_stage():
             # Note that it probably causes N times more disk usage
             # where N = the number of processes.  So we should discourage
             # using web servers of prefork/worker model in the docs.
-            session_id = '{0}.{1}'.format(session_id, os.getpid())
+            session_id = '{0}.{1}'.format(
+                session_id or uuid.getnode(), os.getpid()
+            )
 
         session = Session(session_id)
         url = urllib.parse.urlparse(app.config['REPOSITORY'])
