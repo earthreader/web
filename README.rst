@@ -183,6 +183,7 @@ To be released.
 
 - Fixed a bug that enters a infinite loop when initilize
   :class:`~earthreader.web.CategoryEntryGenerator`
+- Fix open link.
 
 
 Version 0.2.1
