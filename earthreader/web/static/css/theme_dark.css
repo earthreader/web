@@ -1,0 +1,64 @@
+body {
+	background: black;
+	color: white;
+}
+
+.site-header {
+	background: rgb(37, 36, 35);
+	color: rgb(139, 134, 133);
+}
+
+[role=navigation],
+[role=complementary] {
+	background: rgb(42, 41, 40);
+}
+
+[role=main] {
+	background: rgb(49, 48, 4j);
+}
+
+.form {
+	background: rgba(0, 50, 145, .1);
+}
+
+[role=navigation] input[type=submit],
+[role=navigation] input[type=button],
+[role=navigation] button {
+	background: rgb(143, 182, 220);
+}
+
+[role=naigation] .header,
+[role=complementary] .header {
+	background: rgb(245, 245, 255);
+}
+
+[role=navigation] a {
+	color: white;
+}
+
+[role=navigation] .current {
+	background: rgb(43, 73, 63);
+}
+
+[role=main] article .entry-title {
+	background: rgb(43, 43, 43);
+}
+
+[role=main] article.current .entry-title {
+	background: rgb(43, 73, 63);
+}
+
+[role=main] article .entry-content {
+	background: rgb(20, 20, 20);
+}
+
+@media all and (min-width: 800px) {
+	[role=navigation] li:not(.folder):hover,
+	[role=navigation] .header:hover {
+		background: rgb(60, 70, 60);
+	}
+
+	[role=main] article .entry-title:hover {
+		background: rgb(65, 65, 75);
+	}
+}
