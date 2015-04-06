@@ -183,6 +183,14 @@ http://try.earthreader.org/
 Changelog
 ---------
 
+Version 0.3.1
+~~~~~~~~~~~~~
+
+To be released.
+
+- Fix malfunctioning when click different category when loading another category.
+
+
 Version 0.3.0
 ~~~~~~~~~~~~~
 

@@ -19,7 +19,6 @@ function printError(xhr, statusText, error) {
         var json = JSON.parse(xhr.responseText);
         alert(json.error + '\n' + json.message);
     } catch (err) {
-        alert(statusText + error);
     }
 }
 
@@ -492,10 +491,14 @@ function reloadEntries() {
         url += '?' + filter;
     }
 
+    if (reloadEntries.currentXhr && reloadEntries.currentXhr.readystate != 4) {
+      reloadEntries.currentXhr.abort();
+    }
+
     $('[role=navigation] .loading').removeClass('loading');
     currentFeed.addClass('loading');
 
-    $.get(url, function (obj) {
+    reloadEntries.currentXhr = $.get(url, function (obj) {
         if (currentFeed.hasClass('current')) {
             processEntries(obj, url);
         }
