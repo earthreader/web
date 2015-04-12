@@ -617,6 +617,7 @@ function toggleEntryCollapse(entry) {
 
         read_on_web.attr('href', obj.permalink);
         read_on_web.addClass('bottom-button');
+        read_on_web.addClass('read-on-web');
         read_on_web.text("Read on web");
         bottom_bar.append(read_on_web);
 

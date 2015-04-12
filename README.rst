@@ -189,6 +189,7 @@ Version 0.3.1
 To be released.
 
 - Fix malfunctioning when click different category when loading another category.
+- Fix "Read on web" keyboard shortcut.
 
 
 Version 0.3.0
