@@ -415,7 +415,7 @@ function processEntries(obj, queryUrl) {
 
     if (entries.length === 0) {
         var noEntry = $('<p>');
-        noEntry.text('No more entry');
+        noEntry.text('No more entries');
         main.append(noEntry);
     } else {
         for (var i=0; i<entries.length; i++) {

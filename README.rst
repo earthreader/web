@@ -190,6 +190,7 @@ To be released.
 
 - Fix malfunctioning when click different category when loading another category.
 - Fix "Read on web" keyboard shortcut.
+- Fix typo.
 
 
 Version 0.3.0
