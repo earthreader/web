@@ -426,12 +426,13 @@ function processEntries(obj, queryUrl) {
     if (obj.next_url) {
         var nextLoader = main.find('.nextPage');
         if (nextLoader.length === 0) {
-            nextLoader = $('<div>');
+            nextLoader = $('<div role="button">');
             nextLoader.addClass('nextPage');
             nextLoader.text("Load next page");
         }
         nextLoader.attr('data-next-url', obj.next_url);
         main.append(nextLoader);
+        autoNextPager();
     }
     $(window).scrollTop(0);
 }
@@ -458,6 +459,7 @@ function loadNextPage() {
             nextLoader.text("Load next page");
             nextLoader.attr('data-next-url', obj.next_url);
             main.append(nextLoader);
+            autoNextPager();
         } else {
             $('.nextPage').remove();
         }
@@ -946,5 +948,3 @@ $(function () {
         .delay('slow')
         .fadeIn('fast');
 });
-
-/* vim: noet:ts=4 */
