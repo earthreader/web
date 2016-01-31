@@ -5,20 +5,23 @@
 import datetime
 import os
 
-from flask import Flask, jsonify, render_template, request, url_for
+from flask import Flask, g, jsonify, render_template, request, url_for
 from libearth.codecs import Rfc3339
 from libearth.compat import text_type
 from libearth.crawler import crawl, open_url
 from libearth.parser.autodiscovery import autodiscovery, FeedUrlNotFoundError
 from libearth.subscribe import Category, Subscription, SubscriptionList
 from libearth.tz import now, utc
+from werkzeug.local import LocalProxy
 
 from .util import autofix_repo_url, get_hash
 from .wsgi import MethodRewriteMiddleware
-from .exceptions import (InvalidCategoryID, IteratorNotFound, WorkerNotRunning,
-                         FeedNotFound, EntryNotFound)
+from .exceptions import (AutodiscoveryFailed, CategoryCircularReference,
+                         DocumentNotFound, InvalidCategoryID, IteratorNotFound,
+                         WorkerNotRunning, FeedNotFound, FeedNotFoundInCategory,
+                         EntryNotFound)
 from .worker import Worker
-from .stage import stage
+from .transaction import SubscriptionTransaction
 
 
 app = Flask(__name__)
@@ -50,48 +53,26 @@ def initialize():
         worker.start_worker()
 
 
-class Cursor():
+@app.before_request
+def before_request():
+    if request.path == '/' and request.method == 'GET':
+        return
+    g.transaction = SubscriptionTransaction()
 
-    def __init__(self, category_id, return_parent=False):
-        with stage:
-            self.subscriptionlist = (stage.subscriptions if stage.subscriptions
-                                     else SubscriptionList())
-        self.value = self.subscriptionlist
-        self.path = ['/']
-        self.category_id = None
 
-        target_name = None
-        self.target_child = None
+transaction = LocalProxy(lambda: g.transaction)
 
-        try:
-            if category_id:
-                self.category_id = category_id
-                self.path = [key[1:] for key in category_id.split('/')]
-                if return_parent:
-                    target_name = self.path.pop(-1)
-                for key in self.path:
-                    self.value = self.value.categories[key]
-                if target_name:
-                    self.target_child = self.value.categories[target_name]
-        except Exception:
-            raise InvalidCategoryID('The given category ID is not valid')
 
-    def __getattr__(self, attr):
-        return getattr(self.value, attr)
-
-    def __iter__(self):
-        return iter(self.value)
-
-    def join_id(self, append):
-        if self.category_id:
-            return self.category_id + '/-' + append
-        return '-' + append
+def join_category_id(base, append):
+    if base:
+        return base + '/-' + append
+    return '-' + append
 
 
 def add_urls(data, keys, category_id, feed_id=None, entry_id=None):
     APIS = {
         'entries_url': 'category_entries',
-        'feeds_url': 'feeds',
+        'feeds_url': 'list_in_category',
         'add_feed_url': 'add_feed',
         'add_category_url': 'add_category',
         'remove_category_url': 'delete_category',
@@ -139,107 +120,107 @@ def index():
 
 @app.route('/feeds/', defaults={'category_id': ''})
 @app.route('/<path:category_id>/feeds/')
-def feeds(category_id):
-    cursor = Cursor(category_id)
+def list_in_category(category_id):
+    category = transaction.get_category(category_id)
     feeds = []
     categories = []
-    for child in cursor:
-        data = {'title': child.label}
+    for child in category:
         if isinstance(child, Subscription):
-            url_keys = ['entries_url', 'remove_feed_url']
-            add_urls(data, url_keys, cursor.category_id, child.feed_id)
-            add_path_data(data, cursor.category_id, child.feed_id)
-            feeds.append(data)
+            feeds.append(get_feed_data(category_id, child))
         elif isinstance(child, Category):
-            url_keys = ['feeds_url', 'entries_url', 'add_feed_url',
-                        'add_category_url', 'remove_category_url', 'move_url']
-            add_urls(data, url_keys, cursor.join_id(child.label))
-            add_path_data(data, cursor.join_id(child.label))
-            categories.append(data)
+            categories.append(get_category_data(category_id, child))
     return jsonify(feeds=feeds, categories=categories)
+
+
+def get_feed_data(base_category_id, subscription):
+    feed_data = {'title': subscription.label}
+    url_keys = ['entries_url', 'remove_feed_url']
+    add_urls(feed_data, url_keys, base_category_id, subscription.feed_id)
+    add_path_data(feed_data, base_category_id, subscription.feed_id)
+    return feed_data
+
+
+def get_category_data(base_category_id, category):
+    label = category.label
+    category_data = {'title': label}
+    url_keys = ['feeds_url', 'entries_url', 'add_feed_url',
+                'add_category_url', 'remove_category_url', 'move_url']
+    add_urls(category_data, url_keys, join_category_id(base_category_id, label))
+    add_path_data(category_data, join_category_id(base_category_id, label))
+    return category_data
 
 
 @app.route('/feeds/', methods=['POST'], defaults={'category_id': ''})
 @app.route('/<path:category_id>/feeds/', methods=['POST'])
 def add_feed(category_id):
-    cursor = Cursor(category_id)
+    category = transaction.get_category(category_id)
     url = request.form['url']
+    document = get_document(url)
+    feed_links = get_feed_links(document, url)
+    feed_url = feed_links[0].url
+    feed_url, feed, hints = next(iter(crawl([feed_url], 1)))
+    transaction.add_feed(category, feed)
+    transaction.save()
+    return list_in_category(category_id)
+
+
+def get_document(url):
     try:
         f = open_url(url)
         document = f.read()
         f.close()
+        return document
     except Exception:
-        r = jsonify(
-            error='unreachable-url',
-            message='Cannot connect to given url'
-        )
-        r.status_code = 400
-        return r
+        raise DocumentNotFound
+
+
+def get_feed_links(document, url):
     try:
-        feed_links = autodiscovery(document, url)
+        return autodiscovery(document, url)
     except FeedUrlNotFoundError:
-        r = jsonify(
-            error='unreachable-feed-url',
-            message='Cannot find feed url'
-        )
-        r.status_code = 400
-        return r
-    feed_url = feed_links[0].url
-    feed_url, feed, hints = next(iter(crawl([feed_url], 1)))
-    with stage:
-        sub = cursor.subscribe(feed)
-        stage.subscriptions = cursor.subscriptionlist
-        stage.feeds[sub.feed_id] = feed
-    return feeds(category_id)
+        raise FeedUrlNotFoundError
 
 
 @app.route('/', methods=['POST'], defaults={'category_id': ''})
 @app.route('/<path:category_id>/', methods=['POST'])
 def add_category(category_id):
-    cursor = Cursor(category_id)
+    category = transaction.get_category(category_id)
     title = request.form['title']
     outline = Category(label=title)
-    cursor.add(outline)
-    with stage:
-        stage.subscriptions = cursor.subscriptionlist
-    return feeds(category_id)
+    category.add(outline)
+    transaction.save()
+    return list_in_category(category_id)
 
 
 @app.route('/<path:category_id>/', methods=['DELETE'])
 def delete_category(category_id):
-    cursor = Cursor(category_id, True)
-    cursor.remove(cursor.target_child)
-    with stage:
-        stage.subscriptions = cursor.subscriptionlist
+    parent_category = transaction.get_parent_category(category_id)
+    target_category = transaction.get_category(category_id)
+    parent_category.remove(target_category)
+    transaction.save()
     index = category_id.rfind('/')
     if index == -1:
-        return feeds('')
+        return list_in_category('')
     else:
-        return feeds(category_id[:index])
+        return list_in_category(category_id[:index])
 
 
 @app.route('/feeds/<feed_id>/', methods=['DELETE'],
            defaults={'category_id': ''})
 @app.route('/<path:category_id>/feeds/<feed_id>/', methods=['DELETE'])
 def delete_feed(category_id, feed_id):
-    cursor = Cursor(category_id)
+    category = transaction.get_category(category_id)
     target = None
-    for subscription in cursor:
+    for subscription in category:
         if isinstance(subscription, Subscription):
             if feed_id == subscription.feed_id:
                 target = subscription
     if target:
-        cursor.discard(target)
+        category.discard(target)
     else:
-        r = jsonify(
-            error='feed-not-found-in-path',
-            message='Given feed does not exist in the path'
-        )
-        r.status_code = 400
-        return r
-    with stage:
-        stage.subscriptions = cursor.subscriptionlist
-    return feeds(category_id)
+        raise FeedNotFoundInCategory
+    transaction.save()
+    return list_in_category(category_id)
 
 
 @app.route('/<path:category_id>/feeds/', methods=['PUT'])
@@ -248,30 +229,23 @@ def move_outline(category_id):
     source_path = request.args.get('from')
     if '/feeds/' in source_path:
         parent_category_id, feed_id = source_path.split('/feeds/')
-        source = Cursor(parent_category_id)
+        source = transaction.get_category(parent_category_id)
         target = None
         for child in source:
             if child.feed_id == feed_id:
                 target = child
     else:
-        source = Cursor(source_path, True)
-        target = source.target_child
+        source = transaction.get_parent_category(source_path)
+        target = transaction.get_category(source_path)
 
-    dest = Cursor(category_id)
-    if isinstance(target, Category) and target.contains(dest.value):
-        r = jsonify(
-            error='circular-reference',
-            message='Cannot move into child element.'
-        )
-        r.status_code = 400
-        return r
+    dest = transaction.get_category(category_id)
+    if isinstance(target, Category) and target.contains(dest):
+        raise CategoryCircularReference
     source.discard(target)
-    with stage:
-        stage.subscriptions = source.subscriptionlist
-    dest = Cursor(category_id)
+    transaction.save()
+    dest = transaction.get_category(category_id)
     dest.add(target)
-    with stage:
-        stage.subscriptions = dest.subscriptionlist
+    transaction.save()
     return jsonify()
 
 
@@ -425,25 +399,7 @@ class FeedEntryGenerator():
 @app.route('/feeds/<feed_id>/entries/', defaults={'category_id': ''})
 @app.route('/<path:category_id>/feeds/<feed_id>/entries/')
 def feed_entries(category_id, feed_id):
-    try:
-        Cursor(category_id)
-    except InvalidCategoryID:
-        r = jsonify(
-            error='category-id-invalid',
-            message='Given category does not exist'
-        )
-        r.status_code = 404
-        return r
-    try:
-        with stage:
-            feed = stage.feeds[feed_id]
-    except KeyError:
-        r = jsonify(
-            error='feed-not-found',
-            message='Given feed does not exist'
-        )
-        r.status_code = 404
-        return r
+    feed = transaction.get_feed(feed_id, category_id)
     if feed.__revision__:
         updated_at = feed.__revision__.updated_at
         if request.if_modified_since:
@@ -591,7 +547,7 @@ class CategoryEntryGenerator():
 @app.route('/entries/', defaults={'category_id': ''})
 @app.route('/<path:category_id>/entries/')
 def category_entries(category_id):
-    cursor = Cursor(category_id)
+    category = transaction.get_category(category_id)
     generator = None
     url_token, entry_after, read, starred = get_optional_args()
     if url_token:
@@ -602,7 +558,7 @@ def category_entries(category_id):
     else:
         url_token = text_type(now())
     if not generator:
-        subscriptions = cursor.recursive_subscriptions
+        subscriptions = category.recursive_subscriptions
         generator = CategoryEntryGenerator()
         if entry_after:
             id_after, time_after = entry_after.split('@')
@@ -611,9 +567,8 @@ def category_entries(category_id):
             id_after = None
         for subscription in subscriptions:
             try:
-                with stage:
-                    feed = stage.feeds[subscription.feed_id]
-            except KeyError:
+                feed = transaction.get_feed(subscription.feed_id)
+            except FeedNotFound:
                 continue
             feed_title = text_type(feed.title)
             it = iter(feed.entries)
@@ -667,8 +622,8 @@ def category_entries(category_id):
 @app.route('/<path:category_id>/entries/', methods=['PUT'])
 def update_entries(category_id, feed_id=None):
     if worker.is_running():
-        cursor = Cursor(category_id)
-        worker.add_job(cursor, feed_id)
+        category = transaction.get_category(category_id)
+        worker.add_job(category, feed_id)
         r = jsonify()
         r.status_code = 202
         return r
@@ -677,11 +632,7 @@ def update_entries(category_id, feed_id=None):
 
 
 def find_feed_and_entry(feed_id, entry_id):
-    try:
-        with stage:
-            feed = stage.feeds[feed_id]
-    except KeyError:
-        raise FeedNotFound('The feed is not reachable')
+    feed = transaction.get_feed(feed_id)
     feed_permalink = get_permalink(feed)
     for entry in feed.entries:
         entry_permalink = get_permalink(entry)
@@ -734,8 +685,8 @@ def feed_entry(category_id, feed_id, entry_id):
 def read_entry(category_id, feed_id, entry_id):
     feed, _, entry, _ = find_feed_and_entry(feed_id, entry_id)
     entry.read = True
-    with stage:
-        stage.feeds[feed_id] = feed
+    transaction.update_feed(feed_id, feed)
+    transaction.save()
     return jsonify()
 
 
@@ -746,8 +697,8 @@ def read_entry(category_id, feed_id, entry_id):
 def unread_entry(category_id, feed_id, entry_id):
     feed, _, entry, _ = find_feed_and_entry(feed_id, entry_id)
     entry.read = False
-    with stage:
-        stage.feeds[feed_id] = feed
+    transaction.update_feed(feed_id, feed)
+    transaction.save()
     return jsonify()
 
 
@@ -760,8 +711,8 @@ def read_all_entries(category_id='', feed_id=None):
     if feed_id:
         feed_ids = [feed_id]
     else:
-        cursor = Cursor(category_id)
-        feed_ids = [sub.feed_id for sub in cursor.recursive_subscriptions]
+        category = transaction.get_category(category_id)
+        feed_ids = [sub.feed_id for sub in category.recursive_subscriptions]
 
     try:
         codec = Rfc3339()
@@ -770,23 +721,12 @@ def read_all_entries(category_id='', feed_id=None):
         last_updated = None
 
     for feed_id in feed_ids:
-        try:
-            with stage:
-                feed = stage.feeds[feed_id]
-                for entry in feed.entries:
-                    if not last_updated or entry.updated_at <= last_updated:
-                        entry.read = True
-                stage.feeds[feed_id] = feed
-        except KeyError:
-            if feed_id:
-                r = jsonify(
-                    error='feed-not-found',
-                    message='Given feed does not exist'
-                )
-                r.status_code = 404
-                return r
-            else:
-                continue
+        feed = transaction.get_feed(feed_id)
+        for entry in feed.entries:
+            if not last_updated or entry.updated_at <= last_updated:
+                entry.read = True
+        transaction.update_feed(feed_id, feed)
+        transaction.save()
     return jsonify()
 
 
@@ -797,8 +737,8 @@ def read_all_entries(category_id='', feed_id=None):
 def star_entry(category_id, feed_id, entry_id):
     feed, _, entry, _ = find_feed_and_entry(feed_id, entry_id)
     entry.starred = True
-    with stage:
-        stage.feeds[feed_id] = feed
+    transaction.update_feed(feed_id, feed)
+    transaction.save()
     return jsonify()
 
 
@@ -809,6 +749,6 @@ def star_entry(category_id, feed_id, entry_id):
 def unstar_entry(category_id, feed_id, entry_id):
     feed, _, entry, _ = find_feed_and_entry(feed_id, entry_id)
     entry.starred = False
-    with stage:
-        stage.feeds[feed_id] = feed
+    transaction.update_feed(feed_id, feed)
+    transaction.save()
     return jsonify()
