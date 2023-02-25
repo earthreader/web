@@ -44,8 +44,8 @@ __ http://blog.earthreader.org/2013/12/sync/
 .. _rsync: http://rsync.samba.org/
 
 
-Standalone server
------------------
+Standalone server for Earth Reader
+----------------------------------
 
 You can run Earth Reader for Web using its standalone server:
 
